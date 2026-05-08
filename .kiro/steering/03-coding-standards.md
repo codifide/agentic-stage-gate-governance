@@ -40,12 +40,14 @@ If code genuinely cannot reach 100%:
 - HTTPS only (no HTTP exceptions)
 
 ### Architecture Level
-- Certificate pinning on all API calls (where applicable)
-- Encryption at rest for sensitive local data
-- Biometric/auth before sensitive operations
+- PHI/PII is flagged in data models
 - Rate limiting on abuse-prone endpoints
 - Fail closed on security failures (deny by default)
 - Fail open on availability failures (don't trap the user)
+- Database migrations managed inside application
+- No shared databases
+- All code to be packaged in Docker images for deployment in Kubernetes
+- AWS services to be used without approval
 
 ### Review Triggers
 Sentinel reviews any change that touches:
@@ -87,15 +89,16 @@ Sentinel reviews any change that touches:
 
 ### Architecture
 - Single responsibility (one reason to change)
-- Protocol/interface-based design (testable, mockable)
+- In testing mocks are limited to the edges of modules. Use of in-memory replacements such as H2 preferred. Testing from controller level is preferred.
 - No god objects (if a class does 5 things, split it into 5 classes)
 - Composition over inheritance
 - Dependencies injected, not created internally
 
 ### Documentation
+- Git commits contain JIRA ticket number associated with work for tracing
 - Public APIs have doc comments
 - Complex logic has inline comments explaining WHY (not what)
-- ADRs for significant decisions
+- Architectural Decision Records (ADR) for significant decisions
 - README kept current
 
 ---
