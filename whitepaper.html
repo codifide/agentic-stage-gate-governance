@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage-Gate Rebooted: How We Govern AI-Powered Development in Healthcare</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin: 40px 0 20px 0;
+            color: #1a1a1a;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            font-size: 1.8em;
+            margin: 35px 0 20px 0;
+            color: #0066cc;
+        }
+        
+        h3 {
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+            color: #333;
+        }
+        
+        p {
+            margin: 15px 0;
+            text-align: justify;
+        }
+        
+        strong {
+            color: #0066cc;
+            font-weight: 600;
+        }
+        
+        em {
+            font-style: italic;
+            color: #555;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            font-style: italic;
+            color: #666;
+            margin: 20px 0 30px 0;
+            padding-left: 20px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, #0066cc, #f8f9fa);
+            margin: 40px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        
+        table th {
+            background: #0066cc;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        table tr:hover {
+            background: #e6f0ff;
+        }
+        
+        pre {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        
+        blockquote {
+            border-left: 4px solid #0066cc;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 10px 0;
+        }
+        
+        a {
+            color: #0066cc;
+            text-decoration: none;
+            border-bottom: 1px dotted #0066cc;
+        }
+        
+        a:hover {
+            background: #e6f0ff;
+            border-bottom: 1px solid #0066cc;
+        }
+        
+        .highlight {
+            background: #fffacd;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #0066cc;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+        
+        .metadata {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                padding: 0;
+            }
+            a {
+                border-bottom: none;
+                color: #0066cc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stage-Gate Rebooted: How We Govern AI-Powered Development in Healthcare</h1>
+        
+        <p class="subtitle"><strong>When your developer is an AI agent, who watches the gates?</strong></p>
+        
+        <hr>
+        
+        <h2>The Problem No One Talks About</h2>
+        
+        <p>Agentic AI can write code faster than any human team. It can produce 50 files in an hour, refactor entire architectures in a session, and generate test suites that hit 95% coverage before lunch.</p>
+        
+        <p>But speed without governance is just faster failure.</p>
+        
+        <p>In healthcare software — where a bug isn't a broken button but a misdirected medical record — the question isn't <em>"can AI build it?"</em> It's <em>"should this ship?"</em></p>
+        
+        <p>We took Robert Cooper's Stage-Gate® framework (1986), stripped it to its core principle — <strong>evidence, not confidence</strong> — and rebuilt it for a world where AI agents do the building and humans do the deciding.</p>
+        
+        <hr>
+        
+        <h2>The Classic Stage-Gate (1986)</h2>
+        
+        <pre>┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│Discovery│───▶│ Scoping │───▶│Business │───▶│Develop- │───▶│ Launch  │
+│         │    │         │    │  Case   │    │  ment   │    │         │
+└────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘
+     │              │              │              │              │
+   Gate 1        Gate 2        Gate 3        Gate 4        Gate 5
+   "Is it        "Is it        "Is the       "Is it        "Is it
+    real?"        worth it?"    plan solid?"   working?"     ready?"</pre>
+        
+        <p>Cooper's insight: <strong>don't let bad projects consume resources.</strong> Kill early, kill cheap. Each gate is a go/kill/hold decision made by senior management with evidence, not enthusiasm.</p>
+        
+        <p>80% of product development organizations use some form of Stage-Gate (<a href="https://www.researchgate.net/publication/4883499_Stage-Gate_Systems_A_New_Tool_for_Managing_New_Products">PDMA Best Practices Study</a>). It works. But it was designed for physical products with 18-month development cycles and human-only teams.</p>
+        
+        <hr>
+        
+        <h2>What Changes When AI Builds the Software</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Classic Assumption</th>
+                    <th>New Reality</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Development takes months</td>
+                    <td>AI produces working code in hours</td>
+                </tr>
+                <tr>
+                    <td>The bottleneck is building</td>
+                    <td>The bottleneck is <em>deciding what to build</em></td>
+                </tr>
+                <tr>
+                    <td>Code review catches defects</td>
+                    <td>AI generates plausible-looking code that passes superficial review</td>
+                </tr>
+                <tr>
+                    <td>One team builds, another reviews</td>
+                    <td>The same AI can build AND review (confirmation bias risk)</td>
+                </tr>
+                <tr>
+                    <td>Security is a phase</td>
+                    <td>AI doesn't instinctively think about attack surfaces</td>
+                </tr>
+                <tr>
+                    <td>"Ship it" pressure comes from deadlines</td>
+                    <td>"Ship it" pressure comes from how easy it is to produce</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p><strong>The danger isn't that AI builds bad software. It's that AI builds software so fast that governance can't keep up.</strong></p>
+        
+        <hr>
+        
+        <h2>Our Reboot: 7 Gates for AI-Assisted Healthcare Development</h2>
+        
+        <pre>┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐
+│  G0  │──▶│  G1  │──▶│G2/G3 │──▶│  G4  │──▶│  G5  │──▶│LAUNCH│──▶│  G6  │
+│Worth │   │Reqs  │   │Design│   │Build │   │Ready │   │      │   │Learn │
+│doing?│   │solid?│   │safe? │   │works?│   │ship? │   │      │   │      │
+└──┬───┘   └──┬───┘   └──┬───┘   └──┬───┘   └──┬───┘   └──────┘   └──┬───┘
+   │          │          │          │          │                       │
+   ▼          ▼          ▼          ▼          ▼                       ▼
+ Problem    Evidence   Adversarial  Proof    Patient                 Reality
+ is real    survives   review of    it       safety                  vs.
+            attack     architecture works    verified                plan</pre>
+        
+        <h3>The Key Differences</h3>
+        
+        <p><strong>1. Adversarial B-Team + Zero-Context Reviewer at every gate</strong></p>
+        
+        <p>We don't let the builder review their own work. A separate B-Team AI (different model, different prompt, hostile persona) attacks the spec at every gate. But teams immersed in months of development have systematic blind spots. We can't see what we built wrong because we were thinking about it the same way the whole time.</p>
+        
+        <p><strong>2. Evidence is code, not slides</strong></p>
+        
+        <p>At G4, "it works" means: test coverage report, security review sign-off, accessibility audit, integration test against real backend. Not a demo. Not a deck. Artifacts.</p>
+        
+        <p><strong>3. 100% test coverage is a gate requirement, not a goal</strong></p>
+        
+        <p>When AI writes the code, AI can write the tests. There's no excuse for untested code when your developer never gets tired.</p>
+        
+        <p><strong>4. Security is every-gate, not a phase</strong></p>
+        
+        <p>G0 classifies risk. G1 defines security requirements. G2/G3 reviews threat model. G4 verifies implementation. G5 penetration tests. No gate passes without security evidence.</p>
+        
+        <p><strong>5. The human decides. The AI provides evidence.</strong></p>
+        
+        <p>AI builds. AI tests. AI reviews. But the gate decision — go, kill, hold — is human. Always.</p>
+        
+        <hr>
+        
+        <h2>How It Worked: A Real Example</h2>
+        
+        <p><strong>Project:</strong> Native iOS app for medical records requests (HIPAA-regulated, handles PHI)</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Gate</th>
+                    <th>What Happened</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>G0</strong></td>
+                    <td>Problem validated: #1 support call is "where's my request?"</td>
+                    <td>Day 1</td>
+                </tr>
+                <tr>
+                    <td><strong>G1</strong></td>
+                    <td>13-section spec written. B-Team review: <strong>FAIL</strong> (6 criticals). Fixed. Zero-Context review: PASS (3 clarifications added). Resubmitted. <strong>PASS.</strong></td>
+                    <td>Day 1</td>
+                </tr>
+                <tr>
+                    <td><strong>G2/G3</strong></td>
+                    <td>4 iterations of B-Team and Zero-Context adversarial review. 7 ADRs. 18-threat model. Zero findings rejected.</td>
+                    <td>Day 1</td>
+                </tr>
+                <tr>
+                    <td><strong>G4</strong></td>
+                    <td>53+ tests. Security review: PASS. Accessibility audit: PASS. Integration tests against real API. Zero-Context catches missing error handling documentation.</td>
+                    <td>Day 3</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>Three days from "should we build this?" to a verified, secure, accessible working application — with full audit trail.</p>
+        
+        <p><strong>Without governance, that same AI could have produced the same volume of code in 3 hours.</strong> But it would have shipped with a race condition in the submit guard, a missing file upload parameter, and undocumented assumptions about patient consent flow that a regulator would have rejected.</p>
+        
+        <hr>
+        
+        <h2>The Gate Evidence Table</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Gate</th>
+                    <th>Question</th>
+                    <th>Evidence Required</th>
+                    <th>Reviewers</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>G0</strong></td>
+                    <td>Worth doing?</td>
+                    <td>Problem statement, users, risk classification, scope</td>
+                    <td>Product + Director</td>
+                </tr>
+                <tr>
+                    <td><strong>G1</strong></td>
+                    <td>Requirements solid?</td>
+                    <td>Testable requirements, API contracts, NFRs, B-Team review, Zero-Context review</td>
+                    <td>Director + B-Team + Zero-Context</td>
+                </tr>
+                <tr>
+                    <td><strong>G2/G3</strong></td>
+                    <td>Design safe?</td>
+                    <td>ADRs, threat model, test strategy, 3 Amigos on tickets, Zero-Context assumptions audit</td>
+                    <td>Architect + Security + Zero-Context</td>
+                </tr>
+                <tr>
+                    <td><strong>G4</strong></td>
+                    <td>Code works?</td>
+                    <td>100% coverage, security review, accessibility audit, integration tests, Zero-Context clarity check</td>
+                    <td>Test + Security + Director + Zero-Context</td>
+                </tr>
+                <tr>
+                    <td><strong>G5</strong></td>
+                    <td>Safe to ship?</td>
+                    <td>Pen test, rollback plan, monitoring, NFR evidence, full team sign-off, Zero-Context auditor perspective</td>
+                    <td>Everyone</td>
+                </tr>
+                <tr>
+                    <td><strong>G6</strong></td>
+                    <td>What did we learn?</td>
+                    <td>Production metrics, incidents, KPI actuals vs. targets</td>
+                    <td>Director + SRE + Journalist</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <hr>
+        
+        <h2>The Three-Model Review Architecture</h2>
+        
+        <pre>                     ┌─────────────────────┐
+                     │    A-TEAM (Builder)  │
+                     │                     │
+                     │  • Writes spec      │
+                     │  • Builds code      │
+                     │  • Runs tests       │
+                     │  • Proposes design  │
+                     └──────────┬──────────┘
+                                │
+                          Submits for review
+                                │
+                    ┌───────────┴───────────┐
+                    │                       │
+                    ▼                       ▼
+        ┌─────────────────────┐  ┌──────────────────────┐
+        │   B-TEAM (Critic)   │  │ZERO-CONTEXT REVIEWER │
+        │                     │  │                      │
+        │  • Different AI     │  │ • Different model    │
+        │  • Hostile personas │  │ • No dev knowledge   │
+        │  • Domain expert    │  │ • Naive eye          │
+        │  • Finds what       │  │ • Auditor/Regulator  │
+        │    builders missed  │  │   perspective        │
+        │  • CRITICAL/MAJOR/  │  │ • Surfaces hidden    │
+        │    MINOR/OBS        │  │   assumptions        │
+        └──────────┬──────────┘  │ • Clarifies docs     │
+                   │             │ • Flags confusing    │
+                   │             │   terminology        │
+                   │             └──────────┬───────────┘
+                   │                        │
+                   └───────────┬────────────┘
+                               │
+                          Both reviews complete
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   A-TEAM Response   │
+                    │                     │
+                    │  • Accept & fix     │
+                    │  • Accept & defer   │
+                    │  • Reject (with     │
+                    │    evidence only)   │
+                    └──────────┬──────────┘
+                               │
+                         Resubmit until PASS
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    GATE DECISION    │
+                    │    (Human only)     │
+                    │                     │
+                    │  GO / KILL / HOLD   │
+                    └─────────────────────┘</pre>
+        
+        <h3>Why Three Models Matter</h3>
+        
+        <p><strong>B-Team</strong> finds things that are wrong or incomplete — defects in the implementation, missing test cases, architectural flaws. The B-Team is critical but has context. They know what you were trying to do.</p>
+        
+        <p><strong>Zero-Context Reviewer</strong> finds things that are invisible to the B-Team because the B-Team built it. It finds:</p>
+        <ul>
+            <li>Undocumented assumptions baked into requirements</li>
+            <li>Terminology that only makes sense to the team</li>
+            <li>Missing failure mode documentation</li>
+            <li>Design rationale that's in someone's head but not in ADRs</li>
+            <li>Edge cases that everyone missed because they were all thinking the same way</li>
+        </ul>
+        
+        <p>In healthcare, this is the regulatory auditor asking "why is this the way it is?" not because they're hostile, but because they have no context.</p>
+        
+        <p><strong>Result:</strong> 4 review iterations. B-Team first review: 6 criticals. Zero-Context first review: 3 clarifications + 2 assumption surfacing. After fixes, B-Team: PASS with 5 minors. Zero-Context: PASS with 1 note.</p>
+        
+        <hr>
+        
+        <h2>Principles</h2>
+        
+        <pre>┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   1. Patient safety outranks throughput.                    │
+│                                                             │
+│   2. Evidence, not confidence.                              │
+│      "We think it's fine" is not a gate pass.              │
+│                                                             │
+│   3. The B-Team reviews every gate.                        │
+│      Different AI. Different blind spots.                   │
+│                                                             │
+│   4. Zero-Context reviews every gate.                      │
+│      Naive eye catches invisible assumptions.               │
+│                                                             │
+│   5. AI builds. Humans decide.                             │
+│      The gate decision is never automated.                  │
+│                                                             │
+│   6. 100% test coverage on new code.                       │
+│      If AI writes it, AI tests it. No excuses.             │
+│                                                             │
+│   7. Security is every-gate, not a phase.                  │
+│                                                             │
+│   8. Accessibility is every-ticket, not a sprint.          │
+│                                                             │
+│   9. Kill early, kill cheap.                               │
+│      A failed gate at G1 costs hours.                      │
+│      A failed gate at G5 costs months.                     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</pre>
+        
+        <hr>
+        
+        <h2>Why This Matters for Healthcare</h2>
+        
+        <p>Healthcare software has a unique constraint: <strong>you cannot move fast and break things when "things" are patient records.</strong></p>
+        
+        <p>Agentic AI removes the speed constraint on building. It does NOT remove the constraint on safety. Stage-Gate provides the structure to let AI build at full speed while humans maintain control over what ships.</p>
+        
+        <p>The gates aren't bureaucracy. They're the reason we caught:</p>
+        <ul>
+            <li>A race condition that would have allowed duplicate medical records submissions</li>
+            <li>A missing file upload parameter that would have silently dropped patient ID photos</li>
+            <li>An unverified certificate pinning implementation that could have exposed PHI in transit</li>
+            <li><strong>A set of undocumented assumptions about patient consent flow that a regulator would have flagged immediately</strong> (caught by Zero-Context Reviewer)</li>
+        </ul>
+        
+        <p>All found before any patient was affected. All found because the gate required evidence, not confidence.</p>
+        
+        <hr>
+        
+        <h2>Getting Started</h2>
+        
+        <ol>
+            <li><strong>Define your gates.</strong> What questions must be answered before code ships?</li>
+            <li><strong>Define your evidence.</strong> What artifacts prove the answer? (Not opinions. Artifacts.)</li>
+            <li><strong>Establish your B-Team.</strong> Who attacks the work? (Must be different from who builds it.)</li>
+            <li><strong>Establish your Zero-Context Reviewer.</strong> Who reviews as if they know nothing? (Should be a different model/prompt than B-Team.)</li>
+            <li><strong>Automate what you can.</strong> Coverage reports, security scans, accessibility audits — these are gate evidence that AI can produce.</li>
+            <li><strong>Keep the decision human.</strong> The go/kill/hold choice is never delegated to the machine.</li>
+        </ol>
+        
+        <hr>
+        
+        <h2>References</h2>
+        
+        <ul>
+            <li>Cooper, R.G. (1990). "Stage-Gate Systems: A New Tool for Managing New Products." <em>Business Horizons.</em> <a href="https://www.researchgate.net/publication/4883499_Stage-Gate_Systems_A_New_Tool_for_Managing_New_Products">ResearchGate</a></li>
+            <li>Cooper, R.G. (2024). <em>Winning at New Products: Creating Value Through Innovation.</em> 5th Edition.</li>
+            <li>Cooper, R.G. (2024). "Stage-Gate® is Not Waterfall… Find Out Why & How." <a href="https://www.researchgate.net/publication/381834441_Stage-GateR_is_Not_Waterfall_Find_Out_Why_How">ResearchGate</a></li>
+            <li>Sopheon (2025). "Stage-Gate – The Origin, Status Quo and Future." <a href="https://www.sopheon.com/blog/stage-gate-the-origin-status-quo-and-its-future/">Interview with Cooper</a></li>
+            <li>MIT Technology Review (2026). "From Guardrails to Governance: A CEO's Guide for Securing Agentic Systems." <a href="https://www.technologyreview.com/2026/02/04/1131014/from-guardrails-to-governance-ceos-guide/">Link</a></li>
+            <li>Deloitte (2026). "Health Care Leans Into Agentic AI." <a href="https://www.deloitte.com/us/en/insights/industry/health-care/agentic-ai-health-care-operating-model-change.html">Link</a></li>
+            <li>IGI Global (2024). "Application of Agile Stage Gate Hybrid Model in the Healthcare Industry." <a href="https://www.igi-global.com/chapter/application-of-agile-stage-gate-hybrid-model-in-the-healthcare-industry">Link</a></li>
+        </ul>
+        
+        <hr>
+        
+        <p style="font-style: italic; text-align: center; margin-top: 40px;">Built with AI. Governed by humans. Verified by evidence.</p>
+        
+        <div class="footer">
+            <p><strong>Author:</strong> Douglas Jones | Sharecare Health Data Services</p>
+            <p><strong>Date:</strong> May 2026</p>
+        </div>
+    </div>
+</body>
+</html>
