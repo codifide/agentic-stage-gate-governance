@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage-Gate Rebooted: How We Govern AI-Powered Development in Healthcare</title>
+<style>
+  @page { margin: 0.75in; size: letter; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #1a1a1a;
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.5in;
+    font-size: 10.5pt;
+  }
+  h1 { font-size: 22pt; margin-bottom: 4pt; color: #0d3b66; letter-spacing: -0.5px; }
+  h2 { font-size: 14pt; color: #0d3b66; margin-top: 24pt; margin-bottom: 8pt; border-bottom: 2px solid #0d3b66; padding-bottom: 4pt; }
+  h3 { font-size: 11pt; color: #333; margin-top: 14pt; margin-bottom: 6pt; }
+  .subtitle { font-size: 12pt; color: #555; font-style: italic; margin-bottom: 20pt; }
+  .author { font-size: 9pt; color: #666; margin-top: 4pt; }
+  table { width: 100%; border-collapse: collapse; margin: 10pt 0; font-size: 9.5pt; }
+  th { background: #0d3b66; color: white; padding: 6pt 8pt; text-align: left; font-weight: 600; }
+  td { padding: 5pt 8pt; border-bottom: 1px solid #e0e0e0; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .diagram {
+    background: #f4f7fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 14pt;
+    margin: 12pt 0;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 8.5pt;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .principles-box {
+    background: linear-gradient(135deg, #0d3b66 0%, #1a5276 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 16pt 20pt;
+    margin: 14pt 0;
+    font-size: 9.5pt;
+    line-height: 1.7;
+  }
+  .principles-box strong { color: #7ec8e3; }
+  .callout {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    font-size: 9.5pt;
+    border-radius: 0 4px 4px 0;
+  }
+  .stat { font-size: 28pt; font-weight: 700; color: #0d3b66; display: inline-block; margin-right: 8pt; }
+  .stat-label { font-size: 9pt; color: #555; }
+  .stats-row { display: flex; justify-content: space-around; margin: 16pt 0; text-align: center; }
+  .stats-row > div { flex: 1; }
+  .references { font-size: 8.5pt; color: #555; margin-top: 20pt; }
+  .references a { color: #0d3b66; }
+  .page-break { page-break-before: always; }
+  .footer { font-size: 8pt; color: #999; text-align: center; margin-top: 30pt; border-top: 1px solid #e0e0e0; padding-top: 8pt; }
+  ul { padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  .two-col { display: flex; gap: 16pt; }
+  .two-col > div { flex: 1; }
+</style>
+</head>
+<body>
+
+<h1>Stage-Gate Rebooted</h1>
+<p class="subtitle">How We Govern AI-Powered Development in Healthcare</p>
+<p class="author">Douglas Jones · Sharecare Health Data Services · May 2026</p>
+
+<div class="stats-row">
+  <div><span class="stat">3</span><br><span class="stat-label">days from spec to<br>verified working app</span></div>
+  <div><span class="stat">53+</span><br><span class="stat-label">automated tests<br>at gate pass</span></div>
+  <div><span class="stat">6</span><br><span class="stat-label">critical flaws caught<br>by adversarial review</span></div>
+  <div><span class="stat">0</span><br><span class="stat-label">findings rejected<br>across 4 iterations</span></div>
+</div>
+
+<h2>The Problem</h2>
+<p>Agentic AI can produce 50 files in an hour. It can refactor architectures, generate test suites, and build entire features before lunch. But in healthcare — where a bug isn't a broken button but a misdirected medical record — <strong>speed without governance is just faster failure.</strong></p>
+
+<p>We took Robert Cooper's Stage-Gate® framework (1986) and rebuilt it for a world where AI agents do the building and humans do the deciding.</p>
+
+<h2>Classic Stage-Gate → AI-Era Reboot</h2>
+
+<div class="diagram">Classic (Cooper, 1986):   Discovery → Scoping → Business Case → Development → Launch
+                          Gate 1      Gate 2      Gate 3         Gate 4       Gate 5
+
+Rebooted (2026):          G0        G1         G2/G3          G4           G5         G6
+                        Worth    Evidence    Design is     Code works    Safe to    What did
+                        doing?   survives    safe &        & proven      ship?      we learn?
+                                 attack?     testable?</div>
+
+<table>
+<tr><th>What Changed</th><th>Classic Stage-Gate</th><th>AI-Era Reboot</th></tr>
+<tr><td>Who builds</td><td>Human team over months</td><td>AI agent in hours</td></tr>
+<tr><td>The bottleneck</td><td>Building the thing</td><td>Deciding what to build</td></tr>
+<tr><td>Code review</td><td>Peers catch defects</td><td>Adversarial AI attacks the spec</td></tr>
+<tr><td>Test coverage</td><td>Goal: 80%+</td><td>Gate requirement: 100%</td></tr>
+<tr><td>Security</td><td>A phase near the end</td><td>Evidence required at every gate</td></tr>
+<tr><td>Gate decision</td><td>Senior management</td><td>Human always — never the AI</td></tr>
+</table>
+
+<h2>The 7 Gates</h2>
+
+<table>
+<tr><th>Gate</th><th>Question</th><th>Evidence Required</th><th>Decides</th></tr>
+<tr><td><strong>G0</strong></td><td>Worth doing?</td><td>Problem statement, users, risk classification, scope boundaries</td><td>Product + Director</td></tr>
+<tr><td><strong>G1</strong></td><td>Requirements solid?</td><td>Testable requirements, API contracts, NFRs, KPIs, adversarial B-Team review</td><td>Director + B-Team</td></tr>
+<tr><td><strong>G2/G3</strong></td><td>Design safe?</td><td>ADRs, threat model, test strategy, decomposed tickets, B-Team architecture review</td><td>Architect + Security</td></tr>
+<tr><td><strong>G4</strong></td><td>Code works?</td><td>100% coverage, security review, accessibility audit, integration tests</td><td>Test + Security + Director</td></tr>
+<tr><td><strong>G5</strong></td><td>Safe to ship?</td><td>Pen test, rollback plan, monitoring, NFR evidence, full team sign-off</td><td>Everyone</td></tr>
+<tr><td><strong>G6</strong></td><td>What did we learn?</td><td>Production metrics, incidents, KPI actuals vs. targets, retrospective</td><td>Director + SRE</td></tr>
+</table>
+
+<h2 class="page-break">The Adversarial B-Team Model</h2>
+
+<p>The builder cannot review their own work. A <strong>separate AI</strong> (different model, different prompt, hostile personas) attacks the spec at every gate.</p>
+
+<div class="diagram">
+    ┌─────────────────────────────┐
+    │      A-TEAM (Builder)       │    Claude builds the spec and code
+    │  Writes · Builds · Tests    │
+    └──────────────┬──────────────┘
+                   │ submits for review
+                   ▼
+    ┌─────────────────────────────┐
+    │      B-TEAM (Critic)        │    ChatGPT o3 plays 12 hostile personas:
+    │  Different AI · Hostile     │    Security red-teamer, FDA reviewer,
+    │  Finds what builders miss   │    accessibility advocate, performance
+    │  CRITICAL / MAJOR / MINOR   │    skeptic, privacy hawk, ops realist...
+    └──────────────┬──────────────┘
+                   │ findings returned
+                   ▼
+    ┌─────────────────────────────┐
+    │     A-TEAM Response         │    Accept & fix (most common)
+    │  Fix · Defer · Reject       │    Accept & defer (with ticket)
+    │  (reject requires evidence) │    Reject (requires counter-evidence)
+    └──────────────┬──────────────┘
+                   │ resubmit until PASS
+                   ▼
+    ┌─────────────────────────────┐
+    │     GATE DECISION           │
+    │     (Human only)            │    GO  /  KILL  /  HOLD
+    │     Never automated         │
+    └─────────────────────────────┘
+</div>
+
+<div class="callout">
+<strong>Real result:</strong> First external review returned FAIL with 6 critical findings — including physically impossible storage claims and unimplementable security architecture. Four iterations later: PASS with 5 minors. Every finding accepted. Zero rejected.
+</div>
+
+<h2>Principles</h2>
+
+<div class="principles-box">
+<strong>1.</strong> Patient safety outranks throughput.<br>
+<strong>2.</strong> Evidence, not confidence. "We think it's fine" is not a gate pass.<br>
+<strong>3.</strong> The B-Team reviews every gate. Different AI, different blind spots.<br>
+<strong>4.</strong> AI builds. Humans decide. The gate decision is never automated.<br>
+<strong>5.</strong> 100% test coverage on new code. If AI writes it, AI tests it.<br>
+<strong>6.</strong> Security is every-gate, not a phase.<br>
+<strong>7.</strong> Accessibility is every-ticket, not a sprint.<br>
+<strong>8.</strong> Kill early, kill cheap. A failed G1 costs hours. A failed G5 costs months.
+</div>
+
+<h2>Why This Matters for Healthcare</h2>
+
+<div class="two-col">
+<div>
+<h3>What AI gives you</h3>
+<ul>
+<li>Code produced in hours, not months</li>
+<li>100% test coverage is achievable (AI never gets tired)</li>
+<li>Comprehensive documentation generated alongside code</li>
+<li>Adversarial review at scale (12 hostile personas simultaneously)</li>
+</ul>
+</div>
+<div>
+<h3>What gates give you</h3>
+<ul>
+<li>Evidence that it actually works (not just compiles)</li>
+<li>Security verified before patients are exposed</li>
+<li>Accessibility proven, not assumed</li>
+<li>Kill decisions before bad code reaches production</li>
+<li>Audit trail for compliance (HIPAA, HITRUST)</li>
+</ul>
+</div>
+</div>
+
+<p>The gates aren't bureaucracy. They're the reason we caught a race condition in the submit guard, a missing file upload parameter, and an unverified certificate pinning implementation — all before any patient was affected.</p>
+
+<h2>Getting Started</h2>
+
+<table>
+<tr><th>#</th><th>Step</th><th>Key Question</th></tr>
+<tr><td>1</td><td>Define your gates</td><td>What questions must be answered before code ships?</td></tr>
+<tr><td>2</td><td>Define your evidence</td><td>What artifacts prove the answer? (Not opinions. Artifacts.)</td></tr>
+<tr><td>3</td><td>Establish your B-Team</td><td>Who attacks the work? (Must differ from who builds it.)</td></tr>
+<tr><td>4</td><td>Automate evidence collection</td><td>Coverage reports, security scans, accessibility audits — AI produces these.</td></tr>
+<tr><td>5</td><td>Keep the decision human</td><td>Go/kill/hold is never delegated to the machine.</td></tr>
+</table>
+
+<h2 class="page-break">References</h2>
+
+<div class="references">
+<p><strong>Stage-Gate Origins:</strong></p>
+<ul>
+<li>Cooper, R.G. (1990). "Stage-Gate Systems: A New Tool for Managing New Products." <em>Business Horizons.</em> <a href="https://www.researchgate.net/publication/4883499">ResearchGate</a></li>
+<li>Cooper, R.G. (2024). <em>Winning at New Products: Creating Value Through Innovation.</em> 5th Edition. Basic Books.</li>
+<li>Cooper, R.G. (2024). "Stage-Gate® is Not Waterfall… Find Out Why & How." <a href="https://www.researchgate.net/publication/381834441">ResearchGate</a></li>
+<li>Sopheon (2025). "Stage-Gate – The Origin, Status Quo and Future." <a href="https://www.sopheon.com/blog/stage-gate-the-origin-status-quo-and-its-future/">Interview with Cooper</a></li>
+</ul>
+
+<p><strong>Agentic AI Governance:</strong></p>
+<ul>
+<li>MIT Technology Review (2026). "From Guardrails to Governance: A CEO's Guide for Securing Agentic Systems." <a href="https://www.technologyreview.com/2026/02/04/1131014/from-guardrails-to-governance-a-ceos-guide-for-securing-agentic-systems">Link</a></li>
+<li>Fortune (2026). "Agentic AI Governance Framework." <a href="https://fortune.com/2026/05/02/agentic-ai-governance-framework-banking-healthcare-retail-supply-chain-yale-celi-sonnenfeld/">Link</a></li>
+<li>CIO.com (2026). "Guardrails and Governance: A CIO's Blueprint for Responsible Agentic AI." <a href="https://www.cio.com/article/4094586/">Link</a></li>
+</ul>
+
+<p><strong>Healthcare + AI:</strong></p>
+<ul>
+<li>Deloitte (2026). "Health Care Leans Into Agentic AI." <a href="https://www.deloitte.com/us/en/insights/industry/health-care/agentic-ai-health-care-operating-model-change.html">Link</a></li>
+<li>IGI Global (2024). "Application of Agile Stage Gate Hybrid Model in the Healthcare Industry." <a href="https://www.igi-global.com/chapter/application-of-agile-stage-gate-hybrid-model-in-the-healthcare-industry/348482">Link</a></li>
+<li>Accenture (2025). "Scaling Gen AI for Healthcare Productivity." <a href="https://www.accenture.com/gb-en/insights/health/gen-ai-amplified-scaling-productivity-healthcare-providers">Link</a></li>
+</ul>
+</div>
+
+<div class="footer">
+<em>Built with AI. Governed by humans. Verified by evidence.</em><br>
+© 2026 Sharecare Health Data Services
+</div>
+
+</body>
+</html>
