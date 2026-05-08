@@ -25,7 +25,7 @@ Teams NEVER use the same AI model. This eliminates model-specific confirmation b
 
 ### Step 1: Prepare the Review Package
 
-Concatenate the relevant artifacts into a single document for the B-Team to review.
+Concatenate the relevant artifacts into a single document for the B-Team to review. The B-Team must also receive links to the codebase BEFORE and AFTER the change so holistic comparison can be performed, avoiding code duplication or errors caused by looking at code in isolation.
 
 ### Step 2: Use the B-Team System Prompt
 
