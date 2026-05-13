@@ -10,8 +10,8 @@ Drop the `.kiro/` folder into any project workspace. Open in Kiro. The governanc
 
 ### New Project
 ```bash
-# Clone or copy this template
-cp -r agentic-ai-project-template/.kiro /path/to/your/new/project/.kiro
+# Clone this repo and copy the steering folder into your project
+cp -r agentic-stage-gate-governance/steering /path/to/your/new/project/.kiro/steering
 
 # Open in Kiro
 # The steering files activate automatically
@@ -20,8 +20,8 @@ cp -r agentic-ai-project-template/.kiro /path/to/your/new/project/.kiro
 
 ### Existing Project
 ```bash
-# Copy the .kiro folder into your existing project
-cp -r agentic-ai-project-template/.kiro /path/to/your/existing/project/.kiro
+# Copy the steering folder into your existing project
+cp -r agentic-stage-gate-governance/steering /path/to/your/existing/project/.kiro/steering
 
 # Open in Kiro
 # Say "Assess this codebase against the gates" to get a gap analysis
@@ -30,7 +30,7 @@ cp -r agentic-ai-project-template/.kiro /path/to/your/existing/project/.kiro
 ### Global (All Projects)
 ```bash
 # Copy steering files to your user-level Kiro config
-cp agentic-ai-project-template/.kiro/steering/*.md ~/.kiro/steering/
+cp agentic-stage-gate-governance/steering/*.md ~/.kiro/steering/
 
 # Now every project you open in Kiro gets the governance system
 ```
@@ -38,14 +38,14 @@ cp agentic-ai-project-template/.kiro/steering/*.md ~/.kiro/steering/
 ## What's Included
 
 ```
-.kiro/
-└── steering/
+steering/
     ├── 00-welcome.md              # Splash screen — guides developer through gates
     ├── 01-governance-gates.md     # The 7-gate process (G0–G6)
-    ├── 02-personas.md             # A-Team + B-Team persona definitions
+    ├── 02-personas.md             # A-Team + B-Team + Zero-Context persona definitions
     ├── 03-coding-standards.md     # Coverage, security, accessibility, CI/CD
     ├── 04-adversarial-review.md   # B-Team review protocol + system prompt
     └── 05-nfr-kpi-mandate.md      # Measurable targets requirement
+WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
 ```
 
 ## How It Works
