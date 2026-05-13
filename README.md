@@ -4,7 +4,7 @@ A ready-to-use project template for AI-assisted software development with built-
 
 ## What This Is
 
-Drop the `.kiro/` folder into any project workspace. Open in Kiro. The governance system activates automatically — personas, gates, standards, and review processes are all baked in.
+Copy the `steering/` folder from this repo into your project's `.kiro/steering/` directory. Open in Kiro. The governance system activates automatically — personas, gates, standards, and review processes are all baked in.
 
 ## Setup
 
