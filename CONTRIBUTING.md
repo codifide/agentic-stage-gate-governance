@@ -4,7 +4,7 @@ This template is MIT licensed and accepts contributions. The goal is to keep it 
 
 ## What this project is
 
-A ready-to-use governance template for AI-assisted software development. The steering files drop into any Kiro project and activate a 7-gate process with adversarial review built in. The whitepaper explains the methodology.
+A ready-to-use governance template for AI-assisted software development. The steering files drop into any AI coding assistant project and activate a 7-gate process with adversarial review built in. The whitepaper explains the methodology.
 
 ## Types of contributions
 

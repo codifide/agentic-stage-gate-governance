@@ -1,5 +1,7 @@
 ---
 inclusion: auto
+# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
+# For other IDEs, place this file in the appropriate context directory for your tool.
 ---
 
 # Coding Standards & Quality Gates
