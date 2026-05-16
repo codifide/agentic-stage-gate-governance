@@ -52,8 +52,13 @@ steering/
     ├── 01-governance-gates.md     # The 7-gate process (G0–G6)
     ├── 02-personas.md             # A-Team + B-Team + Zero-Context persona definitions
     ├── 03-coding-standards.md     # Coverage, security, accessibility, CI/CD
-    ├── 04-adversarial-review.md   # B-Team review protocol + system prompt
-    └── 05-nfr-kpi-mandate.md      # Measurable targets requirement
+    ├── 04-adversarial-review.md   # B-Team review protocol + A-Team response format
+    ├── 05-nfr-kpi-mandate.md      # Measurable targets requirement
+    └── 06-existing-project-assessment.md  # How to assess projects that already have code
+templates/
+    ├── B-TEAM-REVIEW-PACKAGE.md   # Copy-paste template for B-Team reviews
+    ├── GATE-EVIDENCE-CHECKLIST.md # Per-gate artifact tracking with binary states
+    └── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
 WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
 ```
 
@@ -81,6 +86,8 @@ WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology pa
 - **Team-specific:** Edit `02-personas.md` to rename personas or adjust responsibilities
 - **Standards:** Edit `03-coding-standards.md` to match your tech stack's conventions
 - **Lighter governance:** Remove gates you don't need (but keep G0, G4, and G6 at minimum)
+- **Domain-specific reviews:** Create tailored B-Team prompts for your platform (see `04-adversarial-review.md` for examples)
+- **Existing projects:** Use `templates/EXISTING-PROJECT-ASSESSMENT.md` to assess where you stand before applying gates
 
 ## Philosophy
 
@@ -90,4 +97,4 @@ Based on Robert Cooper's Stage-Gate® (1986), adapted for a world where AI agent
 
 ---
 
-*Template version 1.0 — May 2026*
+*Template version 1.1 — May 2026*

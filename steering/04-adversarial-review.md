@@ -92,9 +92,32 @@ Copy the B-Team output back to the A-Team (this conversation). The A-Team must r
 | **Accept & Defer** | Finding is valid but not gate-blocking. Tracked with ticket and deadline. |
 | **Reject** | Finding is incorrect. Must provide counter-evidence (not just disagreement). |
 
+### A-Team Response Protocol
+
+The A-Team response MUST follow this format for each finding:
+
+```markdown
+| # | Finding | Response | Rationale |
+|---|---------|----------|-----------|
+| C-1 | [brief description] | Accept & Fix / Accept & Defer / Reject | [why] |
+| M-1 | [brief description] | Accept & Fix / Accept & Defer / Reject | [why] |
+```
+
+**Rules for rejection:**
+- "I disagree" is not a valid rejection. You must cite specific evidence (file path, line number, existing test, or spec section) that proves the finding is incorrect.
+- If the B-Team didn't have codebase access, cite the code that already handles their concern.
+- If the B-Team misunderstood the architecture, explain the actual design with references.
+
+**Rules for deferral:**
+- Every deferral MUST have a deadline and an owner.
+- Deferrals past their deadline escalate to MAJOR at the next gate.
+- The human (project steward) can reject deferrals and require immediate fixes.
+
 ### Step 5: Resubmit if Needed
 
 If the verdict is FAIL or PASS WITH CONDITIONS (with CRITICALs), fix and resubmit. Repeat until PASS.
+
+**Re-review scope:** Only the fixed items need re-review, not the entire package. The B-Team should confirm fixes and check for regressions introduced by the fixes.
 
 ---
 
@@ -128,3 +151,57 @@ All B-Team findings are tracked in a `MINOR_FINDINGS_TRACKER.md` with:
 - Resolution status
 
 Items past their deadline escalate to MAJOR at the next gate.
+
+---
+
+## Review Package Template
+
+Use `templates/B-TEAM-REVIEW-PACKAGE.md` for a ready-to-use template that combines the system prompt and artifact sections into one copy-pasteable document.
+
+---
+
+## Domain-Specific Review Prompts
+
+The generic B-Team prompt works well for requirements and architecture reviews. For **code reviews**, create a domain-specific prompt that focuses on platform-specific risks.
+
+### When to Create a Domain-Specific Prompt
+
+- Mobile apps (iOS/Android): App Store rejection risks, memory management, concurrency, accessibility
+- Web apps: XSS, CSRF, CSP compliance, performance budgets, SEO
+- APIs: Rate limiting, auth bypass, input validation, versioning
+- Infrastructure: IAM policies, network segmentation, secrets management
+- ML/AI: Model drift, hallucination, bias, data poisoning
+
+### How to Create One
+
+1. Start with the generic B-Team system prompt
+2. Replace or augment the persona specialties with domain-specific concerns
+3. Add a "Review Scope" section listing specific files/areas to examine
+4. Add platform-specific "Rejection Risks" or "Compliance Checks"
+5. Give the reviewer access to the actual codebase (not just specs)
+
+### Example: iOS App Review Additions
+
+```
+Additional focus areas for iOS code review:
+- App Store Review Guidelines compliance (camera, location, AR, Siri justifications)
+- Certificate pinning and ATS enforcement
+- Keychain access control (kSecAttrAccessible)
+- Swift Concurrency safety (@Sendable, actor isolation, data races)
+- Memory management (retain cycles in closures, large image buffers)
+- WidgetKit/ActivityKit lifecycle management
+- VoiceOver and Dynamic Type support
+- Offline behavior (no crash/blank screen without network)
+```
+
+### Example: Web API Review Additions
+
+```
+Additional focus areas for web API code review:
+- Input validation on all user-provided data (Zod schemas, parameterized queries)
+- Rate limiting effectiveness (distributed vs. per-instance)
+- Authentication bypass paths (middleware ordering, missing checks)
+- Error responses (no stack traces, no internal state leaked)
+- CORS configuration (overly permissive origins)
+- Dependency supply chain (typosquatting, outdated packages with CVEs)
+```
