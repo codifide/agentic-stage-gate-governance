@@ -105,6 +105,90 @@ Sentinel reviews any change that touches:
 
 ---
 
+## Error Handling — No Silent Failures
+
+### The Rule
+
+**A `catch` block that swallows an error without logging it is a defect, not a pattern.**
+
+Silent error swallowing hides failures, makes debugging impossible, and can cause a system to silently fall back to expensive or incorrect paths when a fast path fails. The failure is invisible. The user suffers. Nobody knows why.
+
+### What Is Forbidden
+
+```typescript
+// ❌ FORBIDDEN — silent swallow
+} catch {
+  return null;
+}
+
+// ❌ FORBIDDEN — silent swallow with comment that doesn't justify it
+} catch { /* fall through */ }
+
+// ❌ FORBIDDEN — catches error but discards it
+} catch (e) {
+  return null;
+}
+
+// ❌ FORBIDDEN — logs nothing, returns nothing
+} catch (error) {
+  // ignore
+}
+```
+
+### What Is Required
+
+Every `catch` block must do at least one of:
+
+1. **Log the error** with enough context to diagnose it in production
+2. **Re-throw** (let the caller handle it)
+3. **Return a typed error result** that the caller can inspect
+
+```typescript
+// ✅ Log and return typed fallback
+} catch (err) {
+  console.error("[module-name] operation failed:", err instanceof Error ? err.message : String(err));
+  return null; // caller must check for null and handle it
+}
+
+// ✅ Re-throw with context
+} catch (err) {
+  throw new Error(`[module-name] operation failed: ${err instanceof Error ? err.message : String(err)}`);
+}
+
+// ✅ Fail-soft with structured logging — for non-critical background work
+} catch (err) {
+  console.warn("[module-name] non-critical operation failed, continuing:", err instanceof Error ? err.message : String(err));
+}
+```
+
+### The Exception Process
+
+There is exactly one case where a silent catch is acceptable: **when the operation is genuinely fire-and-forget AND the failure has zero impact on the user experience AND the code is not on any critical path.**
+
+To use a silent catch in that case:
+
+1. Write a comment naming the architect who approved it
+2. Explain WHY the failure is safe to ignore
+3. Get explicit approval from Winston (Architect) before merging
+
+```typescript
+// SILENT-CATCH-APPROVED: [Architect name], [date]
+// Reason: [specific justification — what fails, why it's safe, what the user sees]
+} catch {
+  // intentionally silent — see comment above
+}
+```
+
+Without this comment and approval, any silent catch is a **blocking code review defect**.
+
+### Enforcement
+
+- Sentinel flags any `catch` block without a log statement or re-throw during code review
+- Enable `no-empty-catch` lint rule where tooling supports it
+- Any PR introducing a silent catch without the `SILENT-CATCH-APPROVED` comment is rejected
+
+---
+
 ## CI/CD Requirements
 
 Every PR must pass:
