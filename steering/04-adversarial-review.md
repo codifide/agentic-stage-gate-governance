@@ -23,6 +23,36 @@ Teams NEVER use the same AI model. This eliminates model-specific confirmation b
 
 ---
 
+## Model Selection
+
+The choice of model for B-Team review is not arbitrary. Different model families have different failure modes, and the goal is to find what the builder missed — not to get a second opinion from a model with the same blind spots.
+
+### A-Team (Builder)
+Frontier models with large context windows. Best for generation, refactoring, and multi-file reasoning.
+- Claude Sonnet / Claude Opus
+- GPT-4o
+- Gemini 2.5 Pro
+
+### B-Team (Adversarial Reviewer)
+**Use reasoning/thinking models for code review.** These grind through logic systematically rather than pattern-matching to the most plausible answer. They are less susceptible to the RLHF bias toward confirming that code looks reasonable. They find more bugs — especially race conditions, state machine violations, idempotency failures, and security boundary gaps.
+
+| Model | Strengths | Notes |
+|-------|-----------|-------|
+| **Qwen3** | Strong adversarial posture by default, extended thinking, ChatML native format | Recommended for code review. Use `<\|im_start\|>system` format and explicitly enable thinking. |
+| **o3** | Deep reasoning, excellent at security and correctness | Strong default; no special prompt needed to activate reasoning. |
+| **DeepSeek-R1** | Strong logic and edge-case analysis | Add explicit security instruction — less thorough on security by default. |
+| **Claude (extended thinking)** | Good if A-Team used a different model family | Do not use if Claude built the code. |
+
+**Rule:** Do not use the same model family as the A-Team for B-Team review. If Claude built it, do not use Claude to review it.
+
+### Zero-Context Reviewer (optional, recommended at G5)
+Any capable model in a clean session with no system prompt or project files. The goal is a naive read — fresh eyes catch undocumented assumptions and invisible jargon.
+- Gemini 2.5 Flash
+- GPT-4o mini
+- Any model with no prior project context
+
+---
+
 ## How to Run a B-Team Review
 
 ### Step 1: Prepare the Review Package
@@ -162,46 +192,38 @@ Use `templates/B-TEAM-REVIEW-PACKAGE.md` for a ready-to-use template that combin
 
 ## Domain-Specific Review Prompts
 
-The generic B-Team prompt works well for requirements and architecture reviews. For **code reviews**, create a domain-specific prompt that focuses on platform-specific risks.
+The generic B-Team prompt works well for requirements and architecture reviews. For **code reviews**, use a domain-specific prompt that focuses on platform-specific risks and gives the reviewer the threat model context it needs to find domain-specific bugs.
 
-### When to Create a Domain-Specific Prompt
+### Why Code Review Needs a Different Prompt
 
-- Mobile apps (iOS/Android): App Store rejection risks, memory management, concurrency, accessibility
-- Web apps: XSS, CSRF, CSP compliance, performance budgets, SEO
-- APIs: Rate limiting, auth bypass, input validation, versioning
-- Infrastructure: IAM policies, network segmentation, secrets management
-- ML/AI: Model drift, hallucination, bias, data poisoning
+The generic B-Team prompt is designed for reviewing specs and architecture — it asks 12 personas to evaluate claims, requirements, and design decisions. Code review is different. The reviewer needs to:
 
-### How to Create One
+1. Trace execution paths, not evaluate arguments
+2. Know what invariants must hold (so it can check whether they do)
+3. Know the attack surfaces (so it knows where to look for injection, bypass, and data corruption)
+4. Know what "wrong" looks like in this domain (a wrong parking verdict means a user gets a ticket)
 
-1. Start with the generic B-Team system prompt
-2. Replace or augment the persona specialties with domain-specific concerns
-3. Add a "Review Scope" section listing specific files/areas to examine
-4. Add platform-specific "Rejection Risks" or "Compliance Checks"
-5. Give the reviewer access to the actual codebase (not just specs)
+Without a context block that provides this information, a code reviewer — human or AI — is reviewing in a vacuum. It will find generic issues but miss the domain-specific bugs that actually matter.
 
-### Example: iOS App Review Additions
+### The Code Review Template
 
-```
-Additional focus areas for iOS code review:
-- App Store Review Guidelines compliance (camera, location, AR, Siri justifications)
-- Certificate pinning and ATS enforcement
-- Keychain access control (kSecAttrAccessible)
-- Swift Concurrency safety (@Sendable, actor isolation, data races)
-- Memory management (retain cycles in closures, large image buffers)
-- WidgetKit/ActivityKit lifecycle management
-- VoiceOver and Dynamic Type support
-- Offline behavior (no crash/blank screen without network)
-```
+`templates/CODE-REVIEW-PROMPT-QWEN.md` contains:
+- The full system prompt in Qwen3 ChatML format (also works for o3 and DeepSeek-R1)
+- Instructions for writing the context block
+- A worked example from a real production module
+- Model-specific notes for Qwen3, o3, and DeepSeek-R1
+- A pre-submission checklist
 
-### Example: Web API Review Additions
+**Use this template for any G4 code review.** The generic B-Team prompt is for G1/G2/G3.
 
-```
-Additional focus areas for web API code review:
-- Input validation on all user-provided data (Zod schemas, parameterized queries)
-- Rate limiting effectiveness (distributed vs. per-instance)
-- Authentication bypass paths (middleware ordering, missing checks)
-- Error responses (no stack traces, no internal state leaked)
-- CORS configuration (overly permissive origins)
-- Dependency supply chain (typosquatting, outdated packages with CVEs)
-```
+### When to Create a Custom Domain-Specific Prompt
+
+If your codebase has platform-specific risks not covered by the generic template, extend it:
+
+- **Mobile apps (iOS/Android):** App Store rejection risks, memory management, concurrency, accessibility
+- **Web apps:** XSS, CSRF, CSP compliance, performance budgets, SEO
+- **APIs:** Rate limiting, auth bypass, input validation, versioning
+- **Infrastructure:** IAM policies, network segmentation, secrets management
+- **ML/AI pipelines:** Model drift, hallucination, bias, data poisoning
+
+Start from `templates/CODE-REVIEW-PROMPT-QWEN.md` and add platform-specific concerns to the personas and context block instructions.
