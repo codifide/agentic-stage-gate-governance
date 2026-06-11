@@ -54,7 +54,8 @@ steering/
     ├── 03-coding-standards.md     # Coverage, security, accessibility, CI/CD
     ├── 04-adversarial-review.md   # B-Team review protocol + A-Team response format
     ├── 05-nfr-kpi-mandate.md      # Measurable targets requirement
-    └── 06-existing-project-assessment.md  # How to assess projects that already have code
+    ├── 06-existing-project-assessment.md  # How to assess projects that already have code
+    └── 07-auto-research-protocol.md       # Autonomous solution iteration system
 templates/
     ├── B-TEAM-REVIEW-PACKAGE.md   # Copy-paste template for B-Team reviews
     ├── GATE-EVIDENCE-CHECKLIST.md # Per-gate artifact tracking with binary states
@@ -69,6 +70,17 @@ WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology pa
 3. When you say "start a new initiative," it walks you through G0
 4. When you say "review this," it invokes the appropriate personas
 5. Gate decisions are always yours — the AI provides evidence, you decide
+
+### Auto-Research Mode
+
+Say `"Auto-research: [problem statement]"` to trigger autonomous solution iteration:
+- AI generates multiple solution approaches
+- Implements and tests each approach  
+- Uses adversarial review to find weaknesses
+- Iteratively refines until optimal solution found
+- Presents evidence-backed recommendation
+
+Example: `"Auto-research: Build a rate limiter that handles 100k requests/second"`
 
 ### IDE-Specific Context Loading
 
