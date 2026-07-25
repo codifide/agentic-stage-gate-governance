@@ -267,9 +267,86 @@ All found before any patient was affected. All found because the gate required e
 
 ---
 
-*Built with AI. Governed by humans. Verified by evidence.*
+## The Loop Evolution (v2.0 — July 2026)
+
+### How Loop Engineering Extends the Stage-Gate Model
+
+Stage-Gate governance answers: "Should this ship?" Loop engineering answers: "Can a machine verify this without asking?"
+
+The original model (v1.x) applied human judgment at every decision point. This worked — but it created a bottleneck. Mechanical tasks (running tests, verifying data consistency, checking build status) don't need human judgment. They need a verifier.
+
+v2.0 introduces the **loop layer** — automated execution with automated verification that runs between gates, continuously, without human intervention. Gates still govern judgment. Loops handle execution.
+
+### The Three-Layer Architecture
+
+```
+                ┌─────────────────────────────────────┐
+                │          HUMAN LAYER                 │
+                │  Goals · Decisions · Gate Approvals  │
+                │  (5 minutes per decision)            │
+                └──────────────────┬──────────────────┘
+                                   │ defines
+                ┌──────────────────▼──────────────────┐
+                │          GATE LAYER                  │
+                │  Personas · Adversarial Review       │
+                │  Compliance · Architecture           │
+                │  (30 minutes per review)             │
+                └──────────────────┬──────────────────┘
+                                   │ governs
+                ┌──────────────────▼──────────────────┐
+                │          LOOP LAYER                  │
+                │  Build · Test · Deploy · Verify      │
+                │  ETL · Migration · Optimization      │
+                │  (Runs overnight — or continuously)  │
+                └─────────────────────────────────────┘
+```
+
+Each task finds its correct altitude:
+- **Judgment tasks** → Gate Layer (design decisions, compliance interpretation, architecture)
+- **Mechanical tasks** → Loop Layer (test execution, data verification, build checks, refactoring)
+- **Strategic tasks** → Human Layer (priorities, trade-offs, go/kill/hold)
+
+### The 41,800:1 Automation Ratio
+
+In production use across 199 MIPS measure engines and 3 organizations:
+- **1 human decision** (approve the measure logic) enables
+- **41,800 automated verifications** (engine runs × org × measure × verification type)
+
+The gates ensured the logic was correct. The loops ensured it STAYED correct across every execution, every organization, every data refresh — without a human re-approving each run.
+
+This is the power of the hybrid model: invest judgment once at the gate, then let loops verify continuously at near-zero marginal cost.
+
+### What This Doesn't Replace
+
+Loop engineering does NOT replace gates. It augments them.
+
+| Still Requires Gates | Now Handled by Loops |
+|---------------------|---------------------|
+| "Is this the right approach?" | "Does the build pass?" |
+| "Is this HIPAA compliant?" | "Do all tests pass after this change?" |
+| "Should we ship this?" | "Is the data consistent across all orgs?" |
+| "Is this architecture sound?" | "Did performance regress?" |
+| "Does this meet the CMS spec?" | "Are all 199 engines producing output?" |
+
+The question isn't "gates or loops?" — it's "which tasks belong where?" The three-question framework (Can a machine verify it? Is it bounded? Is failure recoverable?) makes the distinction mechanical.
+
+### Integration with Existing Governance
+
+The loop layer integrates with every gate:
+- **G0:** Loops detect duplicate proposals and validate scope against history
+- **G1:** Loops verify requirement completeness and glossary consistency
+- **G2/G3:** Loops catch architecture drift and dependency vulnerabilities
+- **G4:** Loops run continuous test execution and coverage enforcement
+- **G5:** Loops verify rollback plans and monitoring configuration
+- **G6:** Loops monitor production KPIs and detect degradation
+
+Between every gate, G-LOOP runs: automated verification that catches drift, maintains consistency, and alerts on anomalies — without waiting for a human to ask.
+
+---
+
+*Built with AI. Governed by humans. Verified by evidence. Looped for confidence.*
 
 ---
 
 **Author:** Douglas Jones | Sharecare Health Data Services
-**Date:** May 2026
+**Date:** May 2026 (v1.0), July 2026 (v2.0 — Loop Evolution)

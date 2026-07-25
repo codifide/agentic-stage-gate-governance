@@ -6,7 +6,7 @@ inclusion: auto
 
 # Governance Gates
 
-Every initiative passes through seven gates. No gate passes on confidence — only on evidence.
+Every initiative passes through seven gates. No gate passes on confidence — only on evidence. Between gates, automated loops run continuously to verify consistency, run tests, and catch drift.
 
 ## The Gates
 
@@ -18,6 +18,27 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 | **G4** | Build and verify. | Test Architect + Security + Director |
 | **G5** | Release readiness. | Full team |
 | **G6** | Post-release review. | Director + SRE + Journalist |
+
+---
+
+## G-LOOP — Automated Verification Between Gates
+
+**Purpose:** Between gates, automated loops run continuously. They don't require human approval but DO log their results.
+
+**G-LOOP handles:**
+- Running test suites after every change
+- Verifying data consistency (row counts, checksums, materialized view freshness)
+- Build verification (compile, lint, type-check)
+- Regression detection (performance benchmarks, API contract compliance)
+- Drift monitoring (schema changes, dependency updates, config divergence)
+
+**G-LOOP does NOT handle:**
+- Design decisions
+- Architecture changes
+- Compliance interpretation
+- Anything requiring "it depends" reasoning
+
+**Rule:** If a verifier can judge it, it belongs in G-LOOP. If it needs human judgment, it goes through a gate.
 
 ---
 
@@ -35,6 +56,12 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 **Passes when:** The problem is worth solving and the scope is honest.
 
 **Template:** Create `specifications/{ID}/G0_PROBLEM_STATEMENT.md`
+
+### Loop-Eligible Tasks at G0
+- Stakeholder identification from org charts and prior specs
+- Risk classification lookup against known patterns
+- Duplicate detection (has this been proposed before?)
+- Scope comparison against similar past initiatives
 
 ---
 
@@ -56,6 +83,13 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 **Template:** Create `specifications/{ID}/G1_REQUIREMENTS.md`
 
+### Loop-Eligible Tasks at G1
+- Requirements completeness check (all acceptance criteria have testable conditions)
+- Glossary consistency verification (terms used consistently across docs)
+- NFR target validation (targets are measurable, not subjective)
+- API contract schema validation
+- Traceability matrix generation (requirement → test mapping)
+
 ---
 
 ## G2/G3 — Is the Design/Architecture Ready?
@@ -76,6 +110,13 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 **Template:** Create `specifications/{ID}/G2_ARCHITECTURE.md` + `ADR-*.md` + `THREAT-MODEL.md`
 
+### Loop-Eligible Tasks at G2/G3
+- Dependency vulnerability scanning (known CVEs in proposed stack)
+- Interface contract validation (do all modules agree on data shapes?)
+- Architecture drift detection (does implementation match ADR decisions?)
+- Threat model pattern matching (common attack surfaces for this architecture type)
+- Ticket decomposition verification (every ticket has acceptance criteria)
+
 ---
 
 ## G4 — Build and Verify
@@ -93,6 +134,15 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 **Passes when:** The code works, is proven to work, and the proof is documented.
 
 **Template:** Create `specifications/{ID}/G4_VERIFICATION.md`
+
+### Loop-Eligible Tasks at G4
+- Continuous test execution (run full suite on every commit)
+- Coverage enforcement (reject commits that drop below threshold)
+- Security scan automation (SAST, dependency audit, secret detection)
+- Accessibility linting (automated a11y checks on UI components)
+- Build verification (compile, lint, type-check on every change)
+- Performance regression detection (benchmark comparison against baseline)
+- Data consistency verification (ETL output matches expected state)
 
 ---
 
@@ -114,6 +164,13 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 **Template:** Create `specifications/{ID}/G5_RELEASE_READINESS.md`
 
+### Loop-Eligible Tasks at G5
+- Rollback plan verification (automated dry-run of rollback procedure)
+- Monitoring configuration validation (all endpoints have health checks)
+- Alert threshold testing (verify alerts fire at configured thresholds)
+- NFR evidence collection (automated benchmark runs with reports)
+- Release artifact integrity (checksums, signatures, reproducible builds)
+
 ---
 
 ## G6 — Post-Release Review
@@ -133,6 +190,14 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 **Template:** Create `specifications/{ID}/G6_RETROSPECTIVE.md`
 
+### Loop-Eligible Tasks at G6
+- KPI collection and dashboard updates (automated metric pulls)
+- Error rate monitoring and trend detection
+- Performance degradation alerts
+- User feedback aggregation (sentiment analysis on support tickets)
+- SLA compliance reporting
+- Loop health monitoring (are production loops still passing their verifiers?)
+
 ---
 
 ## Principles
@@ -145,6 +210,7 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 6. **Accessibility is every-phase, not a late fix.** Every ticket includes accessibility acceptance criteria.
 7. **100% test coverage on new code.** If AI writes it, AI tests it. No exceptions without approval.
 8. **Kill early, kill cheap.** The answer to a bad idea is G0 rejection, not G5 failure.
+9. **Loop the mechanical, gate the judgment.** Verifiable tasks run autonomously. Judgment tasks require human decision.
 
 ---
 
@@ -155,6 +221,7 @@ Small features (< 1 week effort, read-only, no new security surface) may be fast
 - Skip standalone G2/G3 if architecture is already established
 - Still requires G4 evidence (tests, review)
 - Director must explicitly approve fast-track
+- G-LOOP still runs (fast-track doesn't bypass automated verification)
 
 ---
 
@@ -166,3 +233,4 @@ When applying this governance to an existing codebase:
 2. **Identify gaps** — What evidence is missing?
 3. **Create a gap-closure plan** — Prioritize: security gaps first, then coverage, then documentation
 4. **Don't retroactively gate everything** — Apply gates to NEW work going forward; address existing gaps as a separate workstream
+5. **Establish G-LOOP immediately** — Even before retroactive gating, set up automated verification loops for the current codebase (tests, builds, security scans)

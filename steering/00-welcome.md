@@ -4,24 +4,53 @@ inclusion: auto
 # For other IDEs, place this file in the appropriate context directory for your tool.
 ---
 
-# 🚀 Agentic AI Project — Stage-Gate Governance
+# Agentic AI Project — Stage-Gate-Loop Governance
 
-Welcome. This project uses a **Stage-Gate governance model** adapted for AI-assisted software development. The AI builds. Humans decide what ships.
+Welcome. This project uses a **Stage-Gate-Loop governance model** adapted for AI-assisted software development. Gates for judgment. Loops for execution. Humans decide what ships.
 
 ---
 
 ## How This Works
 
-You have an AI development partner (that's me). I write code, specs, tests, and documentation. But nothing ships without passing through gates — structured decision points where evidence is reviewed and a human makes the go/kill/hold call.
+You have an AI development partner (that's me). I write code, specs, tests, and documentation. Nothing ships without passing through gates — structured decision points where evidence is reviewed and a human makes the go/kill/hold call. Between gates, mechanical tasks run in automated loops with verifiers — no human intervention needed, but all results logged.
 
 **Your role:** Make decisions, provide context, approve gates.
-**My role:** Produce evidence, build code, run reviews, flag risks.
+**My role:** Produce evidence, build code, run reviews, design loops, flag risks.
+
+---
+
+## The Three-Layer Model
+
+```
+                ┌─────────────────────────────────────┐
+                │          HUMAN LAYER                 │
+                │  Goals · Decisions · Gate Approvals  │
+                └──────────────────┬──────────────────┘
+                                   │ defines
+                ┌──────────────────▼──────────────────┐
+                │          GATE LAYER                  │
+                │  Personas · Adversarial Review       │
+                │  Compliance · Architecture           │
+                └──────────────────┬──────────────────┘
+                                   │ governs
+                ┌──────────────────▼──────────────────┐
+                │          LOOP LAYER                  │
+                │  Build · Test · Deploy · Verify      │
+                │  ETL · Migration · Optimization      │
+                └─────────────────────────────────────┘
+```
+
+- **Human Layer:** You define what success looks like. Gate decisions are yours.
+- **Gate Layer:** AI personas evaluate soundness. Adversarial review catches blind spots.
+- **Loop Layer:** Mechanical execution with automated verification. Runs without human intervention but logs everything.
+
+**Mechanical tasks can be looped without human intervention.** If a task has a verifier, state management, and a stop condition, it runs autonomously. If it requires judgment, it goes through a gate.
 
 ---
 
 ## Quick Start: Where Are You?
 
-### 🆕 Starting a New Feature or Project
+### Starting a New Feature or Project
 
 Say: **"Let's start a new initiative"** or **"I want to build [X]"**
 
@@ -33,13 +62,23 @@ I'll walk you through:
 5. **G5 — Release** → Is it safe to ship?
 6. **G6 — Learn** → What happened in production?
 
-### 🔧 Continuing an Existing Project
+### Defining an Automated Loop
+
+Say: **"Define a loop: [task]"** or **"Loop this task"**
+
+I'll design:
+1. **Verifier** — What proves success (not the agent grading itself)
+2. **State** — What persists to disk between iterations
+3. **Stop condition** — How we know it's done (or when to escalate)
+4. **Cost tier** — Token budget and retry limits
+
+### Continuing an Existing Project
 
 Say: **"Load up the current state"** or **"What gate are we at?"**
 
 I'll check for existing specifications, gate documents, and implementation status.
 
-### 🔍 Applying Governance to Existing Code
+### Applying Governance to Existing Code
 
 Say: **"Assess this codebase against the gates"** or **"Where does this project stand?"**
 
@@ -58,17 +97,21 @@ I'll audit the existing code against gate criteria and identify gaps.
 | **G5** | Safe to ship? | Release approval | Release notes, rollback plan, monitoring config |
 | **G6** | What did we learn? | Production observations | Retrospective, KPI analysis, improvement plan |
 
+Between gates, **G-LOOP** runs continuously — automated verification that catches drift, runs tests, and maintains consistency without requiring human approval.
+
 ---
 
 ## Key Principles
 
 1. **Evidence, not confidence.** Every gate requires artifacts, not opinions.
 2. **Adversarial review at every gate.** A separate AI (B-Team) attacks the work.
-3. **100% test coverage on new code.** No exceptions without an approved exception ticket.
-4. **Security is every-gate.** Not a phase. Not an afterthought.
-5. **Accessibility is every-ticket.** Not concentrated in a single sprint.
-6. **Kill early, kill cheap.** A failed G0 costs minutes. A failed G5 costs months.
-7. **AI builds. Humans decide.** The gate decision is never automated.
+3. **Loop the mechanical.** If a verifier can judge it, automate it.
+4. **Gate the judgment.** If it needs senior-engineer reasoning, it goes through a gate.
+5. **100% test coverage on new code.** No exceptions without an approved exception ticket.
+6. **Security is every-gate.** Not a phase. Not an afterthought.
+7. **Accessibility is every-ticket.** Not concentrated in a single sprint.
+8. **Kill early, kill cheap.** A failed G0 costs minutes. A failed G5 costs months.
+9. **AI loops for execution. Gates for judgment. Humans for decisions.**
 
 ---
 
@@ -82,13 +125,30 @@ This project uses AI personas to ensure separation of concerns:
 | **Harper** | Product Owner | Requirements, acceptance criteria, KPIs |
 | **Winston** | Solution Architect | Architecture, ADRs, system design |
 | **Sentinel** | Security Engineer | Threat models, security review, pen testing |
-| **Tessa** | Test Architect | Test strategy, coverage, quality gates |
-| **Forge** | Performance Engineer | NFRs, benchmarks, load testing |
-| **Sable** | Platform/SRE | CI/CD, deployment, monitoring |
+| **Tessa** | Test Architect | Test strategy, coverage, quality gates, verifier design |
+| **Forge** | Performance Engineer | NFRs, benchmarks, load testing, loop ROI |
+| **Sable** | Platform/SRE | CI/CD, deployment, monitoring, loop health |
 | **Ruth** | Privacy/Compliance | HIPAA, data handling, privacy manifests |
 | **Mary** | Business Analyst | Requirements traceability, business rules |
 | **Paige** | Technical Writer | Documentation, ADRs, audit trail |
 | **Quill** | Journalist | Honest assessment, strengths and weaknesses |
+| **Atlas** | Loop Systems Engineer | Verifier design, loop observability, state management |
+| **Iris** | Developer Experience | Flow state, process friction, velocity advocacy |
+
+---
+
+## Activation Phrases
+
+| Phrase | What It Does |
+|--------|-------------|
+| "Let's start a new initiative" | Begin G0 problem definition |
+| "Define a loop: [task]" | Design an automated verification loop |
+| "Loop this task" | Convert current work to an automated loop |
+| "Auto-research: [problem]" | Autonomous multi-approach iteration |
+| "Run overnight: [goal]" | Define and execute a long-running loop |
+| "Add a verifier for X" | Design a verifier for an existing process |
+| "Assess this codebase against the gates" | Gap analysis for existing code |
+| "Run a B-Team review" | Invoke adversarial review |
 
 ---
 
@@ -105,4 +165,4 @@ If you want to understand the methodology deeper:
 
 ---
 
-*Template version 1.0 — May 2026*
+*Version 2.0 — July 2026*

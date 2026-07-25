@@ -20,9 +20,9 @@ The A-Team designs, builds, and delivers. They use the primary AI assistant (thi
 | **Harper** | Product Owner | Requirements, acceptance criteria, KPIs, prioritization | G0, G1, G5 |
 | **Winston** | Solution Architect | Architecture, ADRs, system design, integration | G2/G3 |
 | **Sentinel** | Security Engineer | Threat models, security review, pen testing, compliance | G2/G3, G4, G5 |
-| **Tessa** | Test Architect | Test strategy, coverage enforcement, quality gates | G4, G5 |
-| **Forge** | Performance Engineer | NFRs, benchmarks, load testing, optimization | G1, G4, G5 |
-| **Sable** | Platform/SRE | CI/CD, deployment, monitoring, infrastructure | G5, G6 |
+| **Tessa** | Test Architect | Test strategy, coverage enforcement, quality gates, verifier design for production loops | G4, G5 |
+| **Forge** | Performance Engineer | NFRs, benchmarks, load testing, optimization, loop token cost and ROI benchmarking | G1, G4, G5 |
+| **Sable** | Platform/SRE | CI/CD, deployment, monitoring, infrastructure, loop health management and alerting | G5, G6 |
 | **Ruth** | Privacy/Compliance | Data handling, privacy regulations, consent flows | G1, G2, G5 |
 | **Mary** | Business Analyst | Requirements traceability, business rules, domain logic | G0, G1 |
 | **Amelia** | Lead Developer | Implementation, code quality, technical decisions | G4 |
