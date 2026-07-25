@@ -587,54 +587,86 @@ hr {
 
 <hr>
 
-<h2>Stage-Gate vs Loop Engineering</h2>
+<h2>Stage-Gate vs Loop Engineering vs The Merged Model</h2>
 
-<div class="comparison-grid">
-  <div class="comp-card">
-    <div class="comp-card-header sg">Stage-Gate Governance</div>
-    <div class="comp-card-body">
-      <div class="comp-item"><span class="badge badge-green">Strength</span> Judgment at every step</div>
-      <div class="comp-item"><span class="badge badge-green">Strength</span> Adversarial review (B-Team)</div>
-      <div class="comp-item"><span class="badge badge-green">Strength</span> CMS compliance via domain experts</div>
-      <div class="comp-item"><span class="badge badge-green">Strength</span> Full audit trail</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> Human bottleneck on mechanical tasks</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> No overnight execution</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> No automated verification between gates</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> Reactive — catches problems when humans look</div>
-    </div>
-  </div>
-  <div class="comp-card">
-    <div class="comp-card-header le">Loop Engineering</div>
-    <div class="comp-card-body">
-      <div class="comp-item"><span class="badge badge-green">Strength</span> Autonomous overnight execution</div>
-      <div class="comp-item"><span class="badge badge-green">Strength</span> Self-recovery on failure</div>
-      <div class="comp-item"><span class="badge badge-green">Strength</span> Compounding search</div>
-      <div class="comp-item"><span class="badge badge-green">Strength</span> No human bottleneck</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> Requires measurable objectives</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> Comprehension debt (ships faster than anyone reads)</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> Token cost on retries</div>
-      <div class="comp-item"><span class="badge badge-red">Weakness</span> No judgment layer</div>
-    </div>
-  </div>
-  <div class="comp-card" style="border: 2px solid var(--green);">
-    <div class="comp-card-header" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #065f46; border-bottom: 2px solid var(--green); font-size: 1.05rem;">Stage-Gate-Loop (Merged)</div>
-    <div class="comp-card-body">
-      <div class="comp-item"><span class="badge badge-green">Keeps</span> Judgment at every gate</div>
-      <div class="comp-item"><span class="badge badge-green">Keeps</span> Adversarial B-Team review</div>
-      <div class="comp-item"><span class="badge badge-green">Keeps</span> Domain expert compliance</div>
-      <div class="comp-item"><span class="badge badge-green">Adds</span> Autonomous overnight execution</div>
-      <div class="comp-item"><span class="badge badge-green">Adds</span> Automated verification between gates</div>
-      <div class="comp-item"><span class="badge badge-green">Adds</span> Self-recovery + compounding search</div>
-      <div class="comp-item"><span class="badge badge-green">Fixes</span> No human bottleneck on mechanical tasks</div>
-      <div class="comp-item"><span class="badge badge-green">Fixes</span> Proactive drift detection (not reactive)</div>
-      <div class="comp-item" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #d1fae5;"><span class="badge" style="background: #065f46; color: #fff;">Result</span> 41,800:1 automation ratio</div>
-    </div>
-  </div>
+<div style="overflow-x: auto; margin: 2rem 0;">
+  <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.88rem; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+    <thead>
+      <tr>
+        <th style="padding: 1rem 1.25rem; text-align: left; background: #1e3a5f; color: #fff; width: 22%;">Dimension</th>
+        <th style="padding: 1rem 1.25rem; text-align: center; background: #1e3a5f; color: #fff; width: 26%;">Stage-Gate</th>
+        <th style="padding: 1rem 1.25rem; text-align: center; background: #1e3a5f; color: #fff; width: 26%;">Loop Engineering</th>
+        <th style="padding: 1rem 1.25rem; text-align: center; background: #065f46; color: #fff; width: 26%;">Stage-Gate-Loop ✓</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background: #fff;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Judgment & Compliance</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Gates + B-Team</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> No judgment layer</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> Gates preserved</td>
+      </tr>
+      <tr style="background: #f9fafb;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Overnight Execution</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> Stops when human sleeps</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Runs autonomously</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> Loops run overnight</td>
+      </tr>
+      <tr style="background: #fff;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Automated Verification</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> Manual between gates</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Verifier-driven</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> G-LOOP continuous</td>
+      </tr>
+      <tr style="background: #f9fafb;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Adversarial Review</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> B-Team critics</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> Agent trusts itself</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> B-Team at gates</td>
+      </tr>
+      <tr style="background: #fff;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Mechanical Task Speed</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">Slow</span> Waits for human</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Fast</span> No bottleneck</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Fast</span> Loops handle it</td>
+      </tr>
+      <tr style="background: #f9fafb;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Comprehension Debt</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Low</span> Human reads everything</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">High</span> Ships faster than anyone reads</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Low</span> Gates force documentation</td>
+      </tr>
+      <tr style="background: #fff;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Token Cost Control</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Low</span> Human limits scope</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">Risk</span> Retries burn tokens</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Managed</span> Tiered + promoted</td>
+      </tr>
+      <tr style="background: #f9fafb;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Drift Detection</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">Reactive</span> Caught when someone looks</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Proactive</span> Verifier catches drift</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Proactive</span> G-LOOP monitors</td>
+      </tr>
+      <tr style="background: #fff;">
+        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Audit Trail</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Gate artifacts</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge" style="background: #fef3c7; color: #92400e;">Partial</span> State files only</td>
+        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Complete</span> Gates + loop logs</td>
+      </tr>
+      <tr style="background: #f0fdf4;">
+        <td style="padding: 1rem 1.25rem; font-weight: 700; color: #065f46;">Automation Ratio</td>
+        <td style="padding: 1rem 1.25rem; text-align: center; font-weight: 600; color: var(--muted);">1:1 (human per task)</td>
+        <td style="padding: 1rem 1.25rem; text-align: center; font-weight: 600; color: var(--muted);">∞:0 (no human gate)</td>
+        <td style="padding: 1rem 1.25rem; text-align: center; font-weight: 700; color: #065f46; font-size: 1rem;">41,800:1</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; border-radius: 10px; padding: 1.5rem 2rem; margin: 2rem 0;">
   <p style="font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.6; color: #1a1a2e; margin: 0;">
-    <strong>Quill's take:</strong> The merged model isn't a compromise between two systems — it's what happens when you stop asking "which one?" and start asking "which layer?" Stage-Gate was always right about judgment. Loop Engineering is right about execution. The mistake was thinking you had to pick. You don't. You stack them. Gates define what "correct" means. Loops verify it stays correct at scale. The human decides when to ship. Three layers. One system. No weaknesses from either ancestor survive intact.
+    <strong>Quill's take:</strong> The merged model isn't a compromise between two systems — it's what happens when you stop asking "which one?" and start asking "which layer?" Stage-Gate was always right about judgment. Loop Engineering is right about execution. The mistake was thinking you had to pick. You don't. You stack them. Gates define what "correct" means. Loops verify it stays correct at scale. The human decides when to ship. Three layers, one system — no weaknesses from either ancestor survive intact.
   </p>
 </div>
 
