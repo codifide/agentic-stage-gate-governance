@@ -2,7 +2,7 @@
 
 *"If you are still prompting, we are dead."*
 
-I didn't know what that meant. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research "Loop Engineering." So I did.
+I didn't know what he meant. I'd already integrated Karpathy's autoresearch concept into the system — autonomous iteration with adversarial review and convergence criteria. But "loop engineering" was a different frame. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research it. So I did.
 
 What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.
 
