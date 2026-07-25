@@ -172,6 +172,78 @@ These are all Tier 1 loops — cheap verifiers, high value, zero token cost once
 
 ---
 
+## Guardrails for Production Loops
+
+Additions from stage-gate persona review:
+
+### Verifier Independence (Aegis)
+For regulated work (healthcare, finance, compliance), the verifier MUST run in a separate context from the generator. An agent that generates measure logic and verifies it in the same session has confirmation bias. The verification pipeline must be independently invokable.
+
+### Observability (Winston)
+Every loop needs metrics: iterations per attempt, token cost per success, wall-clock time, failure mode distribution. Without observability, you can't distinguish "running well" from "spinning." Add circuit breakers: escalating backoff, anomaly detection, graceful degradation (partial results > no results).
+
+### Tests Gate Loops (Tessa)
+**No loop runs without at least Tier 1 tests as its verifier.** This is non-negotiable. An autonomous loop without an honest test suite is just an agent running unsupervised with no accountability.
+
+### Token Economics (Forge)
+**Loop ROI formula:** `(human hours saved × hourly rate) / (tokens consumed × $/token + verifier compute cost)`
+
+Loops designed at unlimited-token pricing may become uneconomic at metered pricing. Design for token efficiency from day one. Cache aggressively. Fail fast and cheap.
+
+### Failure Alerting (Sable)
+Every loop must have a failure notification channel. "Let it run overnight" requires "alert me if it breaks." Parallel loops on shared resources need coordination — we learned this from a deadlock during pipeline execution.
+
+### PHI in Loop State (Ruth)
+Loop state files must follow the same data classification as the data they reference. An autonomous loop must NEVER export patient data to uncontrolled locations, log identifiers to state files, or escalate access when denied.
+
+---
+
+## New Personas for Loop Engineering
+
+### Atlas — Loop Systems Engineer
+**Role:** Designs, monitors, and maintains loop infrastructure. Owns verifier quality, state management, observability.
+
+**Responsibilities:**
+- Verifier design and honest-gate enforcement
+- Loop metrics dashboards (iterations, cost, success rate, failure modes)
+- State file lifecycle (creation, persistence, garbage collection)
+- Circuit breaker and escalation logic
+- Promotion pipeline: Tier 3 → Tier 2 → Tier 1
+
+**Gate responsibility:** G4 (verifiers are honest before deployment), G6 (loop health post-deployment)
+
+### Iris — Developer Experience
+**Role:** Ensures loops and gates don't kill velocity. Advocates against process overhead.
+
+**Responsibilities:**
+- Kills any loop or gate that costs more time than it saves
+- Ensures verification runs in < 2 seconds (flow state preservation)
+- Ensures developers get signal, not noise
+- Makes loops discoverable and debuggable
+
+**Gate responsibility:** G0 (proposed process doesn't kill velocity), G5 (deployed loops don't block development)
+
+**Iris is the counterweight to Aegis** — he enforces quality, she enforces speed.
+
+---
+
+## Storytelling: Quill's Take
+
+At gate G6 (Post-Deployment), **Quill** (Journalist/Documentarian) writes the honest narrative:
+
+- What did we actually build?
+- What worked on the first try? What took 5 iterations?
+- What would we do differently?
+- Where did the loops save us? Where did they fail?
+
+This produces Medium-style articles that document the journey — strengths, weaknesses, and honest assessments. Quill's perspective helps the team learn from each initiative and builds external credibility.
+
+**Trigger:** Invoke Quill at any gate with "Give me Quill's honest assessment" or "Write this up for publication."
+
+**Ink** (Devil's Advocate) pairs with Quill at G6: "What's the question nobody wants to answer about this system?" This forces intellectual honesty into the narrative.
+
+---
+
 ## The Bottom Line
 
 Will was right: if you're still prompting, you're doing it wrong. But the correction isn't "loop everything" — it's "loop the mechanical, gate the judgment, and invest in honest verifiers."
@@ -181,4 +253,5 @@ Our system is already 70% there. The missing 30% is automated verification that 
 ---
 
 *Written from real-world experience: 13 sessions, 199 measures, 3 orgs, 1 demo deadline.*
-*Agentic Stage-Gate Governance v1.1 — July 2026*
+*Reviewed by: Aegis, Winston, Tessa, Forge, Sable, Ruth, Atlas (new), Iris (new), Quill, Ink*
+*Agentic Stage-Gate Governance v1.2 — July 2026*

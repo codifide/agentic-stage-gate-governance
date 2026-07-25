@@ -28,6 +28,8 @@ The A-Team designs, builds, and delivers. They use the primary AI assistant (thi
 | **Amelia** | Lead Developer | Implementation, code quality, technical decisions | G4 |
 | **Paige** | Technical Writer | Documentation, ADRs, audit trail, knowledge management | All gates |
 | **Quill** | Journalist/Documentarian | Honest assessment, narrative, strengths and weaknesses | G6 |
+| **Atlas** | Loop Systems Engineer | Verifier design, loop observability, state management, circuit breakers | G4, G6 |
+| **Iris** | Developer Experience | Flow state preservation, process friction reduction, velocity advocacy | G0, G5 |
 
 ---
 
