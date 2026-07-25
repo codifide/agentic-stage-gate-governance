@@ -1,118 +1,90 @@
 # We Were Already Doing Loop Engineering. We Just Didn't Know It.
 
-*A pragmatic guide to the pattern everyone's talking about — written from 13 sessions of shipping real healthcare software with AI agents.*
+*"If you are still prompting, we are dead."*
+
+I didn't know what that meant. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research "Loop Engineering." So I did.
+
+What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.
+
+This is the story of how we got here, what we learned, and where it goes next.
 
 ---
 
-A colleague dropped a bomb in our team chat last week: "If you are still prompting, we are dead."
+## The Evolution: How We Got Here
 
-I didn't know what he meant. He said: "Just go deep on Loop Engineering."
+A year ago I started using AI for coding the way most people do — as a better Stack Overflow. "How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.
 
-So we did. And what we found was both validating and humbling. Validating because our system — built over a year of shipping a CMS-certified healthcare quality platform with AI agents — already embodied most of what Karpathy's loop engineering describes. Humbling because the gaps we'd been ignoring were exactly the ones that kept biting us.
+Then MCP connections changed everything. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.
 
-This is what we learned.
+That earned enough trust for the next step: building components. Well-defined modules, one at a time, with human review after each. An ETL connector. A measure engine. A frontend page.
 
----
+Then whole systems. Not one component — the full stack. Architecture, data model, API, frontend, deployment. Simulating a traditional development team at 10x speed. Architect drafts the design. Developer implements. Tester verifies. Security reviews. The AI played all the roles.
 
-## What Loop Engineering Actually Is (In One Paragraph)
+But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed 4.0% instead of 22.5/30. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.
 
-Stop being the middleman between every AI turn. Define a goal. Define an automated verifier that isn't the AI grading its own work. Give the loop persistent state so it remembers what it tried. Let it iterate until the verifier passes or you hit a retry limit. That's it.
+That's when we built the governance layer — stage-gates, adversarial review, domain expert personas, persistent session state. Not to slow things down, but to catch the 40% of errors that "it builds" doesn't catch.
 
-Three components. Miss one and you've built a money burner.
+And now we're adding the final piece: automated verification loops that run without asking permission. Not replacing the governance — augmenting it with mechanical consistency checks that catch drift between pipeline runs.
 
----
-
-## The Origin Story Nobody Tells
-
-In March 2026, Andrej Karpathy released `autoresearch` — about 630 lines of code. The agent edits `train.py`, runs training for 5 minutes, keeps improvements, rolls back failures, repeats. In two days it ran 700 experiments and found 20 improvements that humans missed.
-
-But here's what the breathless coverage left out: the system only worked because training loss is a *perfect* verifier. It's numeric. It's unambiguous. It's fast to compute. You can't argue with it.
-
-Most software doesn't have that luxury. "Is this the right architecture?" doesn't have a loss function.
+Each stage earned the right to exist by solving the pain of the previous one.
 
 ---
 
-## What We Were Already Doing
+## What Loop Engineering Actually Is
 
-We've been building a MIPS quality measure platform — 199 clinical measures, 37,000 patients, real Medicare compliance requirements. Here's what our system looked like before we'd ever heard the term "loop engineering":
+Three components. Miss one and you've built a money burner:
 
-**Our ETL pipeline** runs 7 steps automatically: compute measures → generate care gaps → refresh indicators → backfill CPTs → compute recommendations → refresh MIPS score → update quality.score. That's a loop with a state file (the ETL run log) and verification (row counts, score computation).
+**Verifier** — an automated gate that isn't the AI grading its own homework. Tests, metrics, schema checks. Something that says "no" without human intervention.
 
-**Our session state** (`next-session-prompt.md`) persists what was accomplished, what's next, and what the environment looks like. That's Karpathy's "state on disk, not in context" — we just called it "institutional memory."
+**State** — persistent record of what's been tried and what failed. Survives session boundaries. Tomorrow resumes instead of restarts.
 
-**Our A-Team/B-Team persona system** separates builders from critics. The generator can't grade its own homework. That's the generator-verifier pattern with a different name.
+**Stop condition** — "done" must be definable. Verifier passes, or you hit a retry limit. Open-ended goals without measurable completion are just prompting wearing a loop costume.
 
-We were doing loop engineering. We just had gaps.
-
----
-
-## The Gaps That Kept Biting Us
-
-In one session, we shipped 8 new measure engines. They all "worked" — they imported cleanly, the build passed. But when a clinical analyst looked at the Quality Measures page, the MIPS Composite showed "4.0" instead of "22.5/30." The HEDIS section was mislabeled. Inverse measures showed warning icons when they should have shown green.
-
-The build passed. The loop "succeeded." But the output was wrong.
-
-Why? Because our verifier was a build check. The actual requirement was CMS-compliant display logic. No test encoded that. The loop closed on a weak verifier.
-
-In another session, we left 32,000 patients with stale numerator data because the materialized view hadn't been refreshed after the engine re-ran. The pipeline had a step for that — but it came AFTER the step that failed (deadlock). No circuit breaker. No alerting. We found out because the demo looked wrong.
-
-These aren't failures of the AI. They're failures of the harness.
+In March 2026, Andrej Karpathy demonstrated this with `autoresearch` — 630 lines of code that ran 700 ML training experiments in two days, finding 20 improvements humans missed. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.
 
 ---
 
-## The Real Pain Point This Solves
+## The Real Pain Point
 
 Let me be direct about where this comes from.
 
-I've spent hundreds of hours building the governance harness. Not because I love process — because I was tired of correcting the AI on the same mistakes three, four, five times in a row. The same stale data. The same hardcoded values that should be database-driven. The same "it builds" confidence when the output was clinically wrong.
+I spent hundreds of hours building the governance harness — personas, gates, steering files, session state — not because I love process, but because I was tired of correcting the AI on the same mistakes repeatedly. The same stale data left behind. The same hardcoded values that should be database-driven. The same "it builds" confidence when the output was clinically wrong.
 
-The harness — personas, gates, steering files, session state — was my attempt to simulate all the checks and balances of a real development team: the tech lead who catches architecture drift, the QA engineer who actually tests the output, the domain expert who says "that's not how CMS works." It reduced the frustration significantly. But it didn't eliminate it.
+The harness simulates all the checks and balances of a real development team: the tech lead who catches architecture drift, the QA engineer who tests the output, the domain expert who says "that's not how CMS works." It reduced the frustration significantly. But it didn't eliminate it.
 
-The critical gap was always verification. Not "does it compile" verification — *"is the data consistent across all the surfaces that display it"* verification. An AI that writes beautiful code to populate quality.measure, then forgets to refresh the materialized view that the API reads from, has produced a system where the database says one thing and the screen says another. That's not a coding error. It's a *systems coherence* error. And no persona review catches it because it only manifests at runtime, across service boundaries.
+The critical gap was always *systems coherence verification*. An AI that writes beautiful code to populate `quality.measure`, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.
 
-That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. Not as a note in the session state. As an automated gate that fails loudly when things drift.
-
-### The Timing Question
-
-So when do you install these gates? Too early and you're writing tests for interfaces that change tomorrow. Too late and you're debugging cascading inconsistencies in a demo.
-
-The answer we arrived at:
-
-**Don't gate during discovery.** When you're building 8 measure engines in an afternoon, changing the API contract twice, and pivoting the UI based on live feedback — tests are drag. You need flow state. You need to move fast and see what works. The human IS the verifier during this phase.
-
-**Gate when interfaces solidify.** Once the pipeline steps are stable. Once the schema is locked. Once the same bug bites you twice. That's when you know the interface has settled enough to be worth encoding. For us, that moment was session 13 — when the Quality Measures page broke because of a stale MV, and the Measure Detail showed 0 patients because of a strata suffix mismatch. Those bugs told us: this interface is stable enough to test. It broke because of *drift*, not *change*.
-
-**Gate what repeats.** If you run the pipeline once, verify it manually. If you run it daily for 220 clients, gate it. The economics are simple: verifier construction cost ÷ number of future executions. For something that runs once a quarter for 220 clients (880 executions/year), even an expensive test suite pays for itself in the first month.
-
-### Cost Control
-
-Three mechanisms:
-
-1. **Tier the loops.** Pre-computed checks (row count assertions, schema matches) cost zero tokens. Parameterized SQL verifiers cost zero tokens. Only truly novel verification needs AI — and that should be rare and cached.
-
-2. **Invest in the verifier, not the loop.** A good test suite runs in 10 seconds and catches 90% of problems. That's cheaper than an AI loop that retries 5 times at 10,000 tokens each. The verifier is the asset. The loop is just the trigger.
-
-3. **Promote patterns aggressively.** Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. Next client, next measure — it's a one-shot execution, not an exploration. The first time costs tokens. The 220th time costs nothing.
+That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. As an automated gate that fails loudly when things drift.
 
 ---
 
-## Finding the Right Altitude (continued)
+## The Timing Question
 
-After researching Karpathy's work, reviewing our own patterns, and running a full persona review (8 reviewers, 2 new personas created specifically for this), we arrived at a three-layer model:
+When do you install these gates?
 
-```
-HUMAN LAYER     →  Goals, design decisions, gate approvals (5 minutes)
-GATE LAYER      →  Persona review, CMS compliance, architecture (30 minutes)
-LOOP LAYER      →  Build, test, deploy, verify, repeat (runs overnight)
-```
+**Don't gate during discovery.** When you're building 8 measure engines in an afternoon, changing the API contract twice, pivoting the UI based on live feedback — tests are drag. You need flow state. The human IS the verifier.
 
-Each task finds its correct altitude:
+**Gate when interfaces solidify.** Once the same bug bites you twice. Once the pipeline steps are stable. That's when you know the interface has settled enough to be worth encoding. The signal is: it broke because of *drift*, not *change*.
 
-- "Implement MIPS_476 with proper IPSS score extraction" → Human defines goal, Gate verifies CMS compliance, Loop handles the mechanical coding and testing.
-- "Is our pipeline too slow for large orgs?" → Human flags it, Gate investigates architecture, Loop benchmarks and optimizes.
-- "Refresh all materialized views after pipeline" → Pure loop. No human needed. Verifier: MV row counts match source tables.
+**Gate what repeats.** If you run it once, verify manually. If you run it daily for 220 clients, gate it. Verifier construction cost ÷ future executions = ROI. For 880 executions/year, even expensive tests pay for themselves in a month.
 
-The insight is that most teams try to put everything in one layer. Either everything needs approval (slow) or everything runs free (dangerous). The sweet spot is knowing which layer each task belongs in.
+---
+
+## The Merged Model
+
+Neither stage-gates alone nor loops alone are sufficient.
+
+Stage-gates without loops: every mechanical task waits for human approval. Slow.
+
+Loops without gates: everything runs autonomously, including compliance logic. Dangerous.
+
+The merged system gives each task its correct altitude:
+
+- *"Implement MIPS_476 with proper IPSS score extraction"* → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.
+- *"Is our pipeline too slow for large orgs?"* → Human flags it. Gate investigates architecture. Loop benchmarks and optimizes.
+- *"Refresh all materialized views after pipeline"* → Pure loop. No human needed. Verifier: row counts match source tables.
+
+Most teams try to put everything in one layer. Either everything needs approval (slow) or everything runs free (dangerous). The sweet spot is knowing which layer each task belongs in.
 
 ---
 
@@ -122,175 +94,106 @@ The insight is that most teams try to put everything in one layer. Either everyt
 
 2. **State belongs on disk.** Context windows degrade. Sessions end. Models forget. If a loop needs to remember something, write it to a file.
 
-3. **Separate generator from verifier.** The thing that writes code cannot judge code. Same model, different invocation is acceptable. Same session is not.
+3. **Separate generator from verifier.** The thing that writes code cannot judge code.
 
-4. **Hard stop at N retries.** No loop runs forever. 10 iterations for research. 3 retries for a build fix. Without limits, you get infinite token burn on unsolvable problems.
+4. **Hard stop at N retries.** No loop runs forever. Without limits, you get infinite token burn on unsolvable problems.
 
-5. **Promote successful patterns.** When a loop solves a problem, extract the pattern. Next time, it's a template. Over time, work migrates from expensive exploration to cheap execution.
-
----
-
-## What We're Building Next
-
-Tests. Specifically: the tests that would have caught this session's bugs. Not aspirational 100% coverage — targeted verification for the things that actually broke:
-
-- Does the MV match quality.measure after pipeline runs?
-- Does quality.score match the MV?
-- Do all 57 eCQM engines have MEASURE_ID set?
-- Does the API return non-empty data for known-good orgs?
-
-These become the verifiers. Once they exist, the pipeline can run overnight and we trust the output without reading every row. That's the unlock.
+5. **Promote successful patterns.** When a loop solves a problem, extract the pattern. The first time costs tokens. The 220th time costs nothing.
 
 ---
 
-## The Uncomfortable Truth (Ink's Contribution)
+## Cost Control
 
-Here's what nobody in the loop engineering hype wants to say: **most software problems don't have clean verifiers.**
+Three mechanisms:
+
+**Tier the loops.** Pre-computed checks (row counts, schema matches) cost zero tokens. Parameterized SQL verifiers cost zero tokens. Only truly novel verification needs AI — rare and cached.
+
+**Invest in the verifier, not the loop.** A good test suite runs in 10 seconds and catches 90% of problems. Cheaper than an AI retrying 5 times at 10,000 tokens each.
+
+**Promote aggressively.** Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. First client costs tokens. The 220th costs nothing.
+
+---
+
+## The Uncomfortable Truth
+
+Here's what nobody in the loop engineering hype wants to say: most software problems don't have clean verifiers.
 
 Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to 2,200 clients?" requires production traffic.
 
-Loop engineering works brilliantly for the 60% of software work that's mechanical — the ETL, the migrations, the refactoring, the optimization. For the other 40% — the design, the compliance, the judgment calls — you still need gates. You still need humans. You still need the uncomfortable conversation where someone says "this isn't right" and the agent has to start over.
+Loop engineering works brilliantly for the 60% that's mechanical. For the other 40% — design, compliance, judgment calls — you still need gates. You still need the uncomfortable conversation where someone says "this isn't right."
 
-The teams that pretend everything can be looped will ship fast and break things that matter. The teams that refuse to loop anything will be too slow to compete. The sweet spot is knowing the difference.
+The teams that pretend everything can be looped will ship fast and break things that matter. The teams that refuse to loop anything will be too slow to compete.
 
-We learned that the hard way this week.
+The sweet spot is knowing the difference.
 
 ---
 
 ## The Bottom Line
 
-If you're still writing individual prompts for every task, you're working too hard. But if you're letting loops run without honest verifiers, you're working dangerously.
+Loop the mechanical. Gate the judgment. Invest in honest verifiers.
 
-The answer isn't one or the other. It's both — with clear boundaries between them.
-
-Loop the mechanical. Gate the judgment. Invest in honest verifiers. And when the demo is tomorrow, make sure the materialized view got refreshed.
+The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't a luxury. It's the product.
 
 ---
 
 *Douglas Jones leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines using agentic development with stage-gate governance.*
 
-*The full Loop Engineering Guide and the Agentic Stage-Gate Governance framework are open source at [github.com/codifide/agentic-stage-gate-governance](https://github.com/codifide/agentic-stage-gate-governance).*
-
+*The [Agentic Stage-Gate Governance](https://github.com/codifide/agentic-stage-gate-governance) framework is open source.*
 
 ---
 
-## Appendix: Stage-Gate vs Loop Engineering — A Comparison
+## References
 
-### Stage-Gate System (What We Had Before)
+1. Karpathy, A. (2026). *AutoResearch*. [github.com/karpathy/autoresearch](https://github.com/karpathy/autoresearch)
+2. Fortune (2026). "'The Karpathy Loop': 700 experiments, 2 days, and a glimpse of where AI is heading." [fortune.com](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/)
+3. Bilevel Autoresearch: Meta-Autoresearching Itself (2026). arXiv:2603.23420
+4. Cooper, R.G. (1986). *Winning at New Products: Accelerating the Process from Idea to Launch*. Stage-Gate® methodology.
+5. CMS MIPS Payment Adjustment. 42 CFR § 414.1405. Up to ±9% Medicare Part B adjustment based on composite performance score.
+6. AI Builder Club (2026). "Karpathy's LOOPS.md: The Rules and What's Verified." [aibuilderclub.com](https://www.aibuilderclub.com/blog/loops-md-karpathy)
 
-Our Agentic Stage-Gate Governance system, built over a year of production work, operates on a simple principle: **"AI builds. Humans decide. Evidence proves."**
+---
 
-| Strength | Description |
-|----------|-------------|
-| Judgment at every step | 7 gates (G0–G6) ensure no work ships without human approval |
-| Adversarial review | B-Team critics use a DIFFERENT model to find weaknesses |
-| CMS compliance | Domain experts (Gretchen) validate clinical logic at gates |
-| Audit trail | Every gate produces evidence artifacts — traceable, defensible |
-| Persona separation | 12 A-Team builders + 12 B-Team critics prevent groupthink |
+## Appendix: Stage-Gate vs Loop Engineering — Side-by-Side
 
-| Weakness | Description |
-|----------|-------------|
-| Human bottleneck | Every decision waits for the human — even mechanical ones |
-| No overnight execution | Work stops when the session ends |
-| No automated verification | "It builds" was the only check between gates |
-| Reactive, not proactive | Doesn't catch stale data until someone looks at a screen |
-| Flow state interruption | Gate ceremonies can break momentum on simple tasks |
+### Stage-Gate Strengths & Weaknesses
 
-### Loop Engineering (What Karpathy Proposes)
+| Strength | Weakness |
+|----------|----------|
+| Judgment at every step | Human bottleneck on mechanical tasks |
+| Adversarial review (B-Team) | No overnight execution |
+| CMS compliance via domain experts | No automated verification between gates |
+| Full audit trail | Reactive — catches problems when humans look |
 
-| Strength | Description |
-|----------|-------------|
-| Autonomous execution | Runs 700 experiments in 2 days — no human in the inner loop |
-| Automated verification | Verifier closes the loop without human review |
-| Overnight capability | Define goal → sleep → wake up to results |
-| Self-recovery | Failed attempts roll back automatically, loop continues |
-| Compounding search | Each iteration builds on prior knowledge (state file) |
+### Loop Engineering Strengths & Weaknesses
 
-| Weakness | Description |
-|----------|-------------|
-| Requires measurable objectives | Can't loop "design something good" |
-| Comprehension debt | Ships code faster than anyone can understand it |
-| Verifier ≠ Correct | Passing tests doesn't mean the output is RIGHT |
-| Token cost on retries | Failed iterations burn money with no return |
-| No judgment layer | Can't ask "should we even be doing this?" |
-| Runaway risk | Bad loops at 3am produce 40 commits of nonsense |
-| Cognitive surrender | Teams stop thinking because "the loop verified it" |
+| Strength | Weakness |
+|----------|----------|
+| Autonomous overnight execution | Requires measurable objectives |
+| Self-recovery on failure | Comprehension debt (ships faster than anyone reads) |
+| Compounding search | Token cost on retries |
+| No human bottleneck | No judgment layer |
 
-### The Merged System (What We Built)
+### How Merging Fixes Both
 
-Neither system alone is sufficient. Stage-gate is too slow for mechanical work. Loop engineering is too dangerous for judgment work. The merged system puts each task at the correct altitude:
-
-```
-┌────────────────────────────────────────────────────────┐
-│ STAGE-GATE LAYER (Judgment)                            │
-│                                                        │
-│  Human goals → Persona review → Gate decisions         │
-│  CMS compliance, architecture, design, priorities      │
-│                                                        │
-│  When: Requirements, design, compliance, go/no-go      │
-│  Frequency: Per initiative (days/weeks)                │
-│  Cost: Human time (expensive but irreplaceable)        │
-├────────────────────────────────────────────────────────┤
-│ LOOP LAYER (Execution)                                 │
-│                                                        │
-│  Goal → Iterate → Verify → State → Iterate → Done     │
-│  ETL, testing, optimization, data consistency          │
-│                                                        │
-│  When: Implementation, verification, maintenance       │
-│  Frequency: Continuous (hours/overnight)               │
-│  Cost: Tokens + compute (cheap and getting cheaper)    │
-└────────────────────────────────────────────────────────┘
-```
-
-### How Merging Solved Both Systems' Weaknesses
-
-| Original Weakness | How the Merge Fixes It |
+| Weakness | How the Merge Solves It |
 |---|---|
-| **Stage-gate: human bottleneck** | Loops handle mechanical execution without waiting |
-| **Stage-gate: no overnight work** | Loops run pipelines and verify while you sleep |
-| **Stage-gate: no automated verification** | Loop verifiers catch stale data, broken APIs, schema drift |
-| **Loop: no judgment** | Gates still control design, compliance, architecture |
-| **Loop: comprehension debt** | Gates force documentation and persona review before shipping |
-| **Loop: runaway risk** | Gates define scope; loops can't exceed what's been approved |
-| **Loop: cognitive surrender** | B-Team adversarial review remains mandatory at gates |
-| **Loop: verifier ≠ correct** | Gretchen reviews correctness; loops only verify consistency |
+| Stage-gate: human bottleneck | Loops execute mechanical work without waiting |
+| Stage-gate: no overnight work | Loops run pipelines while you sleep |
+| Loop: no judgment | Gates still control design and compliance |
+| Loop: comprehension debt | Gates force documentation before shipping |
 
-### Decision Framework: Gate It or Loop It?
+### Decision Framework
 
-Ask these three questions:
+Three questions:
 
-1. **Can a machine verify the output?** (tests, metrics, row counts, schema checks)
-   - Yes → Loop it
-   - No → Gate it
+1. **Can a machine verify the output?** → Yes: loop it. No: gate it.
+2. **Is the cost of being wrong catastrophic?** → Yes: gate it, even if verifiable.
+3. **Will this task repeat?** → Yes: loop it (amortize verifier cost).
 
-2. **Is the cost of being wrong catastrophic?** (CMS audit, patient safety, data loss)
-   - Yes → Gate it, even if a machine CAN verify
-   - No → Loop it
+### The Numbers
 
-3. **Will this task repeat?** (ETL runs, deployments, data refreshes)
-   - Yes → Loop it (amortize verifier construction cost)
-   - No → Gate it (one-off judgment call)
+- 199 measures × 220 clients × 4 quarterly refreshes = **175,560 loop-cycles/year** (automated)
+- 7 gates × 6 initiatives/year = **42 gated decisions/year** (human judgment)
+- Ratio: **4,180 automated executions per human decision**
 
-### Real Examples From This Week
-
-| Task | System Used | Outcome |
-|---|---|---|
-| Design measure evidence discovery feature | Stage-Gate (G0/G1, 5 personas) | Right architecture, clear requirements |
-| Run ETL pipeline for all orgs | Loop (post_etl_pipeline + MV refresh) | 199 measures recomputed, data consistent |
-| Fix Quality Measures page CMS compliance | Stage-Gate (Gretchen review, 8 findings) | Caught scoring errors no test would find |
-| Rebuild quality-service Docker image | Loop (build → deploy → health check) | Mechanical, repeatable, no judgment needed |
-| Decide whether to use Airflow | Stage-Gate (IT mandate review) | Killed it — domain judgment, not automatable |
-| Verify MV matches quality.measure | Loop (SQL assertion) | Catches inconsistency without human looking |
-| Write Medium article on loop engineering | Stage-Gate + Quill persona | Needs voice, narrative, honesty — can't loop "be insightful" |
-
-### The Competitive Advantage
-
-Most teams will adopt one system or the other:
-- **All-gate teams** will be too slow. Every commit waits for approval.
-- **All-loop teams** will ship fast and break regulated things. CMS doesn't accept "the loop verified it."
-
-We're building both — and the judgment to know which to use when. That's the moat. In healthcare, where a wrong measure calculation can cost a practice $75K in MIPS penalties, you can't afford to loop your compliance logic. But you also can't afford to manually verify 199 measures × 220 clients × 4 data refresh cycles per year.
-
-The merged system handles 175,560 measure-client-cycles per year autonomously (loops) while keeping 42 CMS-regulated decisions under human authority (gates).
-
-That's the sweet spot.
+That's the leverage.
