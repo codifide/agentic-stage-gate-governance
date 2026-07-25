@@ -95,8 +95,11 @@ steering/
     └── 08-loop-engineering.md             # Loop engineering: verifiers, state, cost control
 templates/
     ├── B-TEAM-REVIEW-PACKAGE.md   # Copy-paste template for B-Team reviews
-    ├── GATE-EVIDENCE-CHECKLIST.md # Per-gate artifact tracking with binary states
-    └── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
+    ├── CODE-REVIEW-PROMPT-QWEN.md # Domain-specific code review prompt for reasoning models
+    ├── GATE-EVIDENCE-CHECKLIST.md  # Per-gate artifact tracking with binary states
+    ├── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
+    ├── HOOKS-SESSION-STATE.md     # Agent hooks for session continuity + PHI guards
+    └── NFR-TEMPLATE.md            # Non-functional requirements template
 WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
 LOOP-ENGINEERING-GUIDE.md          # Deep-dive: loop engineering rationale and patterns
 ```
@@ -146,6 +149,67 @@ Example: `"Define a loop: Run all 199 measure engines and verify scorecard consi
 
 ---
 
+## Session Continuity (Agent Hooks)
+
+AI agents lose all context between sessions. Steering files provide the *knowledge*, but hooks provide the *behavior* — ensuring the agent loads that knowledge every time without being told.
+
+### The Problem
+
+Without hooks, every new session starts cold. The agent might:
+- Skip steering files (or load only a subset)
+- Forget what was accomplished in the prior session
+- Lose track of environment state, running services, or active backlog
+
+### The Solution: Two Hooks
+
+| Hook | Trigger | What It Does |
+|------|---------|--------------|
+| `load-session-state.json` | `SessionStart` | Lists the steering directory and loads EVERY file — no hardcoded subset |
+| `update-session-state.json` | `Stop` | Reminds the agent to update `next-session-prompt.md` with session state |
+
+**Key principle: Don't hardcode file lists.** The hook says "list the directory and load everything." This means new steering files added between sessions are automatically picked up — no hook maintenance required.
+
+### Setup (Kiro)
+
+```bash
+mkdir -p .kiro/hooks
+# Copy from templates/HOOKS-SESSION-STATE.md or create directly:
+```
+
+**`.kiro/hooks/load-session-state.json`**
+```json
+{
+  "version": "v1",
+  "hooks": [{
+    "name": "Load all steering files on session start",
+    "trigger": "SessionStart",
+    "action": {
+      "type": "agent",
+      "prompt": "MANDATORY: Before doing ANYTHING else, you MUST list the directory <PROJECT>/.kiro/steering/ and then read EVERY .md file in it using read_files (batch them as needed). Do NOT skip any files — they are ALL institutional memory and ground truth. Start with next-session-prompt.md to understand current state, then load every remaining file. After all steering files are loaded, act on the next-session-prompt immediately."
+    }
+  }]
+}
+```
+
+**`.kiro/hooks/update-session-state.json`**
+```json
+{
+  "version": "v1",
+  "hooks": [{
+    "name": "Update next-session-prompt on session end",
+    "trigger": "Stop",
+    "action": {
+      "type": "agent",
+      "prompt": "Before this session ends, you MUST update .kiro/steering/next-session-prompt.md with: 1) What was accomplished this session, 2) Current initiative/gate status, 3) Immediate next actions for the following session, 4) Any key metrics or environment state changes. This is the institutional memory handoff — future sessions depend on it."
+    }
+  }]
+}
+```
+
+See `templates/HOOKS-SESSION-STATE.md` for the full reference including PHI guards and custom hook design patterns.
+
+---
+
 ## What's New in v2.0
 
 **Loop Engineering Integration (July 2026)**
@@ -154,6 +218,7 @@ v1.x was pure stage-gate: structured judgment at every decision point. v2.0 adds
 
 What changed:
 - **New steering file** (`08-loop-engineering.md`) — practical instructions for when to loop, how to design verifiers, and cost control
+- **Session continuity hooks** — templates for SessionStart/Stop hooks that ensure full context loading every session
 - **Loop-eligible tasks per gate** — each gate now identifies what can be automated vs. what requires judgment
 - **G-LOOP concept** — between gates, automated loops run continuously to verify consistency, run tests, and catch drift
 - **New personas** — Atlas (Loop Systems Engineer) and Iris (Developer Experience) ensure loops are well-designed and don't kill velocity
