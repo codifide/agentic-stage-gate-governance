@@ -60,7 +60,43 @@ These aren't failures of the AI. They're failures of the harness.
 
 ---
 
-## The Hybrid Model We Landed On
+## The Real Pain Point This Solves
+
+Let me be direct about where this comes from.
+
+I've spent hundreds of hours building the governance harness. Not because I love process — because I was tired of correcting the AI on the same mistakes three, four, five times in a row. The same stale data. The same hardcoded values that should be database-driven. The same "it builds" confidence when the output was clinically wrong.
+
+The harness — personas, gates, steering files, session state — was my attempt to simulate all the checks and balances of a real development team: the tech lead who catches architecture drift, the QA engineer who actually tests the output, the domain expert who says "that's not how CMS works." It reduced the frustration significantly. But it didn't eliminate it.
+
+The critical gap was always verification. Not "does it compile" verification — *"is the data consistent across all the surfaces that display it"* verification. An AI that writes beautiful code to populate quality.measure, then forgets to refresh the materialized view that the API reads from, has produced a system where the database says one thing and the screen says another. That's not a coding error. It's a *systems coherence* error. And no persona review catches it because it only manifests at runtime, across service boundaries.
+
+That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. Not as a note in the session state. As an automated gate that fails loudly when things drift.
+
+### The Timing Question
+
+So when do you install these gates? Too early and you're writing tests for interfaces that change tomorrow. Too late and you're debugging cascading inconsistencies in a demo.
+
+The answer we arrived at:
+
+**Don't gate during discovery.** When you're building 8 measure engines in an afternoon, changing the API contract twice, and pivoting the UI based on live feedback — tests are drag. You need flow state. You need to move fast and see what works. The human IS the verifier during this phase.
+
+**Gate when interfaces solidify.** Once the pipeline steps are stable. Once the schema is locked. Once the same bug bites you twice. That's when you know the interface has settled enough to be worth encoding. For us, that moment was session 13 — when the Quality Measures page broke because of a stale MV, and the Measure Detail showed 0 patients because of a strata suffix mismatch. Those bugs told us: this interface is stable enough to test. It broke because of *drift*, not *change*.
+
+**Gate what repeats.** If you run the pipeline once, verify it manually. If you run it daily for 220 clients, gate it. The economics are simple: verifier construction cost ÷ number of future executions. For something that runs once a quarter for 220 clients (880 executions/year), even an expensive test suite pays for itself in the first month.
+
+### Cost Control
+
+Three mechanisms:
+
+1. **Tier the loops.** Pre-computed checks (row count assertions, schema matches) cost zero tokens. Parameterized SQL verifiers cost zero tokens. Only truly novel verification needs AI — and that should be rare and cached.
+
+2. **Invest in the verifier, not the loop.** A good test suite runs in 10 seconds and catches 90% of problems. That's cheaper than an AI loop that retries 5 times at 10,000 tokens each. The verifier is the asset. The loop is just the trigger.
+
+3. **Promote patterns aggressively.** Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. Next client, next measure — it's a one-shot execution, not an exploration. The first time costs tokens. The 220th time costs nothing.
+
+---
+
+## Finding the Right Altitude (continued)
 
 After researching Karpathy's work, reviewing our own patterns, and running a full persona review (8 reviewers, 2 new personas created specifically for this), we arrived at a three-layer model:
 
