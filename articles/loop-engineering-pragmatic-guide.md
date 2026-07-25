@@ -136,7 +136,7 @@ The teams that get this right won't just ship faster — they'll ship with confi
 
 ---
 
-*Douglas Jones leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines using agentic development with stage-gate governance.*
+*Douglas Jones leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.*
 
 *The [Agentic Stage-Gate Governance](https://github.com/codifide/agentic-stage-gate-governance) framework is open source.*
 
@@ -193,7 +193,8 @@ Three questions:
 ### The Numbers
 
 - 199 measures × 220 clients × 4 quarterly refreshes = **175,560 loop-cycles/year** (automated)
+- Scaling to: 199 measures × 2,200 clients × millions of patients = **1.75M loop-cycles/year**
 - 7 gates × 6 initiatives/year = **42 gated decisions/year** (human judgment)
-- Ratio: **4,180 automated executions per human decision**
+- At scale ratio: **41,800 automated executions per human decision**
 
 That's the leverage.
