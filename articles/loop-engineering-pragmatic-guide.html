@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>We Were Already Doing Loop Engineering. We Just Didn't Know It.</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1a1a2e;
+  --bg: #fafaf9;
+  --accent: #2563eb;
+  --red: #dc2626;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --card-bg: #ffffff;
+  --green: #16a34a;
+}
+html { font-size: 18px; }
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+/* Layout */
+.container { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
+article { padding-bottom: 4rem; }
+
+/* Header banner */
+.hero {
+  background: var(--navy);
+  color: #fff;
+  padding: 4rem 1.5rem 3rem;
+  text-align: center;
+}
+.hero h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.4rem;
+  line-height: 1.2;
+  max-width: 720px;
+  margin: 0 auto 1rem;
+  font-weight: 700;
+}
+.hero .subtitle {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  max-width: 600px;
+  margin: 0 auto;
+  font-style: italic;
+}
+
+/* Typography */
+h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.8rem;
+  margin: 3rem 0 1rem;
+  color: var(--navy);
+  line-height: 1.3;
+}
+h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.3rem;
+  margin: 2rem 0 0.75rem;
+  color: var(--navy);
+}
+p { margin-bottom: 1.2rem; }
+strong { color: var(--navy); }
+em { color: var(--muted); }
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3rem 0;
+}
+
+/* Pull quotes */
+.pull-quote {
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  border-radius: 0 8px 8px 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  color: var(--navy);
+  line-height: 1.5;
+}
+.pull-quote.warning {
+  border-left-color: var(--red);
+  background: linear-gradient(135deg, #fef2f2, #fff7ed);
+}
+.pull-quote.conclusion {
+  border-left-color: var(--green);
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+}
+.pull-quote cite {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.75rem;
+  font-style: normal;
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding: 1rem 0 1rem 2.5rem;
+  margin: 2rem 0;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--accent), var(--green));
+  border-radius: 2px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.05rem;
+  top: 1.3rem;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+}
+.timeline-item .stage-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+.timeline-item .stage-title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+.timeline-item .stage-desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Three-layer model */
+.layer-model {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.layer-box {
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  position: relative;
+}
+.layer-box .layer-subtitle {
+  font-weight: 400;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  display: block;
+  margin-top: 0.25rem;
+}
+.layer-human {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px 8px 0 0;
+}
+.layer-gate {
+  background: var(--accent);
+  color: #fff;
+}
+.layer-loop {
+  background: var(--green);
+  color: #fff;
+  border-radius: 0 0 8px 8px;
+}
+.layer-arrow {
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--muted);
+  padding: 0.25rem 0;
+  background: var(--bg);
+}
+
+/* Comparison cards */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+@media (max-width: 600px) {
+  .comparison-grid { grid-template-columns: 1fr; }
+}
+.comp-card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.comp-card-header {
+  padding: 1rem 1.25rem;
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.comp-card-header.sg { background: #eff6ff; color: var(--navy); border-bottom: 2px solid var(--accent); }
+.comp-card-header.le { background: #f0fdf4; color: #14532d; border-bottom: 2px solid var(--green); }
+.comp-card-body { padding: 1rem 1.25rem; }
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin-right: 0.4rem;
+}
+.badge-green { background: #dcfce7; color: #166534; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.comp-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* Rule cards */
+.rules-grid {
+  display: grid;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.rule-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.rule-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  width: 2.5rem;
+  text-align: center;
+}
+.rule-number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.rule-title {
+  font-weight: 700;
+  margin: 0.15rem 0 0.3rem;
+  color: var(--navy);
+}
+.rule-desc {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Decision nodes */
+.decision-framework {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.decision-node {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  border: 2px solid;
+}
+.decision-node:nth-child(1) { border-color: var(--accent); background: #eff6ff; }
+.decision-node:nth-child(2) { border-color: var(--red); background: #fef2f2; }
+.decision-node:nth-child(3) { border-color: var(--green); background: #f0fdf4; }
+.decision-number {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: Georgia, serif;
+  flex-shrink: 0;
+  width: 2.5rem;
+  text-align: center;
+}
+.decision-node:nth-child(1) .decision-number { color: var(--accent); }
+.decision-node:nth-child(2) .decision-number { color: var(--red); }
+.decision-node:nth-child(3) .decision-number { color: var(--green); }
+.decision-question { font-weight: 600; margin-bottom: 0.2rem; }
+.decision-answer { font-size: 0.88rem; color: var(--muted); }
+
+/* References */
+.references {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+}
+.references ol {
+  padding-left: 1.25rem;
+  font-size: 0.88rem;
+  line-height: 1.8;
+}
+.references a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.references a:hover { border-bottom-color: var(--accent); }
+
+/* Author */
+.author-box {
+  background: var(--navy);
+  color: #cbd5e1;
+  padding: 1.5rem 2rem;
+  border-radius: 10px;
+  margin: 3rem 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.author-box a { color: #60a5fa; text-decoration: none; }
+.author-box a:hover { text-decoration: underline; }
+
+/* Print */
+@media print {
+  .hero { background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; }
+  .hero .subtitle { color: #333 !important; }
+  body { font-size: 11pt; }
+  .container { max-width: 100%; padding: 0; }
+  .timeline::before { background: #000; }
+  .timeline-item::before { background: #000; }
+  .layer-human, .layer-gate, .layer-loop { color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rule-card, .comp-card, .decision-node, .references { break-inside: avoid; }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  html { font-size: 16px; }
+  .hero { padding: 2.5rem 1rem 2rem; }
+  .hero h1 { font-size: 1.7rem; }
+  .container { padding: 1.25rem 1rem; }
+  h2 { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>We Were Already Doing Loop Engineering.<br>We Just Didn't Know It.</h1>
+  <p class="subtitle">A pragmatic guide to merging stage-gate governance with autonomous verification loops in healthcare AI</p>
+</header>
+
+<article class="container">
+
+<div class="pull-quote">
+  "If you are still prompting, we are dead."
+  <cite>— A colleague, stating the obvious</cite>
+</div>
+
+<p>I didn't know what that meant. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research "Loop Engineering." So I did.</p>
+
+<p>What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.</p>
+
+<p>This is the story of how we got here, what we learned, and where it goes next.</p>
+
+<hr>
+
+<h2>The Evolution: How We Got Here</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="stage-label">Stage 1</div>
+    <div class="stage-title">Stack Overflow Replacement</div>
+    <div class="stage-desc">"How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="stage-label">Stage 2</div>
+    <div class="stage-title">Multi-System Correlation (MCP)</div>
+    <div class="stage-desc">AI pulling database state, server logs, and config files together. Solving production issues humans couldn't correlate manually — answers living across 4 systems and 6 log files.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="stage-label">Stage 3</div>
+    <div class="stage-title">Component Building</div>
+    <div class="stage-desc">Well-defined modules, one at a time, with human review. An ETL connector. A measure engine. A frontend page.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="stage-label">Stage 4</div>
+    <div class="stage-title">Full System Construction</div>
+    <div class="stage-desc">Full stack at 10x speed. Architecture, data model, API, frontend, deployment. The AI playing all roles — architect, developer, tester, security reviewer.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="stage-label">Stage 5</div>
+    <div class="stage-title">Stage-Gate Governance</div>
+    <div class="stage-desc">Speed without governance produced garbage that looked like gold. Personas, adversarial review, session state — catching the 40% of errors that "it builds" doesn't catch.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="stage-label">Stage 6</div>
+    <div class="stage-title">Loop-Augmented Governance</div>
+    <div class="stage-desc">Automated verification loops running without permission. Not replacing governance — augmenting it with mechanical consistency checks that catch drift between pipeline runs.</div>
+  </div>
+</div>
+
+<p>Each stage earned the right to exist by solving the pain of the previous one.</p>
+
+<hr>
+
+<h2>What Loop Engineering Actually Is</h2>
+
+<p>Three components. Miss one and you've built a money burner:</p>
+
+<p><strong>Verifier</strong> — an automated gate that isn't the AI grading its own homework. Tests, metrics, schema checks. Something that says "no" without human intervention.</p>
+
+<p><strong>State</strong> — persistent record of what's been tried and what failed. Survives session boundaries. Tomorrow resumes instead of restarts.</p>
+
+<p><strong>Stop condition</strong> — "done" must be definable. Verifier passes, or you hit a retry limit. Open-ended goals without measurable completion are just prompting wearing a loop costume.</p>
+
+<p>In March 2026, Andrej Karpathy demonstrated this with <code>autoresearch</code> — 630 lines of code that ran 700 ML training experiments in two days, finding 20 improvements humans missed. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.</p>
+
+<hr>
+
+<h2>The Real Pain Point</h2>
+
+<p>I spent hundreds of hours building the governance harness — personas, gates, steering files, session state — not because I love process, but because I was tired of correcting the AI on the same mistakes repeatedly. The same stale data left behind. The same hardcoded values that should be database-driven. The same "it builds" confidence when the output was clinically wrong.</p>
+
+<p>The harness simulates all the checks and balances of a real development team: the tech lead who catches architecture drift, the QA engineer who tests the output, the domain expert who says "that's not how CMS works." It reduced the frustration significantly. But it didn't eliminate it.</p>
+
+<p>The critical gap was always <em>systems coherence verification</em>. An AI that writes beautiful code to populate <code>quality.measure</code>, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.</p>
+
+<p>That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. As an automated gate that fails loudly when things drift.</p>
+
+<hr>
+
+<h2>The Merged Model</h2>
+
+<p>Neither stage-gates alone nor loops alone are sufficient.</p>
+
+<div class="layer-model">
+  <div class="layer-box layer-human">
+    🧠 Human Layer
+    <span class="layer-subtitle">Design decisions, compliance judgment, "is this right?"</span>
+  </div>
+  <div class="layer-arrow">▼</div>
+  <div class="layer-box layer-gate">
+    🚧 Gate Layer
+    <span class="layer-subtitle">Stage-gate governance, adversarial review, domain expertise</span>
+  </div>
+  <div class="layer-arrow">▼</div>
+  <div class="layer-box layer-loop">
+    🔁 Loop Layer
+    <span class="layer-subtitle">Autonomous execution, automated verification, self-recovery</span>
+  </div>
+</div>
+
+<p>The merged system gives each task its correct altitude:</p>
+
+<ul style="margin-bottom: 1.2rem; padding-left: 1.5rem;">
+  <li style="margin-bottom: 0.6rem;"><em>"Implement MIPS_476 with proper IPSS score extraction"</em> → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.</li>
+  <li style="margin-bottom: 0.6rem;"><em>"Is our pipeline too slow for large orgs?"</em> → Human flags it. Gate investigates architecture. Loop benchmarks and optimizes.</li>
+  <li style="margin-bottom: 0.6rem;"><em>"Refresh all materialized views after pipeline"</em> → Pure loop. No human needed. Verifier: row counts match source tables.</li>
+</ul>
+
+<p>Most teams try to put everything in one layer. Either everything needs approval (slow) or everything runs free (dangerous). The sweet spot is knowing which layer each task belongs in.</p>
+
+<hr>
+
+<h2>The Timing Question</h2>
+
+<p><strong>Don't gate during discovery.</strong> When you're building 8 measure engines in an afternoon, changing the API contract twice, pivoting the UI based on live feedback — tests are drag. You need flow state. The human IS the verifier.</p>
+
+<p><strong>Gate when interfaces solidify.</strong> Once the same bug bites you twice. Once the pipeline steps are stable. That's when you know the interface has settled enough to be worth encoding. The signal is: it broke because of <em>drift</em>, not <em>change</em>.</p>
+
+<p><strong>Gate what repeats.</strong> If you run it once, verify manually. If you run it daily for 220 clients, gate it. Verifier construction cost ÷ future executions = ROI. For 880 executions/year, even expensive tests pay for themselves in a month.</p>
+
+<hr>
+
+<h2>Five Rules for Production Loops</h2>
+
+<div class="rules-grid">
+  <div class="rule-card">
+    <div class="rule-icon">🔒</div>
+    <div>
+      <div class="rule-number">Rule 1</div>
+      <div class="rule-title">The verifier must be harder than the task</div>
+      <div class="rule-desc">If your test is easier to pass than the real requirement, the loop finds the easiest path — not the correct one.</div>
+    </div>
+  </div>
+  <div class="rule-card">
+    <div class="rule-icon">💾</div>
+    <div>
+      <div class="rule-number">Rule 2</div>
+      <div class="rule-title">State belongs on disk</div>
+      <div class="rule-desc">Context windows degrade. Sessions end. Models forget. If a loop needs to remember something, write it to a file.</div>
+    </div>
+  </div>
+  <div class="rule-card">
+    <div class="rule-icon">🔀</div>
+    <div>
+      <div class="rule-number">Rule 3</div>
+      <div class="rule-title">Separate generator from verifier</div>
+      <div class="rule-desc">The thing that writes code cannot judge code.</div>
+    </div>
+  </div>
+  <div class="rule-card">
+    <div class="rule-icon">🛑</div>
+    <div>
+      <div class="rule-number">Rule 4</div>
+      <div class="rule-title">Hard stop at N retries</div>
+      <div class="rule-desc">No loop runs forever. Without limits, you get infinite token burn on unsolvable problems.</div>
+    </div>
+  </div>
+  <div class="rule-card">
+    <div class="rule-icon">🔄</div>
+    <div>
+      <div class="rule-number">Rule 5</div>
+      <div class="rule-title">Promote successful patterns</div>
+      <div class="rule-desc">When a loop solves a problem, extract the pattern. The first time costs tokens. The 220th time costs nothing.</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<h2>Cost Control</h2>
+
+<p><strong>Tier the loops.</strong> Pre-computed checks (row counts, schema matches) cost zero tokens. Parameterized SQL verifiers cost zero tokens. Only truly novel verification needs AI — rare and cached.</p>
+
+<p><strong>Invest in the verifier, not the loop.</strong> A good test suite runs in 10 seconds and catches 90% of problems. Cheaper than an AI retrying 5 times at 10,000 tokens each.</p>
+
+<p><strong>Promote aggressively.</strong> Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. First client costs tokens. The 220th costs nothing.</p>
+
+<hr>
+
+<h2>The Uncomfortable Truth</h2>
+
+<div class="pull-quote warning">
+  Most software problems don't have clean verifiers. Loop engineering works brilliantly for the 60% that's mechanical. For the other 40% — design, compliance, judgment calls — you still need gates.
+</div>
+
+<p>Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to 2,200 clients?" requires production traffic.</p>
+
+<p>The teams that pretend everything can be looped will ship fast and break things that matter. The teams that refuse to loop anything will be too slow to compete.</p>
+
+<p>The sweet spot is knowing the difference.</p>
+
+<hr>
+
+<h2>The Bottom Line</h2>
+
+<div class="pull-quote conclusion">
+  Loop the mechanical. Gate the judgment. Invest in honest verifiers.<br><br>
+  The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't a luxury. It's the product.
+</div>
+
+<hr>
+
+<h2>Stage-Gate vs Loop Engineering</h2>
+
+<div class="comparison-grid">
+  <div class="comp-card">
+    <div class="comp-card-header sg">Stage-Gate Governance</div>
+    <div class="comp-card-body">
+      <div class="comp-item"><span class="badge badge-green">Strength</span> Judgment at every step</div>
+      <div class="comp-item"><span class="badge badge-green">Strength</span> Adversarial review (B-Team)</div>
+      <div class="comp-item"><span class="badge badge-green">Strength</span> CMS compliance via domain experts</div>
+      <div class="comp-item"><span class="badge badge-green">Strength</span> Full audit trail</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> Human bottleneck on mechanical tasks</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> No overnight execution</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> No automated verification between gates</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> Reactive — catches problems when humans look</div>
+    </div>
+  </div>
+  <div class="comp-card">
+    <div class="comp-card-header le">Loop Engineering</div>
+    <div class="comp-card-body">
+      <div class="comp-item"><span class="badge badge-green">Strength</span> Autonomous overnight execution</div>
+      <div class="comp-item"><span class="badge badge-green">Strength</span> Self-recovery on failure</div>
+      <div class="comp-item"><span class="badge badge-green">Strength</span> Compounding search</div>
+      <div class="comp-item"><span class="badge badge-green">Strength</span> No human bottleneck</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> Requires measurable objectives</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> Comprehension debt (ships faster than anyone reads)</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> Token cost on retries</div>
+      <div class="comp-item"><span class="badge badge-red">Weakness</span> No judgment layer</div>
+    </div>
+  </div>
+</div>
+
+<h3>How Merging Fixes Both</h3>
+
+<table style="width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.9rem;">
+  <thead>
+    <tr style="background: var(--navy); color: #fff;">
+      <th style="padding: 0.75rem 1rem; text-align: left; border-radius: 6px 0 0 0;">Weakness</th>
+      <th style="padding: 0.75rem 1rem; text-align: left; border-radius: 0 6px 0 0;">How the Merge Solves It</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--border);">
+      <td style="padding: 0.6rem 1rem;">Stage-gate: human bottleneck</td>
+      <td style="padding: 0.6rem 1rem;">Loops execute mechanical work without waiting</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border); background: #f9fafb;">
+      <td style="padding: 0.6rem 1rem;">Stage-gate: no overnight work</td>
+      <td style="padding: 0.6rem 1rem;">Loops run pipelines while you sleep</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border);">
+      <td style="padding: 0.6rem 1rem;">Loop: no judgment</td>
+      <td style="padding: 0.6rem 1rem;">Gates still control design and compliance</td>
+    </tr>
+    <tr style="background: #f9fafb;">
+      <td style="padding: 0.6rem 1rem;">Loop: comprehension debt</td>
+      <td style="padding: 0.6rem 1rem;">Gates force documentation before shipping</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Decision Framework</h3>
+
+<div class="decision-framework">
+  <div class="decision-node">
+    <div class="decision-number">1</div>
+    <div>
+      <div class="decision-question">Can a machine verify the output?</div>
+      <div class="decision-answer">Yes → Loop it. &nbsp;No → Gate it.</div>
+    </div>
+  </div>
+  <div class="decision-node">
+    <div class="decision-number">2</div>
+    <div>
+      <div class="decision-question">Is the cost of being wrong catastrophic?</div>
+      <div class="decision-answer">Yes → Gate it, even if verifiable.</div>
+    </div>
+  </div>
+  <div class="decision-node">
+    <div class="decision-number">3</div>
+    <div>
+      <div class="decision-question">Will this task repeat?</div>
+      <div class="decision-answer">Yes → Loop it (amortize verifier cost).</div>
+    </div>
+  </div>
+</div>
+
+<h3>The Numbers</h3>
+
+<div style="background: var(--navy); color: #e2e8f0; padding: 1.5rem 2rem; border-radius: 10px; margin: 1.5rem 0; font-size: 0.92rem; line-height: 2;">
+  <div><strong style="color: #60a5fa;">175,560</strong> loop-cycles/year <span style="color: #94a3b8;">(199 measures × 220 clients × 4 quarterly refreshes)</span></div>
+  <div><strong style="color: #60a5fa;">1.75M</strong> loop-cycles/year at scale <span style="color: #94a3b8;">(199 × 2,200 clients × millions of patients)</span></div>
+  <div><strong style="color: #60a5fa;">42</strong> gated decisions/year <span style="color: #94a3b8;">(7 gates × 6 initiatives)</span></div>
+  <div style="margin-top: 0.75rem; border-top: 1px solid #334155; padding-top: 0.75rem; font-size: 1.05rem;">
+    <strong style="color: #34d399;">41,800 automated executions per human decision.</strong> <span style="color: #94a3b8;">That's the leverage.</span>
+  </div>
+</div>
+
+<hr>
+
+<h2>References</h2>
+
+<div class="references">
+  <ol>
+    <li>Karpathy, A. (2026). <em>AutoResearch</em>. <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a></li>
+    <li>Fortune (2026). "'The Karpathy Loop': 700 experiments, 2 days, and a glimpse of where AI is heading." <a href="https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/">fortune.com</a></li>
+    <li>Bilevel Autoresearch: Meta-Autoresearching Itself (2026). arXiv:2603.23420</li>
+    <li>Cooper, R.G. (1986). <em>Winning at New Products: Accelerating the Process from Idea to Launch</em>. Stage-Gate® methodology.</li>
+    <li>CMS MIPS Payment Adjustment. 42 CFR § 414.1405. Up to ±9% Medicare Part B adjustment based on composite performance score.</li>
+    <li>AI Builder Club (2026). "Karpathy's LOOPS.md: The Rules and What's Verified." <a href="https://www.aibuilderclub.com/blog/loops-md-karpathy">aibuilderclub.com</a></li>
+  </ol>
+</div>
+
+<div class="author-box">
+  <strong style="color: #f8fafc;">Douglas Jones</strong> leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.<br><br>
+  The <a href="https://github.com/codifide/agentic-stage-gate-governance">Agentic Stage-Gate Governance</a> framework is open source.
+</div>
+
+</article>
+
+</body>
+</html>
