@@ -227,6 +227,30 @@ Before activating a loop, confirm:
 
 ---
 
+## Proactive Loop Suggestion (MANDATORY)
+
+**When the user gives a task that meets all three loop criteria (machine-verifiable, bounded/repeatable, low-cost failure), the AI MUST proactively ask:**
+
+> "This looks like a good candidate for looping — it's verifiable, bounded, and recoverable. Want me to loop it (define verifier + state + stop condition) or just execute it once?"
+
+**When to suggest:**
+- Running a pipeline or ETL for multiple orgs
+- Fixing a failing test (the test IS the verifier)
+- Data consistency checks across tables/views
+- Refactoring to a known pattern with existing tests
+- Performance optimization with a measurable benchmark
+- Any task the user is likely to run again
+
+**When NOT to suggest:**
+- Design decisions, architecture choices
+- First-time implementation of new features
+- Compliance interpretation
+- Anything where "correct" requires human judgment
+
+This is not optional. If the task fits, ask. Let the human decide.
+
+---
+
 ## Examples
 
 ### Example 1: Fix a Failing Test
