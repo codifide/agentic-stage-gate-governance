@@ -134,3 +134,127 @@ Loop the mechanical. Gate the judgment. Invest in honest verifiers. And when the
 *Douglas Jones leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines using agentic development with stage-gate governance.*
 
 *The full Loop Engineering Guide and the Agentic Stage-Gate Governance framework are open source at [github.com/codifide/agentic-stage-gate-governance](https://github.com/codifide/agentic-stage-gate-governance).*
+
+
+---
+
+## Appendix: Stage-Gate vs Loop Engineering — A Comparison
+
+### Stage-Gate System (What We Had Before)
+
+Our Agentic Stage-Gate Governance system, built over a year of production work, operates on a simple principle: **"AI builds. Humans decide. Evidence proves."**
+
+| Strength | Description |
+|----------|-------------|
+| Judgment at every step | 7 gates (G0–G6) ensure no work ships without human approval |
+| Adversarial review | B-Team critics use a DIFFERENT model to find weaknesses |
+| CMS compliance | Domain experts (Gretchen) validate clinical logic at gates |
+| Audit trail | Every gate produces evidence artifacts — traceable, defensible |
+| Persona separation | 12 A-Team builders + 12 B-Team critics prevent groupthink |
+
+| Weakness | Description |
+|----------|-------------|
+| Human bottleneck | Every decision waits for the human — even mechanical ones |
+| No overnight execution | Work stops when the session ends |
+| No automated verification | "It builds" was the only check between gates |
+| Reactive, not proactive | Doesn't catch stale data until someone looks at a screen |
+| Flow state interruption | Gate ceremonies can break momentum on simple tasks |
+
+### Loop Engineering (What Karpathy Proposes)
+
+| Strength | Description |
+|----------|-------------|
+| Autonomous execution | Runs 700 experiments in 2 days — no human in the inner loop |
+| Automated verification | Verifier closes the loop without human review |
+| Overnight capability | Define goal → sleep → wake up to results |
+| Self-recovery | Failed attempts roll back automatically, loop continues |
+| Compounding search | Each iteration builds on prior knowledge (state file) |
+
+| Weakness | Description |
+|----------|-------------|
+| Requires measurable objectives | Can't loop "design something good" |
+| Comprehension debt | Ships code faster than anyone can understand it |
+| Verifier ≠ Correct | Passing tests doesn't mean the output is RIGHT |
+| Token cost on retries | Failed iterations burn money with no return |
+| No judgment layer | Can't ask "should we even be doing this?" |
+| Runaway risk | Bad loops at 3am produce 40 commits of nonsense |
+| Cognitive surrender | Teams stop thinking because "the loop verified it" |
+
+### The Merged System (What We Built)
+
+Neither system alone is sufficient. Stage-gate is too slow for mechanical work. Loop engineering is too dangerous for judgment work. The merged system puts each task at the correct altitude:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ STAGE-GATE LAYER (Judgment)                            │
+│                                                        │
+│  Human goals → Persona review → Gate decisions         │
+│  CMS compliance, architecture, design, priorities      │
+│                                                        │
+│  When: Requirements, design, compliance, go/no-go      │
+│  Frequency: Per initiative (days/weeks)                │
+│  Cost: Human time (expensive but irreplaceable)        │
+├────────────────────────────────────────────────────────┤
+│ LOOP LAYER (Execution)                                 │
+│                                                        │
+│  Goal → Iterate → Verify → State → Iterate → Done     │
+│  ETL, testing, optimization, data consistency          │
+│                                                        │
+│  When: Implementation, verification, maintenance       │
+│  Frequency: Continuous (hours/overnight)               │
+│  Cost: Tokens + compute (cheap and getting cheaper)    │
+└────────────────────────────────────────────────────────┘
+```
+
+### How Merging Solved Both Systems' Weaknesses
+
+| Original Weakness | How the Merge Fixes It |
+|---|---|
+| **Stage-gate: human bottleneck** | Loops handle mechanical execution without waiting |
+| **Stage-gate: no overnight work** | Loops run pipelines and verify while you sleep |
+| **Stage-gate: no automated verification** | Loop verifiers catch stale data, broken APIs, schema drift |
+| **Loop: no judgment** | Gates still control design, compliance, architecture |
+| **Loop: comprehension debt** | Gates force documentation and persona review before shipping |
+| **Loop: runaway risk** | Gates define scope; loops can't exceed what's been approved |
+| **Loop: cognitive surrender** | B-Team adversarial review remains mandatory at gates |
+| **Loop: verifier ≠ correct** | Gretchen reviews correctness; loops only verify consistency |
+
+### Decision Framework: Gate It or Loop It?
+
+Ask these three questions:
+
+1. **Can a machine verify the output?** (tests, metrics, row counts, schema checks)
+   - Yes → Loop it
+   - No → Gate it
+
+2. **Is the cost of being wrong catastrophic?** (CMS audit, patient safety, data loss)
+   - Yes → Gate it, even if a machine CAN verify
+   - No → Loop it
+
+3. **Will this task repeat?** (ETL runs, deployments, data refreshes)
+   - Yes → Loop it (amortize verifier construction cost)
+   - No → Gate it (one-off judgment call)
+
+### Real Examples From This Week
+
+| Task | System Used | Outcome |
+|---|---|---|
+| Design measure evidence discovery feature | Stage-Gate (G0/G1, 5 personas) | Right architecture, clear requirements |
+| Run ETL pipeline for all orgs | Loop (post_etl_pipeline + MV refresh) | 199 measures recomputed, data consistent |
+| Fix Quality Measures page CMS compliance | Stage-Gate (Gretchen review, 8 findings) | Caught scoring errors no test would find |
+| Rebuild quality-service Docker image | Loop (build → deploy → health check) | Mechanical, repeatable, no judgment needed |
+| Decide whether to use Airflow | Stage-Gate (IT mandate review) | Killed it — domain judgment, not automatable |
+| Verify MV matches quality.measure | Loop (SQL assertion) | Catches inconsistency without human looking |
+| Write Medium article on loop engineering | Stage-Gate + Quill persona | Needs voice, narrative, honesty — can't loop "be insightful" |
+
+### The Competitive Advantage
+
+Most teams will adopt one system or the other:
+- **All-gate teams** will be too slow. Every commit waits for approval.
+- **All-loop teams** will ship fast and break regulated things. CMS doesn't accept "the loop verified it."
+
+We're building both — and the judgment to know which to use when. That's the moat. In healthcare, where a wrong measure calculation can cost a practice $75K in MIPS penalties, you can't afford to loop your compliance logic. But you also can't afford to manually verify 199 measures × 220 clients × 4 data refresh cycles per year.
+
+The merged system handles 175,560 measure-client-cycles per year autonomously (loops) while keeping 42 CMS-regulated decisions under human authority (gates).
+
+That's the sweet spot.
