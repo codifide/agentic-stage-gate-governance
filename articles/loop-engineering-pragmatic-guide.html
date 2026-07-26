@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>We Were Already Doing Loop Engineering. We Just Didn't Know It.</title>
 <style>
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --navy: #1a1a2e;
@@ -375,388 +376,235 @@ hr {
   .container { padding: 1.25rem 1rem; }
   h2 { font-size: 1.5rem; }
 }
+
 </style>
 </head>
 <body>
 
 <header class="hero">
-  <h1>We Were Already Doing Loop Engineering.<br>We Just Didn't Know It.</h1>
-  <p class="subtitle">A pragmatic guide to merging stage-gate governance with autonomous verification loops in healthcare AI</p>
+<h1>We Were Already Doing Loop Engineering.<br>We Just Didn't Know It.</h1>
+<p class="subtitle">"If you are still prompting, we are dead."</p>
 </header>
 
-<article class="container">
-
-<div class="pull-quote">
-  "If you are still prompting, we are dead."
-  <cite>— A colleague, stating the obvious</cite>
-</div>
-
+<div class="container">
+<article>
+<h1>We Were Already Doing Loop Engineering. We Just Didn't Know It.</h1>
+<p><em>"If you are still prompting, we are dead."</em></p>
 <p>I didn't know what he meant. I'd already integrated Karpathy's autoresearch concept into the system — autonomous iteration with adversarial review and convergence criteria. But "loop engineering" was a different frame. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research it. So I did.</p>
-
 <p>What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.</p>
-
 <p>This is the story of how we got here, what we learned, and where it goes next.</p>
-
-<hr>
-
+<hr />
 <h2>The Evolution: How We Got Here</h2>
-
-<div class="timeline">
-  <div class="timeline-item">
-    <div class="stage-label">Stage 1</div>
-    <div class="stage-title">Stack Overflow Replacement</div>
-    <div class="stage-desc">"How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="stage-label">Stage 2</div>
-    <div class="stage-title">Multi-System Correlation (MCP)</div>
-    <div class="stage-desc">AI pulling database state, server logs, and config files together. Solving production issues humans couldn't correlate manually — answers living across 4 systems and 6 log files.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="stage-label">Stage 3</div>
-    <div class="stage-title">Component Building</div>
-    <div class="stage-desc">Well-defined modules, one at a time, with human review. An ETL connector. A measure engine. A frontend page.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="stage-label">Stage 4</div>
-    <div class="stage-title">Full System Construction</div>
-    <div class="stage-desc">Full stack at 10x speed. Architecture, data model, API, frontend, deployment. The AI playing all roles — architect, developer, tester, security reviewer.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="stage-label">Stage 5</div>
-    <div class="stage-title">Stage-Gate Governance</div>
-    <div class="stage-desc">Speed without governance produced garbage that looked like gold. Personas, adversarial review, session state — catching the 40% of errors that "it builds" doesn't catch.</div>
-  </div>
-  <div class="timeline-item">
-    <div class="stage-label">Stage 6</div>
-    <div class="stage-title">Loop-Augmented Governance</div>
-    <div class="stage-desc">Automated verification loops running without permission. Not replacing governance — augmenting it with mechanical consistency checks that catch drift between pipeline runs.</div>
-  </div>
-</div>
-
+<p>A year ago I started using AI for coding the way most people do — as a better Stack Overflow. "How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.</p>
+<p>Then MCP connections changed everything. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.</p>
+<p>That earned enough trust for the next step: building components. Well-defined modules, one at a time, with human review after each. An ETL connector. A measure engine. A frontend page.</p>
+<p>Then whole systems. Not one component — the full stack. Architecture, data model, API, frontend, deployment. Simulating a traditional development team at 10x speed. Architect drafts the design. Developer implements. Tester verifies. Security reviews. The AI played all the roles.</p>
+<p>But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed 4.0% instead of 22.5/30. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.</p>
+<p>That's when we built the governance layer — stage-gates, adversarial review, domain expert personas, persistent session state. Not to slow things down, but to catch the 40% of errors that "it builds" doesn't catch.</p>
+<p>And now we're adding the final piece: automated verification loops that run without asking permission. Not replacing the governance — augmenting it with mechanical consistency checks that catch drift between pipeline runs.</p>
 <p>Each stage earned the right to exist by solving the pain of the previous one.</p>
-
-<hr>
-
+<hr />
 <h2>What Loop Engineering Actually Is</h2>
-
 <p>Three components. Miss one and you've built a money burner:</p>
-
 <p><strong>Verifier</strong> — an automated gate that isn't the AI grading its own homework. Tests, metrics, schema checks. Something that says "no" without human intervention.</p>
-
 <p><strong>State</strong> — persistent record of what's been tried and what failed. Survives session boundaries. Tomorrow resumes instead of restarts.</p>
-
 <p><strong>Stop condition</strong> — "done" must be definable. Verifier passes, or you hit a retry limit. Open-ended goals without measurable completion are just prompting wearing a loop costume.</p>
-
 <p>In March 2026, Andrej Karpathy demonstrated this with <code>autoresearch</code> — 630 lines of code that ran 700 ML training experiments in two days, finding 20 improvements humans missed. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.</p>
-
-<hr>
-
+<hr />
 <h2>The Real Pain Point</h2>
-
+<p>Let me be direct about where this comes from.</p>
 <p>I spent hundreds of hours building the governance harness — personas, gates, steering files, session state — not because I love process, but because I was tired of correcting the AI on the same mistakes repeatedly. The same stale data left behind. The same hardcoded values that should be database-driven. The same "it builds" confidence when the output was clinically wrong.</p>
-
 <p>The harness simulates all the checks and balances of a real development team: the tech lead who catches architecture drift, the QA engineer who tests the output, the domain expert who says "that's not how CMS works." It reduced the frustration significantly. But it didn't eliminate it.</p>
-
 <p>The critical gap was always <em>systems coherence verification</em>. An AI that writes beautiful code to populate <code>quality.measure</code>, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.</p>
-
 <p>That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. As an automated gate that fails loudly when things drift.</p>
-
-<hr>
-
-<h2>The Merged Model</h2>
-
-<p>Neither stage-gates alone nor loops alone are sufficient.</p>
-
-<div class="layer-model">
-  <div class="layer-box layer-human">
-    🧠 Human Layer
-    <span class="layer-subtitle">Design decisions, compliance judgment, "is this right?"</span>
-  </div>
-  <div class="layer-arrow">▼</div>
-  <div class="layer-box layer-gate">
-    🚧 Gate Layer
-    <span class="layer-subtitle">Stage-gate governance, adversarial review, domain expertise</span>
-  </div>
-  <div class="layer-arrow">▼</div>
-  <div class="layer-box layer-loop">
-    🔁 Loop Layer
-    <span class="layer-subtitle">Autonomous execution, automated verification, self-recovery</span>
-  </div>
-</div>
-
-<p>The merged system gives each task its correct altitude:</p>
-
-<ul style="margin-bottom: 1.2rem; padding-left: 1.5rem;">
-  <li style="margin-bottom: 0.6rem;"><em>"Implement MIPS_476 with proper IPSS score extraction"</em> → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.</li>
-  <li style="margin-bottom: 0.6rem;"><em>"Is our pipeline too slow for large orgs?"</em> → Human flags it. Gate investigates architecture. Loop benchmarks and optimizes.</li>
-  <li style="margin-bottom: 0.6rem;"><em>"Refresh all materialized views after pipeline"</em> → Pure loop. No human needed. Verifier: row counts match source tables.</li>
-</ul>
-
-<p>Most teams try to put everything in one layer. Either everything needs approval (slow) or everything runs free (dangerous). The sweet spot is knowing which layer each task belongs in.</p>
-
-<hr>
-
+<hr />
 <h2>The Timing Question</h2>
-
+<p>When do you install these gates?</p>
 <p><strong>Don't gate during discovery.</strong> When you're building 8 measure engines in an afternoon, changing the API contract twice, pivoting the UI based on live feedback — tests are drag. You need flow state. The human IS the verifier.</p>
-
 <p><strong>Gate when interfaces solidify.</strong> Once the same bug bites you twice. Once the pipeline steps are stable. That's when you know the interface has settled enough to be worth encoding. The signal is: it broke because of <em>drift</em>, not <em>change</em>.</p>
-
 <p><strong>Gate what repeats.</strong> If you run it once, verify manually. If you run it daily for 220 clients, gate it. Verifier construction cost ÷ future executions = ROI. For 880 executions/year, even expensive tests pay for themselves in a month.</p>
-
-<hr>
-
+<hr />
+<h2>The Merged Model</h2>
+<p>Neither stage-gates alone nor loops alone are sufficient.</p>
+<p>Stage-gates without loops: every mechanical task waits for human approval. Slow.</p>
+<p>Loops without gates: everything runs autonomously, including compliance logic. Dangerous.</p>
+<p>The merged system gives each task its correct altitude:</p>
+<ul>
+<li><em>"Implement MIPS_476 with proper IPSS score extraction"</em> → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.</li>
+<li><em>"Is our pipeline too slow for large orgs?"</em> → Human flags it. Gate investigates architecture. Loop benchmarks and optimizes.</li>
+<li><em>"Refresh all materialized views after pipeline"</em> → Pure loop. No human needed. Verifier: row counts match source tables.</li>
+</ul>
+<p>Most teams try to put everything in one layer. Either everything needs approval (slow) or everything runs free (dangerous). The sweet spot is knowing which layer each task belongs in.</p>
+<hr />
 <h2>Five Rules for Production Loops</h2>
-
-<div class="rules-grid">
-  <div class="rule-card">
-    <div class="rule-icon">🔒</div>
-    <div>
-      <div class="rule-number">Rule 1</div>
-      <div class="rule-title">The verifier must be harder than the task</div>
-      <div class="rule-desc">If your test is easier to pass than the real requirement, the loop finds the easiest path — not the correct one.</div>
-    </div>
-  </div>
-  <div class="rule-card">
-    <div class="rule-icon">💾</div>
-    <div>
-      <div class="rule-number">Rule 2</div>
-      <div class="rule-title">State belongs on disk</div>
-      <div class="rule-desc">Context windows degrade. Sessions end. Models forget. If a loop needs to remember something, write it to a file.</div>
-    </div>
-  </div>
-  <div class="rule-card">
-    <div class="rule-icon">🔀</div>
-    <div>
-      <div class="rule-number">Rule 3</div>
-      <div class="rule-title">Separate generator from verifier</div>
-      <div class="rule-desc">The thing that writes code cannot judge code.</div>
-    </div>
-  </div>
-  <div class="rule-card">
-    <div class="rule-icon">🛑</div>
-    <div>
-      <div class="rule-number">Rule 4</div>
-      <div class="rule-title">Hard stop at N retries</div>
-      <div class="rule-desc">No loop runs forever. Without limits, you get infinite token burn on unsolvable problems.</div>
-    </div>
-  </div>
-  <div class="rule-card">
-    <div class="rule-icon">🔄</div>
-    <div>
-      <div class="rule-number">Rule 5</div>
-      <div class="rule-title">Promote successful patterns</div>
-      <div class="rule-desc">When a loop solves a problem, extract the pattern. The first time costs tokens. The 220th time costs nothing.</div>
-    </div>
-  </div>
-</div>
-
-<hr>
-
+<ol>
+<li>
+<p><strong>The verifier must be harder than the task.</strong> If your test is easier to pass than the real requirement, the loop finds the easiest path — not the correct one.</p>
+</li>
+<li>
+<p><strong>State belongs on disk.</strong> Context windows degrade. Sessions end. Models forget. If a loop needs to remember something, write it to a file.</p>
+</li>
+<li>
+<p><strong>Separate generator from verifier.</strong> The thing that writes code cannot judge code.</p>
+</li>
+<li>
+<p><strong>Hard stop at N retries.</strong> No loop runs forever. Without limits, you get infinite token burn on unsolvable problems.</p>
+</li>
+<li>
+<p><strong>Promote successful patterns.</strong> When a loop solves a problem, extract the pattern. The first time costs tokens. The 220th time costs nothing.</p>
+</li>
+</ol>
+<hr />
 <h2>Cost Control</h2>
-
+<p>Three mechanisms:</p>
 <p><strong>Tier the loops.</strong> Pre-computed checks (row counts, schema matches) cost zero tokens. Parameterized SQL verifiers cost zero tokens. Only truly novel verification needs AI — rare and cached.</p>
-
 <p><strong>Invest in the verifier, not the loop.</strong> A good test suite runs in 10 seconds and catches 90% of problems. Cheaper than an AI retrying 5 times at 10,000 tokens each.</p>
-
 <p><strong>Promote aggressively.</strong> Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. First client costs tokens. The 220th costs nothing.</p>
-
-<hr>
-
+<hr />
 <h2>The Uncomfortable Truth</h2>
-
-<div class="pull-quote warning">
-  Most software problems don't have clean verifiers. Loop engineering works brilliantly for the 60% that's mechanical. For the other 40% — design, compliance, judgment calls — you still need gates.
-</div>
-
+<p>Here's what nobody in the loop engineering hype wants to say: most software problems don't have clean verifiers.</p>
 <p>Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to 2,200 clients?" requires production traffic.</p>
-
+<p>Loop engineering works brilliantly for the 60% that's mechanical. For the other 40% — design, compliance, judgment calls — you still need gates. You still need the uncomfortable conversation where someone says "this isn't right."</p>
 <p>The teams that pretend everything can be looped will ship fast and break things that matter. The teams that refuse to loop anything will be too slow to compete.</p>
-
 <p>The sweet spot is knowing the difference.</p>
-
-<hr>
-
+<hr />
+<h2>The Stale Baseline Trap</h2>
+<p>Here's something the academic papers don't mention: verifiers can be correct AND misleading.</p>
+<p>We built a verifier that compared our new bitmap pipeline output against the legacy <code>quality.measure</code> table — 176 measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.</p>
+<p>The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures (eCQM engines now handle some measures that attestation used to), the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.</p>
+<p>15 of 176 measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.</p>
+<p><strong>The lesson:</strong> A comparison verifier is only as good as its reference data. If the reference was produced by a different system configuration, you're not testing correctness — you're testing backward compatibility. Those are different things.</p>
+<p><strong>Three fixes:</strong>
+1. Regenerate the baseline fresh before every comparison (expensive but honest)
+2. Make the verifier self-contained: write data through the new path, read it back, verify the round-trip (no external reference)
+3. Accept a documented divergence threshold when configuration has explicitly changed — but NEVER normalize away unexpected differences without root-cause</p>
+<p>The dangerous mode is when the team learns to say "oh, that's just the stale baseline again" and stops investigating. One day it won't be the baseline. It'll be a real bug wearing the same clothes.</p>
+<hr />
+<h2>What We Got Wrong About Effort Estimation</h2>
+<p>The B-Team adversarial review estimated 3-6 weeks for the bitmap pipeline rewrite. The actual implementation took 8 hours.</p>
+<p>This isn't because the B-Team was incompetent. It's because their estimation model assumed traditional execution: one developer, switching between files, running manual tests, waiting for code review, writing documentation. That's how the 3-6 week number makes sense.</p>
+<p>But looped execution changes the math:
+- The pipeline had a single shared output interface (<code>BaseEngine.write_results()</code>). Changing it to <code>write_bitmap_results()</code> was one method addition + find-and-replace across 68 call sites. That's 20 minutes of mechanical work, not 2 days.
+- The verifier ran immediately after each change — no "wait for QA" cycle.
+- The AI held full context (all 68 call sites, the base class, the verifier, the state file) simultaneously. No context-switching tax.</p>
+<p><strong>The calibration insight:</strong> If your adversarial review estimates effort for a looped task, ask the reviewer to identify the shared abstraction boundary. If there IS one (like BaseEngine), the actual effort is the boundary change + repetition count × cost-per-repetition. The repetition cost for a find-and-replace is ~zero. The total effort is dominated by the boundary change alone.</p>
+<p>Our B-Team now knows to ask: "Is there a single interface point?" before estimating. If yes, divide the estimate by the number of consumers — they're not independent tasks.</p>
+<hr />
 <h2>The Bottom Line</h2>
-
-<div class="pull-quote conclusion">
-  Loop the mechanical. Gate the judgment. Invest in honest verifiers.<br><br>
-  The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't a luxury. It's the product.
-</div>
-
-<hr>
-
-<h2>Stage-Gate vs Loop Engineering vs The Merged Model</h2>
-
-<div style="overflow-x: auto; margin: 2rem 0;">
-  <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.88rem; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-    <thead>
-      <tr>
-        <th style="padding: 1rem 1.25rem; text-align: left; background: #1e3a5f; color: #fff; width: 22%;">Dimension</th>
-        <th style="padding: 1rem 1.25rem; text-align: center; background: #1e3a5f; color: #fff; width: 26%;">Stage-Gate</th>
-        <th style="padding: 1rem 1.25rem; text-align: center; background: #1e3a5f; color: #fff; width: 26%;">Loop Engineering</th>
-        <th style="padding: 1rem 1.25rem; text-align: center; background: #065f46; color: #fff; width: 26%;">Stage-Gate-Loop ✓</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="background: #fff;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Judgment & Compliance</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Gates + B-Team</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> No judgment layer</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> Gates preserved</td>
-      </tr>
-      <tr style="background: #f9fafb;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Overnight Execution</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> Stops when human sleeps</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Runs autonomously</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> Loops run overnight</td>
-      </tr>
-      <tr style="background: #fff;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Automated Verification</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> Manual between gates</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Verifier-driven</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> G-LOOP continuous</td>
-      </tr>
-      <tr style="background: #f9fafb;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Adversarial Review</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> B-Team critics</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">None</span> Agent trusts itself</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Strong</span> B-Team at gates</td>
-      </tr>
-      <tr style="background: #fff;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Mechanical Task Speed</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">Slow</span> Waits for human</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Fast</span> No bottleneck</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Fast</span> Loops handle it</td>
-      </tr>
-      <tr style="background: #f9fafb;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Comprehension Debt</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Low</span> Human reads everything</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">High</span> Ships faster than anyone reads</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Low</span> Gates force documentation</td>
-      </tr>
-      <tr style="background: #fff;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Token Cost Control</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Low</span> Human limits scope</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">Risk</span> Retries burn tokens</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Managed</span> Tiered + promoted</td>
-      </tr>
-      <tr style="background: #f9fafb;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Drift Detection</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-red">Reactive</span> Caught when someone looks</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Proactive</span> Verifier catches drift</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Proactive</span> G-LOOP monitors</td>
-      </tr>
-      <tr style="background: #fff;">
-        <td style="padding: 0.75rem 1.25rem; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Audit Trail</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge badge-green">Strong</span> Gate artifacts</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb;"><span class="badge" style="background: #fef3c7; color: #92400e;">Partial</span> State files only</td>
-        <td style="padding: 0.75rem 1.25rem; text-align: center; border-bottom: 1px solid #e5e7eb; background: #f0fdf4;"><span class="badge badge-green">Complete</span> Gates + loop logs</td>
-      </tr>
-      <tr style="background: #f0fdf4;">
-        <td style="padding: 1rem 1.25rem; font-weight: 700; color: #065f46;">Automation Ratio</td>
-        <td style="padding: 1rem 1.25rem; text-align: center; font-weight: 600; color: var(--muted);">1:1 (human per task)</td>
-        <td style="padding: 1rem 1.25rem; text-align: center; font-weight: 600; color: var(--muted);">∞:0 (no human gate)</td>
-        <td style="padding: 1rem 1.25rem; text-align: center; font-weight: 700; color: #065f46; font-size: 1rem;">41,800:1</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; border-radius: 10px; padding: 1.5rem 2rem; margin: 2rem 0;">
-  <p style="font-family: Georgia, serif; font-size: 1.05rem; line-height: 1.6; color: #1a1a2e; margin: 0;">
-    <strong>Quill's take:</strong> The merged model isn't a compromise between two systems — it's what happens when you stop asking "which one?" and start asking "which layer?" Stage-Gate was always right about judgment. Loop Engineering is right about execution. The mistake was thinking you had to pick. You don't. You stack them. Gates define what "correct" means. Loops verify it stays correct at scale. The human decides when to ship. Three layers, one system — no weaknesses from either ancestor survive intact.
-  </p>
-</div>
-
-<h3>How Merging Fixes Both</h3>
-
-<table style="width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.9rem;">
-  <thead>
-    <tr style="background: var(--navy); color: #fff;">
-      <th style="padding: 0.75rem 1rem; text-align: left; border-radius: 6px 0 0 0;">Weakness</th>
-      <th style="padding: 0.75rem 1rem; text-align: left; border-radius: 0 6px 0 0;">How the Merge Solves It</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr style="border-bottom: 1px solid var(--border);">
-      <td style="padding: 0.6rem 1rem;">Stage-gate: human bottleneck</td>
-      <td style="padding: 0.6rem 1rem;">Loops execute mechanical work without waiting</td>
-    </tr>
-    <tr style="border-bottom: 1px solid var(--border); background: #f9fafb;">
-      <td style="padding: 0.6rem 1rem;">Stage-gate: no overnight work</td>
-      <td style="padding: 0.6rem 1rem;">Loops run pipelines while you sleep</td>
-    </tr>
-    <tr style="border-bottom: 1px solid var(--border);">
-      <td style="padding: 0.6rem 1rem;">Loop: no judgment</td>
-      <td style="padding: 0.6rem 1rem;">Gates still control design and compliance</td>
-    </tr>
-    <tr style="background: #f9fafb;">
-      <td style="padding: 0.6rem 1rem;">Loop: comprehension debt</td>
-      <td style="padding: 0.6rem 1rem;">Gates force documentation before shipping</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>Decision Framework</h3>
-
-<div class="decision-framework">
-  <div class="decision-node">
-    <div class="decision-number">1</div>
-    <div>
-      <div class="decision-question">Can a machine verify the output?</div>
-      <div class="decision-answer">Yes → Loop it. &nbsp;No → Gate it.</div>
-    </div>
-  </div>
-  <div class="decision-node">
-    <div class="decision-number">2</div>
-    <div>
-      <div class="decision-question">Is the cost of being wrong catastrophic?</div>
-      <div class="decision-answer">Yes → Gate it, even if verifiable.</div>
-    </div>
-  </div>
-  <div class="decision-node">
-    <div class="decision-number">3</div>
-    <div>
-      <div class="decision-question">Will this task repeat?</div>
-      <div class="decision-answer">Yes → Loop it (amortize verifier cost).</div>
-    </div>
-  </div>
-</div>
-
-<h3>The Numbers</h3>
-
-<div style="background: var(--navy); color: #e2e8f0; padding: 1.5rem 2rem; border-radius: 10px; margin: 1.5rem 0; font-size: 0.92rem; line-height: 2;">
-  <div><strong style="color: #60a5fa;">175,560</strong> loop-cycles/year <span style="color: #94a3b8;">(199 measures × 220 clients × 4 quarterly refreshes)</span></div>
-  <div><strong style="color: #60a5fa;">1.75M</strong> loop-cycles/year at scale <span style="color: #94a3b8;">(199 × 2,200 clients × millions of patients)</span></div>
-  <div><strong style="color: #60a5fa;">42</strong> gated decisions/year <span style="color: #94a3b8;">(7 gates × 6 initiatives)</span></div>
-  <div style="margin-top: 0.75rem; border-top: 1px solid #334155; padding-top: 0.75rem; font-size: 1.05rem;">
-    <strong style="color: #34d399;">41,800 automated executions per human decision.</strong> <span style="color: #94a3b8;">That's the leverage.</span>
-  </div>
-</div>
-
-<hr>
-
+<p>Loop the mechanical. Gate the judgment. Invest in honest verifiers. And test your verifiers against stale data — because a verifier that cries wolf trains you to ignore it.</p>
+<p>The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't the product. Correctness is. Confidence is what you earn when the verifier agrees.</p>
+<hr />
+<p><em>Douglas Jones leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.</em></p>
+<p><em>The <a href="https://github.com/codifide/agentic-stage-gate-governance">Agentic Stage-Gate Governance</a> framework is open source.</em></p>
+<hr />
 <h2>References</h2>
-
-<div class="references">
-  <ol>
-    <li>Karpathy, A. (2026). <em>AutoResearch</em>. <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a></li>
-    <li>Fortune (2026). "'The Karpathy Loop': 700 experiments, 2 days, and a glimpse of where AI is heading." <a href="https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/">fortune.com</a></li>
-    <li>Bilevel Autoresearch: Meta-Autoresearching Itself (2026). arXiv:2603.23420</li>
-    <li>Cooper, R.G. (1986). <em>Winning at New Products: Accelerating the Process from Idea to Launch</em>. Stage-Gate® methodology.</li>
-    <li>CMS MIPS Payment Adjustment. 42 CFR § 414.1405. Up to ±9% Medicare Part B adjustment based on composite performance score.</li>
-    <li>AI Builder Club (2026). "Karpathy's LOOPS.md: The Rules and What's Verified." <a href="https://www.aibuilderclub.com/blog/loops-md-karpathy">aibuilderclub.com</a></li>
-  </ol>
-</div>
-
-<div class="author-box">
-  <strong style="color: #f8fafc;">Douglas Jones</strong> leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.<br><br>
-  The <a href="https://github.com/codifide/agentic-stage-gate-governance">Agentic Stage-Gate Governance</a> framework is open source.
-</div>
-
+<ol>
+<li>Karpathy, A. (2026). <em>AutoResearch</em>. <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a></li>
+<li>Fortune (2026). "'The Karpathy Loop': 700 experiments, 2 days, and a glimpse of where AI is heading." <a href="https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/">fortune.com</a></li>
+<li>Bilevel Autoresearch: Meta-Autoresearching Itself (2026). arXiv:2603.23420</li>
+<li>Cooper, R.G. (1986). <em>Winning at New Products: Accelerating the Process from Idea to Launch</em>. Stage-Gate® methodology.</li>
+<li>CMS MIPS Payment Adjustment. 42 CFR § 414.1405. Up to ±9% Medicare Part B adjustment based on composite performance score.</li>
+<li>AI Builder Club (2026). "Karpathy's LOOPS.md: The Rules and What's Verified." <a href="https://www.aibuilderclub.com/blog/loops-md-karpathy">aibuilderclub.com</a></li>
+</ol>
+<hr />
+<h2>Appendix: Stage-Gate vs Loop Engineering — Side-by-Side</h2>
+<h3>Stage-Gate Strengths &amp; Weaknesses</h3>
+<table>
+<thead>
+<tr>
+<th>Strength</th>
+<th>Weakness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Judgment at every step</td>
+<td>Human bottleneck on mechanical tasks</td>
+</tr>
+<tr>
+<td>Adversarial review (B-Team)</td>
+<td>No overnight execution</td>
+</tr>
+<tr>
+<td>CMS compliance via domain experts</td>
+<td>No automated verification between gates</td>
+</tr>
+<tr>
+<td>Full audit trail</td>
+<td>Reactive — catches problems when humans look</td>
+</tr>
+</tbody>
+</table>
+<h3>Loop Engineering Strengths &amp; Weaknesses</h3>
+<table>
+<thead>
+<tr>
+<th>Strength</th>
+<th>Weakness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Autonomous overnight execution</td>
+<td>Requires measurable objectives</td>
+</tr>
+<tr>
+<td>Self-recovery on failure</td>
+<td>Comprehension debt (ships faster than anyone reads)</td>
+</tr>
+<tr>
+<td>Compounding search</td>
+<td>Token cost on retries</td>
+</tr>
+<tr>
+<td>No human bottleneck</td>
+<td>No judgment layer</td>
+</tr>
+</tbody>
+</table>
+<h3>How Merging Fixes Both</h3>
+<table>
+<thead>
+<tr>
+<th>Weakness</th>
+<th>How the Merge Solves It</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stage-gate: human bottleneck</td>
+<td>Loops execute mechanical work without waiting</td>
+</tr>
+<tr>
+<td>Stage-gate: no overnight work</td>
+<td>Loops run pipelines while you sleep</td>
+</tr>
+<tr>
+<td>Loop: no judgment</td>
+<td>Gates still control design and compliance</td>
+</tr>
+<tr>
+<td>Loop: comprehension debt</td>
+<td>Gates force documentation before shipping</td>
+</tr>
+</tbody>
+</table>
+<h3>Decision Framework</h3>
+<p>Three questions:</p>
+<ol>
+<li><strong>Can a machine verify the output?</strong> → Yes: loop it. No: gate it.</li>
+<li><strong>Is the cost of being wrong catastrophic?</strong> → Yes: gate it, even if verifiable.</li>
+<li><strong>Will this task repeat?</strong> → Yes: loop it (amortize verifier cost).</li>
+</ol>
+<h3>The Numbers</h3>
+<ul>
+<li>199 measures × 220 clients × 4 quarterly refreshes = <strong>175,560 loop-cycles/year</strong> (automated)</li>
+<li>Scaling to: 199 measures × 2,200 clients × millions of patients = <strong>1.75M loop-cycles/year</strong></li>
+<li>7 gates × 6 initiatives/year = <strong>42 gated decisions/year</strong> (human judgment)</li>
+<li>At scale ratio: <strong>41,800 automated executions per human decision</strong></li>
+</ul>
+<p>That's the leverage.</p>
 </article>
-
+</div>
 </body>
 </html>
