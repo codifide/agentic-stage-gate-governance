@@ -128,11 +128,49 @@ The sweet spot is knowing the difference.
 
 ---
 
+## The Stale Baseline Trap
+
+Here's something the academic papers don't mention: verifiers can be correct AND misleading.
+
+We built a verifier that compared our new bitmap pipeline output against the legacy `quality.measure` table — 176 measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.
+
+The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures (eCQM engines now handle some measures that attestation used to), the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.
+
+15 of 176 measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.
+
+**The lesson:** A comparison verifier is only as good as its reference data. If the reference was produced by a different system configuration, you're not testing correctness — you're testing backward compatibility. Those are different things.
+
+**Three fixes:**
+1. Regenerate the baseline fresh before every comparison (expensive but honest)
+2. Make the verifier self-contained: write data through the new path, read it back, verify the round-trip (no external reference)
+3. Accept a documented divergence threshold when configuration has explicitly changed — but NEVER normalize away unexpected differences without root-cause
+
+The dangerous mode is when the team learns to say "oh, that's just the stale baseline again" and stops investigating. One day it won't be the baseline. It'll be a real bug wearing the same clothes.
+
+---
+
+## What We Got Wrong About Effort Estimation
+
+The B-Team adversarial review estimated 3-6 weeks for the bitmap pipeline rewrite. The actual implementation took 8 hours.
+
+This isn't because the B-Team was incompetent. It's because their estimation model assumed traditional execution: one developer, switching between files, running manual tests, waiting for code review, writing documentation. That's how the 3-6 week number makes sense.
+
+But looped execution changes the math:
+- The pipeline had a single shared output interface (`BaseEngine.write_results()`). Changing it to `write_bitmap_results()` was one method addition + find-and-replace across 68 call sites. That's 20 minutes of mechanical work, not 2 days.
+- The verifier ran immediately after each change — no "wait for QA" cycle.
+- The AI held full context (all 68 call sites, the base class, the verifier, the state file) simultaneously. No context-switching tax.
+
+**The calibration insight:** If your adversarial review estimates effort for a looped task, ask the reviewer to identify the shared abstraction boundary. If there IS one (like BaseEngine), the actual effort is the boundary change + repetition count × cost-per-repetition. The repetition cost for a find-and-replace is ~zero. The total effort is dominated by the boundary change alone.
+
+Our B-Team now knows to ask: "Is there a single interface point?" before estimating. If yes, divide the estimate by the number of consumers — they're not independent tasks.
+
+---
+
 ## The Bottom Line
 
-Loop the mechanical. Gate the judgment. Invest in honest verifiers.
+Loop the mechanical. Gate the judgment. Invest in honest verifiers. And test your verifiers against stale data — because a verifier that cries wolf trains you to ignore it.
 
-The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't a luxury. It's the product.
+The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't the product. Correctness is. Confidence is what you earn when the verifier agrees.
 
 ---
 

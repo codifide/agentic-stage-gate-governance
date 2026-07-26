@@ -307,4 +307,47 @@ Promote: After 3 successful migrations, extract template
 
 ---
 
-*Loop Engineering Steering v1.0 — Part of Stage-Gate-Loop Governance v2.0 — July 2026*
+## Verifier Anti-Patterns (Learned in Production)
+
+### Stale Baseline Comparison
+
+**Problem:** A verifier that compares new output against historical data will produce false failures when the system's behavior has legitimately changed (different engine routing, different data, different configuration).
+
+**Example:** Bitmap pipeline verifier compared against `quality.measure` data from a prior run that used different engine routing rules. 15 of 176 measures showed "discrepancies" that were actually correct new behavior.
+
+**Solution:** Verifiers must either:
+1. **Use fresh baselines** — regenerate the reference data immediately before comparison
+2. **Be self-contained** — verify round-trip correctness (write → read → compare input vs output) without depending on external historical state
+3. **Tolerate known divergences** — accept a threshold when the system configuration has explicitly changed, with documented reasoning
+
+A verifier that compares against stale data is worse than no verifier — it trains the team to dismiss failures as "probably stale baseline again," which eventually hides a real bug.
+
+### False Confidence from Partial Validation
+
+**Problem:** Validating 6 of 176 measures and declaring "prototype validated" creates false confidence. The B-Team correctly flagged this as "3% coverage."
+
+**Solution:** If full validation is expensive, document explicitly: "Validated N of M (X%). Full validation required before Phase Y." Never use the word "validated" without the denominator.
+
+---
+
+## Practical Learnings: When Loops and Gates Interact
+
+### B-Team Estimates Are Miscalibrated for Looped Execution
+
+Gate reviews (B-Team adversarial review) estimate effort based on traditional sequential human execution. When a task is looped, the actual effort is typically 5-25× less than B-Team estimates because:
+- Shared abstraction boundaries (e.g., BaseEngine) make changes surgical
+- The verifier catches errors immediately (no manual testing cycle)
+- No context-switching between files (the AI holds full context)
+
+**Calibration rule:** If the B-Team estimates > 2 weeks for a looped task, challenge the estimate. Ask: "What's the shared interface? How many unique changes are needed vs how many repetitions?"
+
+### The "Proactive Ask" Failure Mode
+
+The steering file says loop suggestion is MANDATORY. In practice, the AI failed to suggest looping until the human prompted. Root cause: the AI was in "implementation mode" (executing sequentially) rather than "planning mode" (classifying tasks before executing).
+
+**Fix:** Before starting any multi-step implementation, pause and classify each step: LOOP / GATE / DOCUMENT. Present the classification to the human before executing. This forces the proactive assessment.
+
+---
+
+*Loop Engineering Steering v1.1 — Part of Stage-Gate-Loop Governance v2.0 — July 2026*
+*Updated with production learnings from SCALE-ARCHITECTURE-001 bitmap pipeline rewrite loop.*
