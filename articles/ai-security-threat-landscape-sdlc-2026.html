@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI Security Threat Landscape: A 90-Day Shift Report and SDLC Implications</title>
+<style>
+:root {
+  --primary: #1a1a2e;
+  --accent: #e94560;
+  --accent2: #0f3460;
+  --bg: #fafafa;
+  --card-bg: #ffffff;
+  --text: #2d2d2d;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --code-bg: #f3f4f6;
+  --critical: #dc2626;
+  --high: #ea580c;
+  --medium: #ca8a04;
+  --low: #16a34a;
+}
+</style>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.8;
+  color: var(--text);
+  background: var(--bg);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+h1, h2, h3, h4 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.3; }
+h1 { font-size: 2.2rem; color: var(--primary); margin-bottom: 0.5rem; }
+h2 { font-size: 1.6rem; color: var(--accent2); margin-top: 3rem; margin-bottom: 1rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.3rem; }
+h3 { font-size: 1.2rem; color: var(--primary); margin-top: 2rem; margin-bottom: 0.8rem; }
+p { margin-bottom: 1rem; }
+.subtitle { font-size: 1.1rem; color: var(--muted); font-style: italic; margin-bottom: 2rem; line-height: 1.6; }
+.meta { font-size: 0.9rem; color: var(--muted); margin-bottom: 2rem; }
+.meta span { margin-right: 2rem; }
+/* Abstract */
+.abstract {
+  background: var(--card-bg);
+  border-left: 4px solid var(--accent2);
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.abstract p { margin-bottom: 0; font-size: 0.95rem; }
+
+/* Key stats callout */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.2rem;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.stat-card .number {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--accent);
+}
+.stat-card .label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+/* Timeline */
+.timeline {
+  position: relative;
+  margin: 2rem 0;
+  padding-left: 2rem;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  border-radius: 2px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -1.55rem;
+  top: 0.6rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.timeline-date {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.timeline-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0.2rem 0;
+}
+.timeline-desc { font-size: 0.9rem; color: var(--muted); }
+/* Diagram boxes */
+.diagram {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.layer {
+  padding: 1.2rem 1.5rem;
+  text-align: center;
+  border: 2px solid;
+  position: relative;
+}
+.layer-human {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  border-radius: 12px 12px 0 0;
+}
+.layer-gate {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+.layer-loop {
+  background: #d1fae5;
+  border-color: #10b981;
+  border-radius: 0 0 12px 12px;
+}
+.layer-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+.layer-detail {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.arrow-down {
+  text-align: center;
+  font-size: 1.5rem;
+  color: var(--muted);
+  margin: -2px 0;
+  position: relative;
+  z-index: 1;
+}
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+th {
+  background: var(--primary);
+  color: white;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.85rem;
+}
+td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) { background: #f9fafb; }
+
+/* Callout boxes */
+.callout {
+  border-radius: 8px;
+  padding: 1.2rem 1.5rem;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+.callout-danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid var(--critical);
+}
+.callout-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid var(--medium);
+}
+.callout-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--accent2);
+}
+.callout-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+/* Tier badges */
+.tier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.tier-card {
+  border-radius: 8px;
+  padding: 1.2rem;
+  text-align: center;
+  border: 2px solid;
+}
+.tier-1 { background: #d1fae5; border-color: #10b981; }
+.tier-2 { background: #dbeafe; border-color: #3b82f6; }
+.tier-3 { background: #fef3c7; border-color: #f59e0b; }
+.tier-card .tier-label {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+.tier-card .tier-pct {
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.tier-card .tier-desc { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+
+/* Comparison flow */
+.compare-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin: 2rem 0;
+}
+.compare-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.2rem;
+}
+.compare-box.old { border-left: 4px solid var(--critical); }
+.compare-box.new { border-left: 4px solid var(--low); }
+.compare-arrow { font-size: 2rem; color: var(--accent); text-align: center; }
+.compare-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* References */
+.references { font-size: 0.8rem; color: var(--muted); }
+.references p { margin-bottom: 0.3rem; }
+.references a { color: var(--accent2); }
+
+/* SVG diagrams */
+.svg-diagram { text-align: center; margin: 2rem 0; }
+.svg-diagram svg { max-width: 100%; height: auto; }
+
+/* Lists */
+ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+li { margin-bottom: 0.4rem; }
+
+/* Code */
+code {
+  background: var(--code-bg);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .tier-grid { grid-template-columns: 1fr; }
+  .compare-flow { grid-template-columns: 1fr; }
+  .compare-arrow { transform: rotate(90deg); }
+  h1 { font-size: 1.6rem; }
+}
+</style>
+</head>
+<body>
+<h1>The AI Security Threat Landscape: A 90-Day Shift Report</h1>
+<p class="subtitle">How the convergence of AI-as-weapon, AI-as-attack-surface, and AI-as-developer demands an architectural response in the software development lifecycle.</p>
+
+<div class="meta">
+  <span><strong>Author:</strong> Douglas Jones</span>
+  <span><strong>Date:</strong> July 2026</span>
+</div>
+
+<!-- Key Statistics -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="number">84%</div>
+    <div class="label">Agent tool-injection success rate in lab testing</div>
+  </div>
+  <div class="stat-card">
+    <div class="number">10.5%</div>
+    <div class="label">of AI-generated code meets security standards</div>
+  </div>
+  <div class="stat-card">
+    <div class="number">29 min</div>
+    <div class="label">Average intrusion time from access to objective</div>
+  </div>
+  <div class="stat-card">
+    <div class="number">95M</div>
+    <div class="label">Monthly downloads of compromised LiteLLM package</div>
+  </div>
+</div>
+<!-- Abstract -->
+<div class="abstract">
+  <p><strong>Abstract:</strong> The AI security threat landscape underwent a structural transformation between May and July 2026. Three forces converged simultaneously: AI became a confirmed offensive weapon (first AI-generated zero-day exploit), AI infrastructure became a high-value attack surface (supply chain compromises targeting packages with 95 million monthly downloads), and AI agents became the primary authors of production code (40%+ of enterprise code with only 10.5% meeting security standards). This paper examines each shift, evaluates why traditional gate-based SDLCs cannot absorb these changes, and proposes a three-layer governance model &mdash; Human, Gate, and Loop &mdash; that enables daily deployment cadence without sacrificing security posture.</p>
+</div>
+
+<h2>1. Introduction</h2>
+<p>For two decades, software security has operated on a shared assumption: humans write the code, humans review it, and security teams can meaningfully inspect artifacts before they reach production. All three assumptions broke simultaneously in 2026.</p>
+
+<p>AI coding agents &mdash; Cursor, Claude Code, GitHub Copilot, Kiro, and others &mdash; now select dependencies, generate implementations, execute build steps, create pull requests, and push changes to repositories at velocities no human reviewer can match. By end of 2026, Gartner projects that 40% of enterprise applications will embed task-specific AI agents, up from under 5% in 2025. Checkmarx surveys indicate roughly 70% of organizations already estimate more than 40% of their code is AI-generated.</p>
+
+<p>Simultaneously, the tools that attackers use have crossed the same threshold. The first confirmed AI-generated zero-day exploit appeared in May 2026. Autonomous AI attack campaigns ran multi-step intrusions across nine government agencies with minimal human direction. And the AI infrastructure that developers depend on proved to be catastrophically vulnerable to supply chain compromise.</p>
+
+<p>This is not a problem that can be solved by adding another scanner or scheduling an additional quarterly pen test. It is an architectural problem that requires an architectural response.</p>
+<h2>2. Threat Landscape Evolution: What Changed in 90 Days</h2>
+
+<!-- Timeline Graphic -->
+<div class="diagram">
+  <h3 style="text-align:center; margin-bottom:1rem;">90-Day Threat Timeline (May&ndash;July 2026)</h3>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-date">March 24, 2026</div>
+      <div class="timeline-title">LiteLLM Supply Chain Compromise</div>
+      <div class="timeline-desc">TeamPCP publishes backdoored versions to PyPI. 95M monthly downloads. Three-stage credential stealer harvests SSH keys, cloud credentials, Kubernetes secrets.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">May 1, 2026</div>
+      <div class="timeline-title">CISA/Five Eyes Agentic AI Guidance</div>
+      <div class="timeline-desc">First coordinated multi-government security guidance targeting agentic AI systems. Five risk categories, 23 risks, 100+ best practices.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">May 11, 2026</div>
+      <div class="timeline-title">First AI-Generated Zero-Day Confirmed</div>
+      <div class="timeline-desc">Google GTIG discloses AI-crafted exploit bypassing 2FA on open-source admin tool. "Clean, textbook" Python code &mdash; hallmark of LLM output.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">June 2026</div>
+      <div class="timeline-title">OWASP Agentic AI Top 10 Published</div>
+      <div class="timeline-desc">New taxonomy (ASI01&ndash;ASI10) covering risks unique to autonomous agents: goal hijacking, memory poisoning, cascading failures, rogue agents.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">August 2, 2026</div>
+      <div class="timeline-title">EU AI Act High-Risk Obligations Activate</div>
+      <div class="timeline-desc">Articles 8&ndash;17 enforceable. Penalties up to &euro;35M or 7% of global turnover. Most enterprises building AI agents are not ready.</div>
+    </div>
+  </div>
+</div>
+<h3>2.1 AI-Generated Exploits Crossed the Threshold</h3>
+
+<div class="callout callout-danger">
+  <div class="callout-title">Milestone Event: May 11, 2026</div>
+  <p>Google's Threat Intelligence Group disclosed the first confirmed case of a threat actor using a large language model to both discover a zero-day vulnerability and generate a working exploit. The target was a widely-deployed open-source web administration tool. The exploit &mdash; a Python script bypassing two-factor authentication &mdash; was notable for its "clean, methodical, textbook" structure.</p>
+</div>
+
+<p><strong>Implications:</strong></p>
+<ul>
+  <li><strong>Vulnerability discovery is no longer gated by human skill.</strong> An attacker with model access can systematically probe codebases for logic flaws faster than defenders can audit them.</li>
+  <li><strong>Exploit quality no longer correlates with attacker sophistication.</strong> Traditional forensic indicators of attacker capability (code style, obfuscation patterns) are unreliable.</li>
+  <li><strong>The asymmetry favors offense.</strong> A defender must secure every path. An attacker needs one working exploit. AI multiplies the attacker's search capacity by orders of magnitude.</li>
+</ul>
+
+<h3>2.2 AI Infrastructure Supply Chain Attacks Reached Critical Mass</h3>
+
+<div class="callout callout-warning">
+  <div class="callout-title">The LiteLLM Incident: A Recursive Supply Chain Attack</div>
+  <p>On March 24, 2026, threat actor TeamPCP published backdoored versions of LiteLLM (v1.82.7, v1.82.8) to PyPI &mdash; a package with ~95 million monthly downloads used by major financial services firms, streaming platforms, and AI framework providers. The attack was a multi-stage chain: first compromise a security scanner (Trivy), then use stolen CI/CD credentials to backdoor the AI package itself.</p>
+</div>
+
+<p><strong>Why AI supply chain is uniquely dangerous:</strong></p>
+<ul>
+  <li><strong>Credential concentration.</strong> AI proxy packages aggregate API keys for multiple model providers, cloud credentials, and database connections. Compromising one package exposes everything.</li>
+  <li><strong>Recursive attack surface.</strong> Security tools used to detect supply chain attacks are themselves supply chain dependencies.</li>
+  <li><strong>Implicit trust velocity.</strong> AI agents add dependencies without the deliberation a human developer applies.</li>
+</ul>
+<h3>2.3 Agentic AI Emerged as the Dominant Attack Vector</h3>
+
+<p>The shift from LLM applications (chatbots) to agentic AI systems (autonomous multi-step actors with tool access) created an entirely new risk taxonomy:</p>
+
+<ul>
+  <li><strong>48% of cybersecurity professionals</strong> named agentic AI the most dangerous attack vector for 2026</li>
+  <li><strong>Indirect prompt injection</strong> now accounts for over 55% of observed incidents, with success rates 20&ndash;30 percentage points higher than direct attacks</li>
+  <li>OWASP maps <strong>prompt injection to 6 of 10 categories</strong> in its Top 10 for Agentic Applications</li>
+  <li>A misconfigured agent platform leaked <strong>1.5 million API tokens</strong> and private inter-agent communications</li>
+</ul>
+
+<p>The fundamental difference: traditional LLM vulnerabilities affect a <em>response</em>. Agentic AI vulnerabilities affect <em>actions</em> &mdash; tool execution, data access, and multi-service orchestration with real-world consequences.</p>
+
+<h3>2.4 AI-Powered Offensive Operations Became Autonomous</h3>
+
+<p>Check Point Research documented multiple independent cases of commercial AI models executing autonomous attack workflows across extended campaigns:</p>
+<ul>
+  <li>AI writes custom malware tailored to target environments</li>
+  <li>AI executes commands inside live networks and performs lateral movement</li>
+  <li>Average intrusion time: <strong>29 minutes</strong> from initial access to objective</li>
+  <li>Phishing-as-a-service kits now embed jailbroken LLMs; AI voice-agents run vishing at scale</li>
+  <li>Nine government agencies breached using AI-directed attack chains</li>
+</ul>
+
+<h3>2.5 AI-Generated Code as an Internal Vulnerability Source</h3>
+
+<!-- Visual: the 61% / 10.5% gap -->
+<div class="svg-diagram">
+<svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:550px;">
+  <!-- Background bar -->
+  <rect x="50" y="40" width="500" height="40" rx="6" fill="#e5e7eb"/>
+  <!-- 61% functional -->
+  <rect x="50" y="40" width="305" height="40" rx="6" fill="#fbbf24"/>
+  <!-- 10.5% secure -->
+  <rect x="50" y="40" width="52.5" height="40" rx="6" fill="#10b981"/>
+  <!-- Labels -->
+  <text x="300" y="30" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#6b7280">AI-Generated Code Quality (Zhao et al., 2026)</text>
+  <text x="76" y="65" font-family="sans-serif" font-size="11" font-weight="bold" fill="white">10.5% Secure</text>
+  <text x="200" y="65" font-family="sans-serif" font-size="11" font-weight="bold" fill="#78350f">61% Functionally Correct</text>
+  <text x="430" y="65" font-family="sans-serif" font-size="11" fill="#6b7280">39% Incorrect</text>
+  <!-- Bottom annotations -->
+  <text x="76" y="110" font-family="sans-serif" font-size="10" fill="#6b7280">What your SAST/SCA/DAST catches: pattern-level issues</text>
+  <line x1="50" y1="95" x2="355" y2="95" stroke="#e94560" stroke-width="2" stroke-dasharray="4"/>
+  <text x="76" y="130" font-family="sans-serif" font-size="10" fill="#e94560">The gap: logic-level vulnerabilities invisible to scanners</text>
+  <text x="76" y="155" font-family="sans-serif" font-size="10" fill="#6b7280">Missing auth checks, race conditions, insecure defaults, business logic flaws</text>
+</svg>
+</div>
+
+<p>Additional data points:</p>
+<ul>
+  <li><strong>49% of dependencies recommended by AI agents</strong> contain known vulnerabilities (Endor Labs)</li>
+  <li><strong>37.6% increase in critical vulnerabilities</strong> after 5 agent iterations without embedded checks (IEEE-ISTAS)</li>
+  <li><strong>81% of security teams lack visibility</strong> into AI-generated code in production (Cycode &mdash; 100% of surveyed companies have it deployed)</li>
+</ul>
+<h2>3. Regulatory and Standards Response</h2>
+
+<table>
+  <tr>
+    <th>Framework</th>
+    <th>Date</th>
+    <th>Scope</th>
+    <th>Key Contribution</th>
+  </tr>
+  <tr>
+    <td><strong>CISA/Five Eyes Guidance</strong></td>
+    <td>May 1, 2026</td>
+    <td>Agentic AI systems</td>
+    <td>5 risk categories, 23 risks, 100+ best practices</td>
+  </tr>
+  <tr>
+    <td><strong>OWASP Agentic Top 10</strong></td>
+    <td>2026</td>
+    <td>Autonomous AI agents</td>
+    <td>New taxonomy (ASI01&ndash;ASI10) for agent-specific risks</td>
+  </tr>
+  <tr>
+    <td><strong>EU AI Act (High-Risk)</strong></td>
+    <td>Aug 2, 2026</td>
+    <td>All high-risk AI systems</td>
+    <td>Binding law, &euro;35M penalties, technical documentation required</td>
+  </tr>
+  <tr>
+    <td><strong>OWASP LLMSVS v2.0</strong></td>
+    <td>2026</td>
+    <td>LLM applications</td>
+    <td>Testable verification standard for secure LLM development</td>
+  </tr>
+  <tr>
+    <td><strong>NIST AI RMF (updated)</strong></td>
+    <td>2026</td>
+    <td>All AI systems</td>
+    <td>Updated procedural manual; ISO 42001 certification maturing</td>
+  </tr>
+</table>
+
+<div class="callout callout-info">
+  <div class="callout-title">CISA Five-Risk Framework for Agentic AI</div>
+  <p>The Five Eyes guidance organizes agentic AI risk into five categories &mdash; each requiring dedicated mitigations rather than a generalized AI security policy:</p>
+  <ol>
+    <li><strong>Privilege</strong> &mdash; escalation, excessive permissions</li>
+    <li><strong>Design &amp; Configuration</strong> &mdash; architectural flaws enabling exploitation</li>
+    <li><strong>Behavioral</strong> &mdash; misalignment between intended and actual actions</li>
+    <li><strong>Structural</strong> &mdash; cascading failures across interconnected agents</li>
+    <li><strong>Accountability</strong> &mdash; opacity in decision chains, forensics impossible</li>
+  </ol>
+</div>
+<h2>4. Why the Traditional SDLC Breaks</h2>
+
+<h3>4.1 The Gate-Based Model Cannot Scale to Agent Velocity</h3>
+
+<p>The foundational assumption of the secure SDLC is that security can be inserted as checkpoints at defined phase transitions. That model works when humans produce code at human pace. An agent iterating hundreds of times per day breaks this timing assumption entirely.</p>
+
+<!-- Comparison graphic -->
+<div class="compare-flow">
+  <div class="compare-box old">
+    <div class="compare-title" style="color:var(--critical);">Traditional SDLC</div>
+    <ul style="font-size:0.85rem; margin-left:1rem;">
+      <li>Sequential phases</li>
+      <li>Human-gated control points</li>
+      <li>Quarterly security reviews</li>
+      <li>Code at human speed</li>
+      <li>Sprint-based remediation</li>
+    </ul>
+  </div>
+  <div class="compare-arrow">&rarr;</div>
+  <div class="compare-box new">
+    <div class="compare-title" style="color:var(--low);">Three-Layer Model</div>
+    <ul style="font-size:0.85rem; margin-left:1rem;">
+      <li>Continuous verification</li>
+      <li>Risk-tiered review</li>
+      <li>Security as loop verifier</li>
+      <li>Daily deployment capable</li>
+      <li>Automated remediation</li>
+    </ul>
+  </div>
+</div>
+
+<h3>4.2 The Scanner Coverage Gap</h3>
+
+<table>
+  <tr>
+    <th>What Scanners Catch (Pattern-Level)</th>
+    <th>What AI Agents Introduce (Logic-Level)</th>
+  </tr>
+  <tr>
+    <td>Known CVEs in dependencies</td>
+    <td>Missing authorization checks (syntactically valid)</td>
+  </tr>
+  <tr>
+    <td>SQL injection patterns</td>
+    <td>Business logic flaws (correct code, wrong behavior)</td>
+  </tr>
+  <tr>
+    <td>Hardcoded secrets</td>
+    <td>Insecure defaults that are context-dependent</td>
+  </tr>
+  <tr>
+    <td>XSS/CSRF patterns</td>
+    <td>TOCTOU race conditions</td>
+  </tr>
+  <tr>
+    <td>Exposed endpoints</td>
+    <td>Over-privilege in IaC (valid policy, wrong scope)</td>
+  </tr>
+</table>
+
+<p>The gap is not in tooling quantity &mdash; it is in the <em>class</em> of defect. Scanners detect pattern violations. AI-generated vulnerabilities are often syntactically perfect, pass all existing tests, and represent logic-level errors requiring <em>semantic understanding of intent</em> to identify.</p>
+
+<h3>4.3 The Quarterly Cadence Is Incompatible with 29-Minute Intrusions</h3>
+
+<p>If attackers achieve objectives in 29 minutes, a response posture built on quarterly reviews, monthly patch cycles, and sprint-based remediation is operating at a structural disadvantage. The question is not "how do we make quarterly reviews better?" &mdash; it is "how do we make security posture continuously known and continuously enforced?"</p>
+<h2>5. The Three-Layer Governance Model</h2>
+
+<h3>5.1 Architecture Overview</h3>
+
+<!-- Three-Layer Diagram -->
+<div class="diagram">
+  <div class="layer-stack">
+    <div class="layer layer-human">
+      <div class="layer-title">HUMAN LAYER</div>
+      <div class="layer-detail">Goals &middot; Decisions &middot; Gate Approvals<br><em>Strategic: minutes per decision</em></div>
+    </div>
+    <div class="arrow-down">&#9660;</div>
+    <div class="layer layer-gate">
+      <div class="layer-title">GATE LAYER</div>
+      <div class="layer-detail">Adversarial Review &middot; Compliance &middot; Architecture &middot; Security Judgment<br><em>Tactical: 15&ndash;45 min per review</em></div>
+    </div>
+    <div class="arrow-down">&#9660;</div>
+    <div class="layer layer-loop">
+      <div class="layer-title">LOOP LAYER</div>
+      <div class="layer-detail">Build &middot; Test &middot; Scan &middot; Deploy &middot; Verify &middot; Monitor &middot; Remediate<br><em>Operational: continuous, automated</em></div>
+    </div>
+  </div>
+</div>
+
+<p>Each task finds its correct altitude:</p>
+<ul>
+  <li><strong>Judgment tasks</strong> (design decisions, compliance interpretation, architecture) &rarr; Gate Layer</li>
+  <li><strong>Mechanical tasks</strong> (test execution, vulnerability scanning, deployment verification) &rarr; Loop Layer</li>
+  <li><strong>Strategic tasks</strong> (priorities, trade-offs, go/kill/hold decisions) &rarr; Human Layer</li>
+</ul>
+
+<h3>5.2 Threat Vector Mapping to Layers</h3>
+
+<table>
+  <tr>
+    <th>Threat Vector</th>
+    <th>Loop Layer Response</th>
+    <th>Gate Layer Response</th>
+  </tr>
+  <tr>
+    <td>AI-generated exploits</td>
+    <td>Continuous fuzzing, behavioral testing</td>
+    <td>Threat model updates at architectural changes</td>
+  </tr>
+  <tr>
+    <td>Supply chain compromise</td>
+    <td>Automated provenance verification, behavioral analysis</td>
+    <td>Human review for AI infrastructure packages</td>
+  </tr>
+  <tr>
+    <td>Agentic AI attacks</td>
+    <td>Agent behavioral monitoring, anomaly detection</td>
+    <td>Adversarial review of agent capabilities</td>
+  </tr>
+  <tr>
+    <td>AI-powered intrusions</td>
+    <td>Real-time intrusion detection, automated containment</td>
+    <td>Incident response playbook review</td>
+  </tr>
+  <tr>
+    <td>AI-generated insecure code</td>
+    <td>SAST/SCA/DAST every commit, provenance tracking</td>
+    <td>Tiered adversarial review (semantic analysis)</td>
+  </tr>
+</table>
+<h3>5.3 Tiered Adversarial Review for Daily Deployment</h3>
+
+<p>The full adversarial review (12 specialized AI personas) provides comprehensive coverage but takes 30+ minutes &mdash; incompatible with daily deployment. The solution is risk-tiered review:</p>
+
+<div class="tier-grid">
+  <div class="tier-card tier-1">
+    <div class="tier-label">Tier 1</div>
+    <div class="tier-pct">60&ndash;70%</div>
+    <div class="tier-desc">Auto-Pass<br>Loop verifiers only<br>Docs, tests, refactors</div>
+  </div>
+  <div class="tier-card tier-2">
+    <div class="tier-label">Tier 2</div>
+    <div class="tier-pct">20&ndash;30%</div>
+    <div class="tier-desc">Focused Review<br>3 personas, ~15 min<br>Auth, APIs, dependencies</div>
+  </div>
+  <div class="tier-card tier-3">
+    <div class="tier-label">Tier 3</div>
+    <div class="tier-pct">5&ndash;15%</div>
+    <div class="tier-desc">Full Review<br>12 personas, ~45 min<br>Architecture, compliance</div>
+  </div>
+</div>
+
+<p>This enables daily deployment for the majority of changes while maintaining full scrutiny where risk warrants it.</p>
+
+<h3>5.4 Security Remediation as a Loop</h3>
+
+<!-- Remediation comparison -->
+<div class="compare-flow">
+  <div class="compare-box old">
+    <div class="compare-title" style="color:var(--critical);">Traditional Remediation</div>
+    <p style="font-size:0.85rem;">Vulnerability found &rarr; triaged &rarr; queued &rarr; next sprint &rarr; next release<br><strong>Timeline: weeks to months</strong></p>
+  </div>
+  <div class="compare-arrow">&rarr;</div>
+  <div class="compare-box new">
+    <div class="compare-title" style="color:var(--low);">Loop-Based Remediation</div>
+    <p style="font-size:0.85rem;">Vulnerability found &rarr; auto-classified &rarr; loop or gate &rarr; verify &rarr; deploy<br><strong>Timeline: hours to days</strong></p>
+  </div>
+</div>
+
+<table>
+  <tr>
+    <th>Severity</th>
+    <th>SLA</th>
+    <th>Route</th>
+  </tr>
+  <tr>
+    <td style="color:var(--critical); font-weight:bold;">CRITICAL</td>
+    <td>24 hours</td>
+    <td>Loop (if pattern-match) or expedited gate</td>
+  </tr>
+  <tr>
+    <td style="color:var(--high); font-weight:bold;">HIGH</td>
+    <td>72 hours</td>
+    <td>Loop or standard gate</td>
+  </tr>
+  <tr>
+    <td style="color:var(--medium); font-weight:bold;">MEDIUM</td>
+    <td>14 days</td>
+    <td>Scheduled loop or sprint</td>
+  </tr>
+  <tr>
+    <td style="color:var(--low); font-weight:bold;">LOW</td>
+    <td>30 days</td>
+    <td>Backlog, bundled with next deployment</td>
+  </tr>
+</table>
+
+<h3>5.5 Supply Chain Verification Loop</h3>
+
+<p>Every dependency change triggers an automated verification sequence:</p>
+<ol>
+  <li><strong>Provenance check</strong> &mdash; verified publisher, consistent maintainer, Sigstore signature</li>
+  <li><strong>Vulnerability scan</strong> &mdash; NVD, OSV, GitHub Advisory (including transitive dependencies)</li>
+  <li><strong>Behavioral analysis</strong> &mdash; network access, credential reads, subprocess calls compared to prior version</li>
+  <li><strong>AI-specific checks</strong> &mdash; data transmission, prompt logging, telemetry, endpoint configurability</li>
+  <li><strong>License verification</strong> &mdash; compatibility with project requirements</li>
+</ol>
+
+<h3>5.6 Code Provenance Tracking</h3>
+
+<p>Every commit includes metadata indicating whether code was human-written, AI-generated, AI-assisted, or AI-paired. This enables differential risk assessment by source, data-driven calibration of review tiers, and detection of patterns where AI-generated code systematically introduces specific vulnerability classes.</p>
+<h2>6. Implementation Considerations</h2>
+
+<h3>6.1 Measuring Success</h3>
+
+<table>
+  <tr>
+    <th>Metric</th>
+    <th>Baseline (Quarterly Model)</th>
+    <th>Target (Three-Layer Model)</th>
+  </tr>
+  <tr>
+    <td>Mean time to remediate (CRITICAL)</td>
+    <td>2&ndash;4 weeks</td>
+    <td>&lt; 24 hours</td>
+  </tr>
+  <tr>
+    <td>Deployment cadence</td>
+    <td>Quarterly / Monthly</td>
+    <td>Daily</td>
+  </tr>
+  <tr>
+    <td>Security review coverage</td>
+    <td>100% (but shallow)</td>
+    <td>100% (depth proportional to risk)</td>
+  </tr>
+  <tr>
+    <td>Security defects escaping to prod</td>
+    <td>Unknown (no provenance)</td>
+    <td>Measured, &lt; 2% of AI-generated code</td>
+  </tr>
+  <tr>
+    <td>Vulnerability disclosure &rarr; patch deployed</td>
+    <td>30&ndash;90 days</td>
+    <td>1&ndash;3 days (looped) / 3&ndash;7 days (gated)</td>
+  </tr>
+  <tr>
+    <td>Supply chain compromise detection</td>
+    <td>Post-incident (days/weeks)</td>
+    <td>&lt; 1 hour (automated verification)</td>
+  </tr>
+</table>
+
+<h3>6.2 What This Does Not Solve</h3>
+
+<ul>
+  <li><strong>Novel attack classes without existing patterns.</strong> Loops verify against known-good baselines. Truly novel attacks require human threat intelligence (gate layer).</li>
+  <li><strong>Business logic correctness at scale.</strong> The B-Team covers this but cannot review every line. Some logic-level vulnerabilities will ship.</li>
+  <li><strong>Regulatory compliance interpretation.</strong> The EU AI Act, HIPAA, PCI-DSS all require human judgment on applicability.</li>
+  <li><strong>Insider threat.</strong> A malicious developer who intentionally introduces vulnerabilities requires separation of duties and behavioral monitoring.</li>
+</ul>
+<h2>7. Conclusion</h2>
+
+<div class="callout callout-info">
+  <div class="callout-title">Three Simultaneous Structural Shifts</div>
+  <ol>
+    <li><strong>AI as weapon</strong> &mdash; the first confirmed AI-generated zero-day proves vulnerability discovery and exploit generation are now automated at attacker scale.</li>
+    <li><strong>AI as attack surface</strong> &mdash; supply chain compromises targeting AI infrastructure exploit credential concentration inherent in model gateways.</li>
+    <li><strong>AI as developer</strong> &mdash; 40%+ of production code is AI-generated with only 10.5% meeting security standards, at volumes that overwhelm human review.</li>
+  </ol>
+</div>
+
+<p>The traditional SDLC &mdash; sequential phases, human-gated control points, quarterly security reviews &mdash; was built for a world where humans wrote code at human speed. That world no longer exists.</p>
+
+<p>The response is not to abandon governance (speed without governance is faster failure) or to add more gates (gates that cannot keep pace are ceremonial). The response is architectural: separate judgment from verification, automate what machines can verify, reserve human attention for what requires human reasoning, and run security validation continuously within the development loop.</p>
+
+<p>The three-layer model &mdash; Human (decisions), Gate (judgment), Loop (verification) &mdash; provides this architecture. It enables daily deployment by making security posture continuously known rather than periodically assessed, while preserving the adversarial scrutiny that catches what automation cannot.</p>
+
+<p><strong>The choice is not between speed and security. It is between architectural adaptation and structural obsolescence.</strong></p>
+<h2>References</h2>
+<div class="references">
+<p>[1] Gartner (2026). "Predicts 2026: AI Engineering." Cited in Anderson, J. "The Agentic SDLC."</p>
+<p>[2] Checkmarx (2026). Industry survey on AI-generated code visibility.</p>
+<p>[3] Google Threat Intelligence Group (2026). "AI Threat Tracker Report." May 11, 2026. <a href="https://www.securityweek.com/google-detects-first-ai-generated-zero-day-exploit/">SecurityWeek</a></p>
+<p>[4] Check Point Research (2026). "AI Security Report 2026." <a href="https://research.checkpoint.com/2026/ai-security-report-2026/">Link</a></p>
+<p>[5] Cloud Security Alliance (2026). "LiteLLM PyPI Backdoor: Credential Theft in AI Toolchains." March 27, 2026.</p>
+<p>[6] MSN/TechRepublic (2026). "The AI-generated zero-day used clean 'textbook' Python code."</p>
+<p>[7] Phoenix Security (2026). "TeamPCP LiteLLM Supply Chain Compromise." <a href="https://phoenix.security/teampcp-litellm-supply-chain-compromise-pypi-credential-stealer-kubernetes/">Link</a></p>
+<p>[8] Datadog Security Labs (2026). "LiteLLM and Telnyx compromised on PyPI." <a href="https://securitylabs.datadoghq.com/articles/litellm-compromised-pypi-teampcp-supply-chain-campaign/">Link</a></p>
+<p>[9] HelpNet Security (2026). "Prompt injection still drives most agentic AI security failures." <a href="https://www.helpnetsecurity.com/2026/06/11/owasp-prompt-injection-ai-security-failures/">Link</a></p>
+<p>[10] Shattered.io (2026). "Agentic AI Security 2026." <a href="https://shattered.io/agentic-ai-security-2026/">Link</a></p>
+<p>[11] Axis Intelligence (2026). "AI Model Vulnerability Tracker 2026." <a href="https://axis-intelligence.com/research/ai-model-vulnerability-tracker">Link</a></p>
+<p>[12] Tianpan.co (2026). "Prompt Injection Is a Supply Chain Problem." <a href="https://tianpan.co/blog/2026-04-19-prompt-injection-supply-chain-problem">Link</a></p>
+<p>[13] NeuralTrust (2026). "OWASP Agentic AI Top 10." <a href="https://neuraltrust.ai/blog/owasp-agentic-ai-top-10">Link</a></p>
+<p>[14] Carnegie Endowment (2026). "When AI Agents Attack." <a href="https://carnegieendowment.org/research/2026/07/when-ai-agents-attack-autonomous-cyber-operations-and-europes-governance-gap">Link</a></p>
+<p>[15] Shattered.io (2026). "90% Autonomous, 40K Flaws." <a href="https://shattered.io/ai-cyberattacks-2026/">Link</a></p>
+<p>[16] Check Point Research (2026). "AI Threat Landscape Digest March-April 2026." <a href="https://research.checkpoint.com/2026/ai-threat-landscape-digest-march-april-2026/">Link</a></p>
+<p>[17] Anderson, J. (2026). "The Agentic SDLC." GEICO Tech Blog. <a href="https://www.geico.com/techblog/the-agentic-sdlc/">Link</a></p>
+<p>[18] Endor Labs (2026). AI Coding Agent Dependency Risk Study.</p>
+<p>[19] IEEE-ISTAS 2025. Security degradation over agent iteration cycles.</p>
+<p>[20] Cycode (2025). Industry survey: AI-generated code in production.</p>
+<p>[21] CISA (2026). "Careful Adoption of Agentic AI Services." <a href="https://www.cisa.gov/resources-tools/resources/careful-adoption-agentic-ai-services">Link</a></p>
+<p>[22] Mayer Brown (2026). "Multi-Agency Guidance on Securing Agentic AI Systems." <a href="https://www.mayerbrown.com/en/insights/publications/2026/06/multi-agency-guidance-on-securing-agentic-ai-systems">Link</a></p>
+<p>[23] NeuralTrust (2026). "Deep Dive: OWASP Top 10 for Agentic Applications 2026." <a href="https://neuraltrust.ai/blog/owasp-top-10-for-agentic-applications-2026">Link</a></p>
+<p>[24] Digital Applied (2026). "AI Agent Governance: Policy and Compliance 2026." <a href="https://www.digitalapplied.com/blog/ai-agent-governance-policy-compliance-2026">Link</a></p>
+<p>[25] SecurePrivacy (2026). "EU AI Act vs NIST AI RMF vs ISO 42001." <a href="https://secureprivacy.ai/blog/eu-ai-act-vs-nist-ai-rmf-vs-iso-42001-ai-governance-framework-alignment">Link</a></p>
+<p>[26] OWASP (2026). "LLM Security Verification Standard v2.0." <a href="https://owasp.org/www-project-llm-verification-standard/LLMSVS-v2.0-en.html">Link</a></p>
+<p>[27] Jones, D. (2026). "Stage-Gate Rebooted." Agentic Stage-Gate-Loop Governance v2.0. <a href="https://github.com/codifide/agentic-stage-gate-governance">GitHub</a></p>
+<p>[28] NxCode (2026). "AI-Native SDLC Security Controls." <a href="https://www.nxcode.io/resources/news/ai-native-sdlc-security-controls-playbook-2026">Link</a></p>
+<p>[29] IBM X-Force (2026). "What OpenClaw reveals about agentic AI security risks." <a href="https://www.ibm.com/think/x-force/what-openclaw-reveals-about-agentic-ai-security-risks">Link</a></p>
+<p>[30] Axis Intelligence (2026). "AI Agent Security Statistics 2026." <a href="https://axis-intelligence.com/ai-agent-security-statistics/">Link</a></p>
+</div>
+
+<hr style="margin-top:3rem; border:none; border-top:1px solid var(--border);">
+<p style="font-size:0.8rem; color:var(--muted); margin-top:1rem;"><em>Content was rephrased for compliance with licensing restrictions. All statistics and findings are attributed to their original sources.</em></p>
+
+</body>
+</html>
