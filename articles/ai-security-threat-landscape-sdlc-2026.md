@@ -277,9 +277,11 @@ Vulnerability found → auto-classified → route to loop or gate →
 
 Defined SLA targets:
 - CRITICAL: patched within 24 hours
-- HIGH: patched within 72 hours
-- MEDIUM: patched within 14 days
-- LOW: patched within 30 days
+- HIGH: patched within 24 hours
+- MEDIUM: patched within 72 hours
+- LOW: patched within 72 hours
+
+With mature loop automation, all security remediations deploy within 72 hours. The SLA differentiates *priority in the queue*, not deployment capability. What extends remediation beyond 24 hours is not pipeline limitations but structural factors: cross-service coordination, architectural redesign, compliance sign-off, or breaking API changes requiring consumer coordination.
 
 Most remediations (dependency bumps, known-pattern fixes) are bounded, machine-verifiable, and low-blast-radius — meaning they can be fully automated through the loop layer. The 80% of remediations that are mechanical should never wait for a sprint boundary.
 
@@ -335,11 +337,11 @@ The model is tool-agnostic but requires:
 
 | Metric | Baseline (Quarterly Model) | Target (Three-Layer Model) |
 |--------|---|---|
-| Mean time to remediate (CRITICAL) | 2-4 weeks | < 24 hours |
+| Mean time to remediate (CRITICAL) | 2-4 weeks | < 8 hours |
 | Deployment cadence | Quarterly/Monthly | Daily |
 | % changes with security review | 100% (but shallow) | 100% (depth proportional to risk) |
 | Security defects escaping to production | Unknown (no provenance) | Measured, < 2% of AI-generated code |
-| Time from vulnerability disclosure to patch deployed | 30-90 days | 1-3 days (looped), 3-7 days (gated) |
+| Time from vulnerability disclosure to patch deployed | 30-90 days | < 24 hours (CRITICAL/HIGH), < 72 hours (all others) |
 | Supply chain compromise detection time | Post-incident (days/weeks) | < 1 hour (automated verification) |
 
 ---

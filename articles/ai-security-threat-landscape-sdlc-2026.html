@@ -705,18 +705,18 @@ code {
   </tr>
   <tr>
     <td style="color:var(--high); font-weight:bold;">HIGH</td>
+    <td>24 hours</td>
+    <td>Loop or expedited gate</td>
+  </tr>
+  <tr>
+    <td style="color:var(--medium); font-weight:bold;">MEDIUM</td>
     <td>72 hours</td>
     <td>Loop or standard gate</td>
   </tr>
   <tr>
-    <td style="color:var(--medium); font-weight:bold;">MEDIUM</td>
-    <td>14 days</td>
-    <td>Scheduled loop or sprint</td>
-  </tr>
-  <tr>
     <td style="color:var(--low); font-weight:bold;">LOW</td>
-    <td>30 days</td>
-    <td>Backlog, bundled with next deployment</td>
+    <td>72 hours</td>
+    <td>Next deployment window (bundled for efficiency)</td>
   </tr>
 </table>
 
@@ -747,7 +747,7 @@ code {
   <tr>
     <td>Mean time to remediate (CRITICAL)</td>
     <td>2&ndash;4 weeks</td>
-    <td>&lt; 24 hours</td>
+    <td>&lt; 8 hours</td>
   </tr>
   <tr>
     <td>Deployment cadence</td>
@@ -767,7 +767,7 @@ code {
   <tr>
     <td>Vulnerability disclosure &rarr; patch deployed</td>
     <td>30&ndash;90 days</td>
-    <td>1&ndash;3 days (looped) / 3&ndash;7 days (gated)</td>
+    <td>&lt; 24 hours (CRITICAL/HIGH), &lt; 72 hours (all)</td>
   </tr>
   <tr>
     <td>Supply chain compromise detection</td>

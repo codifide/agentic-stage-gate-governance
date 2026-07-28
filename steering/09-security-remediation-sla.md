@@ -15,9 +15,25 @@ Security vulnerabilities have defined remediation timelines. Every vulnerability
 | Severity | Time to Patch | Deployment | Escalation |
 |----------|---------------|------------|------------|
 | **CRITICAL** | 24 hours | Emergency hotfix — bypasses sprint | CTO + Security Lead notified immediately |
-| **HIGH** | 72 hours | Next available deployment window | Security Lead notified; blocks next release if unresolved |
-| **MEDIUM** | 14 days | Current sprint | Tracked in backlog; escalates to HIGH if deadline missed |
-| **LOW** | 30 days | Scheduled maintenance | Tracked; no escalation unless pattern emerges |
+| **HIGH** | 24 hours | Next available deployment window (same day) | Security Lead notified; blocks next release if unresolved |
+| **MEDIUM** | 72 hours | Current sprint or next deployment window | Tracked in backlog; escalates to HIGH if deadline missed |
+| **LOW** | 72 hours | Next deployment window | Tracked; bundled for efficiency |
+
+### Why All Severities Ship Within 72 Hours
+
+With mature loop automation, the deployment pipeline is not the bottleneck. All security remediations can ship within 72 hours. The SLA differentiates *priority in the queue*, not deployment capability.
+
+What legitimately extends remediation beyond 24 hours:
+- Fix requires architectural change (redesign, not patch)
+- Fix has cross-service dependencies (coordination across teams)
+- Fix needs compliance sign-off (regulated data handling change)
+- Fix requires a breaking API change (consumer coordination)
+
+What does NOT justify extension:
+- "We only deploy on Tuesdays" — deploy when ready
+- "QA needs a 2-week regression cycle" — loop verifiers replace this
+- "The change review board meets monthly" — tiered review replaces this
+- Batching for organizational convenience
 
 ### Severity Classification
 
@@ -123,9 +139,9 @@ For teams deploying daily:
 | CRITICAL fix (looped) | Automated verifiers pass | Yes — emergency path |
 | CRITICAL fix (gated) | Expedited B-Team (Cipher + Jett only) | Yes — if review completes |
 | HIGH fix (looped) | Automated verifiers pass | Yes |
-| HIGH fix (gated) | Standard B-Team Tier 2 | Next day if review late |
-| MEDIUM fix | Standard loop or gate per classification | Yes (loop) / Next sprint (gate) |
-| LOW fix | Bundled with next feature deployment | Whenever convenient |
+| HIGH fix (gated) | Expedited B-Team (Cipher + Jett only) | Yes — same day target |
+| MEDIUM fix | Standard loop or Tier 2 gate | Yes (loop) / Next day (gate) |
+| LOW fix | Standard loop or Tier 1 auto-pass | Yes — bundled with next deployment |
 
 ### Sprint Cadence (Weekly)
 
@@ -143,10 +159,11 @@ Track these metrics continuously (G-LOOP automated collection):
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| Mean Time to Remediate (CRITICAL) | < 12 hours | Time from detection to deployed fix |
-| Mean Time to Remediate (HIGH) | < 48 hours | Time from detection to deployed fix |
+| Mean Time to Remediate (CRITICAL) | < 8 hours | Time from detection to deployed fix |
+| Mean Time to Remediate (HIGH) | < 24 hours | Time from detection to deployed fix |
+| Mean Time to Remediate (ALL) | < 72 hours | No severity takes longer than 72h |
 | % CRITICALs resolved within SLA | 100% | No exceptions |
-| % HIGHs resolved within SLA | 95% | 5% allowance for complex architectural fixes |
+| % ALL severities resolved within 72h | 95% | 5% allowance for architectural fixes requiring coordination |
 | % looped vs gated remediations | > 70% looped | Higher = more automation maturity |
 | Regression rate from security fixes | < 2% | Fixes that introduce new bugs |
 | False positive rate (auto-classification) | < 10% | Mis-classified severities |
