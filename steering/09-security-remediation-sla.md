@@ -35,6 +35,27 @@ What does NOT justify extension:
 - "The change review board meets monthly" — tiered review replaces this
 - Batching for organizational convenience
 
+---
+
+## Extension Classifications
+
+When a remediation cannot meet the standard SLA, it MUST be classified with one of four recognized extension reasons. Each has its own extended timeline and accountability requirement.
+
+| Extension Class | Description | Extended SLA | Interim Mitigation | Accountability |
+|---|---|---|---|---|
+| **ARCH** — Architectural Redesign | Fix requires structural change to system design. New services, data flows, or fundamental pattern changes. | 7 days | Required within 24h | Architecture Lead signs off on scope |
+| **CROSS** — Cross-Service Coordination | Fix spans multiple services owned by different teams. Requires synchronized deployment or shared interface changes. | 5 days | Required within 24h | Service owners jointly commit to timeline |
+| **COMPLY** — Compliance Sign-Off | Fix changes how regulated data is handled, stored, or transmitted. Requires legal/compliance review. | 5 days | Required within 24h | Compliance Officer approves change |
+| **BREAK** — Breaking API Change | Fix requires change to a published API contract. Consumers must be notified and adapters built. | 5 days | Required within 24h | API consumers acknowledge timeline |
+
+### Extension Rules
+
+1. **Every extension MUST include an interim mitigation deployed within 24 hours** — WAF rule, feature flag, rate limit, monitoring alert, or access restriction. The vulnerability is contained immediately; only the permanent fix takes longer.
+2. **Extensions are tracked separately** from standard SLA metrics. They are a signal of structural complexity, not pipeline immaturity.
+3. **No extension exceeds 7 days** without Director escalation to war room.
+4. **Recurring extensions trigger architectural review** — if the same extension class is used 3+ times in a quarter for the same component, it indicates a structural problem that must be resolved (decouple the service, pre-build the compliance path, version the API).
+5. **Extension class is declared at triage**, not retroactively. You cannot reclassify after missing the standard SLA.
+
 ### Severity Classification
 
 | Severity | Criteria |

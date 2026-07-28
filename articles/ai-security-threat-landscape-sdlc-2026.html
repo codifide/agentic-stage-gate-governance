@@ -722,6 +722,49 @@ code {
 
 <h3>5.5 Supply Chain Verification Loop</h3>
 
+<h4>Extension Classifications</h4>
+<p>When a remediation cannot meet the standard SLA, it must be classified with one of four recognized extension reasons &mdash; each with its own timeline and accountability:</p>
+
+<table>
+  <tr>
+    <th>Extension Class</th>
+    <th>Description</th>
+    <th>Extended SLA</th>
+    <th>Interim Mitigation</th>
+  </tr>
+  <tr>
+    <td><strong>ARCH</strong></td>
+    <td>Architectural redesign &mdash; structural change, not a localized patch</td>
+    <td>7 days</td>
+    <td>Required within 24h</td>
+  </tr>
+  <tr>
+    <td><strong>CROSS</strong></td>
+    <td>Cross-service coordination &mdash; spans multiple teams, synchronized deployment</td>
+    <td>5 days</td>
+    <td>Required within 24h</td>
+  </tr>
+  <tr>
+    <td><strong>COMPLY</strong></td>
+    <td>Compliance sign-off &mdash; regulated data handling change requires legal review</td>
+    <td>5 days</td>
+    <td>Required within 24h</td>
+  </tr>
+  <tr>
+    <td><strong>BREAK</strong></td>
+    <td>Breaking API change &mdash; published contract change, consumer notification required</td>
+    <td>5 days</td>
+    <td>Required within 24h</td>
+  </tr>
+</table>
+
+<div class="callout callout-warning">
+  <div class="callout-title">Key Rule: Interim Mitigation Always Within 24 Hours</div>
+  <p>Every extension requires an interim mitigation deployed within 24 hours (WAF rule, feature flag, rate limit, monitoring alert, or access restriction). The vulnerability is <em>contained</em> immediately; only the permanent fix takes longer. If a component triggers the same extension class 3+ times per quarter, it mandates an architectural review to eliminate the structural blocker.</p>
+</div>
+
+<h3 style="margin-top:2rem;">5.6 Supply Chain Verification Loop</h3>
+
 <p>Every dependency change triggers an automated verification sequence:</p>
 <ol>
   <li><strong>Provenance check</strong> &mdash; verified publisher, consistent maintainer, Sigstore signature</li>

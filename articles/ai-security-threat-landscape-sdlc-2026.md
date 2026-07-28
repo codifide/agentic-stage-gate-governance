@@ -283,6 +283,23 @@ Defined SLA targets:
 
 With mature loop automation, all security remediations deploy within 72 hours. The SLA differentiates *priority in the queue*, not deployment capability. What extends remediation beyond 24 hours is not pipeline limitations but structural factors: cross-service coordination, architectural redesign, compliance sign-off, or breaking API changes requiring consumer coordination.
 
+### Extension Classifications
+
+When a remediation cannot meet the standard SLA, it must be classified with one of four recognized extension reasons — each with its own extended timeline and accountability:
+
+| Extension Class | Description | Extended SLA | Accountability |
+|---|---|---|---|
+| **ARCH** — Architectural Redesign | Fix requires structural change to system design, not a localized patch. New services, new data flows, or fundamental pattern changes. | 7 days (with interim mitigation within 24h) | Architecture Lead signs off on redesign scope |
+| **CROSS** — Cross-Service Coordination | Fix spans multiple services owned by different teams. Requires synchronized deployment or shared interface changes. | 5 days (with partial mitigation within 24h) | Service owners jointly commit to timeline |
+| **COMPLY** — Compliance Sign-Off | Fix changes how regulated data is handled, stored, or transmitted. Requires legal/compliance review before deployment. | 5 days (with compensating control within 24h) | Compliance Officer approves change |
+| **BREAK** — Breaking API Change | Fix requires a change to a published API contract. Consumers must be notified, adapters built, or versioning strategy applied. | 5 days (with deprecation notice within 24h) | API consumers acknowledge timeline |
+
+**Rules for extensions:**
+- Every extension MUST include an interim mitigation deployed within 24 hours (WAF rule, feature flag, rate limit, monitoring alert, or access restriction)
+- Extensions are tracked and reported separately from standard SLA metrics
+- No extension exceeds 7 days without Director escalation
+- If an extension class is used more than 3 times in a quarter for the same component, it triggers an architectural review to eliminate the structural blocker
+
 Most remediations (dependency bumps, known-pattern fixes) are bounded, machine-verifiable, and low-blast-radius — meaning they can be fully automated through the loop layer. The 80% of remediations that are mechanical should never wait for a sprint boundary.
 
 ### 5.5 Supply Chain Verification Loop
