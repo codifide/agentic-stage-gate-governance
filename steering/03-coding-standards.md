@@ -189,6 +189,92 @@ Without this comment and approval, any silent catch is a **blocking code review 
 
 ---
 
+## AI-Generated Code Provenance
+
+### The Problem
+
+When 40%+ of code is AI-generated but indistinguishable from human-written code in the repository, security teams lose the ability to apply differential risk assessment. Research shows 61% of AI-generated code is functionally correct but only 10.5% meets security standards (Zhao et al., 2026). Without provenance tracking, you cannot measure your exposure or target review effort.
+
+### Provenance Requirements
+
+Every commit MUST include metadata indicating the code generation source:
+
+**Git trailer format (preferred):**
+```
+feat: add rate limiting to /api/users endpoint
+
+Implements token bucket rate limiter with Redis backend.
+Configured for 100 req/min per authenticated user.
+
+Ticket: PROJ-1234
+Generated-By: ai-agent
+Agent-Model: claude-sonnet-4
+Agent-Tool: kiro
+Review-Tier: 2
+```
+
+**Valid `Generated-By` values:**
+- `human` — entirely human-written
+- `ai-agent` — primarily AI-generated (agent wrote the implementation)
+- `ai-assisted` — human-written with AI suggestions/completions incorporated
+- `ai-paired` — interactively developed with AI (human directing, AI implementing)
+
+### Tracking Fields
+
+| Field | Required | Values |
+|-------|----------|--------|
+| `Generated-By` | Yes | `human`, `ai-agent`, `ai-assisted`, `ai-paired` |
+| `Agent-Model` | If AI-generated | Model name and version |
+| `Agent-Tool` | If AI-generated | IDE/tool (kiro, cursor, copilot, etc.) |
+| `Review-Tier` | Yes | `1`, `2`, `3` (per `11-tiered-adversarial-review.md`) |
+
+### Escalation Rules Based on Provenance
+
+| Code Source | Touches Security Path | Review Tier |
+|---|---|---|
+| `human` | No | Tier 1 (standard) |
+| `human` | Yes | Tier 2 (minimum) |
+| `ai-agent` | No | Tier 1 (if tests cover) |
+| `ai-agent` | Yes | **Tier 2 (minimum) — auto-escalated** |
+| `ai-agent` | Auth/crypto/permissions | **Tier 3 (mandatory)** |
+| Any | New architectural pattern | Tier 3 |
+
+**Rule:** AI-generated code touching security-sensitive paths is ALWAYS reviewed at minimum Tier 2, regardless of other classification criteria.
+
+### Metrics Derived from Provenance
+
+Track monthly:
+- **% code by source** — what proportion is ai-agent vs human vs assisted?
+- **Defect rate by source** — do AI-generated commits have higher bug/vulnerability rates?
+- **Security finding rate by source** — are SAST/SCA findings disproportionately in AI code?
+- **Review tier distribution by source** — is AI code appropriately escalated?
+- **Time-to-merge by source** — is AI code moving faster (less scrutiny) or slower (more review)?
+
+These metrics inform calibration of the tiered review system. If AI-generated code consistently shows higher defect rates in a specific category, auto-escalate that category.
+
+### Enforcement
+
+- Pre-commit hook validates `Generated-By` trailer is present
+- CI pipeline extracts provenance metadata for dashboard reporting
+- Missing provenance blocks merge (same as missing tests)
+- Quarterly provenance audit: sample PRs and verify accuracy of self-reported source
+
+### Why This Matters
+
+Without provenance tracking:
+- You cannot measure whether AI-generated code is riskier in your specific codebase
+- You cannot prove to auditors that appropriate review was applied based on risk
+- You cannot calibrate your review tiers based on actual defect data
+- You cannot detect if AI-generated code is systematically bypassing security patterns
+
+With provenance tracking:
+- Security posture analysis becomes data-driven, not assumption-based
+- Review effort is allocated proportionally to measured risk
+- Audit trails demonstrate governance of AI-assisted development
+- Patterns of AI-introduced vulnerabilities are detected and addressed systematically
+
+---
+
 ## CI/CD Requirements
 
 Every PR must pass:
@@ -197,6 +283,7 @@ Every PR must pass:
 3. **Lint** — no lint errors (warnings acceptable with justification)
 4. **Security scan** — no secrets, no known vulnerabilities
 5. **Accessibility check** — automated checks pass (where tooling exists)
+6. **Provenance check** — `Generated-By` trailer present on all commits
 
 ### Branch Protection
 - No direct pushes to main/develop
