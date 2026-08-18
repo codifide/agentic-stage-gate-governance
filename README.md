@@ -2,7 +2,7 @@
 
 **Loop the mechanical. Gate the judgment. Ship with confidence.**
 
-A ready-to-use governance system for AI-assisted software development that combines stage-gates (structured human judgment) with loop engineering (automated verification). Three layers, one coherent model.
+A ready-to-use governance system for AI-assisted software development that combines stage-gates (structured human judgment) with loop engineering (automated verification). It recreates the **checks and balances of a mature software organization inside an agentic execution environment**.
 
 ---
 
@@ -28,8 +28,8 @@ A ready-to-use governance system for AI-assisted software development that combi
 ```
 
 - **Human Layer:** You define what success looks like and make go/kill/hold decisions. 5 minutes.
-- **Gate Layer:** AI personas evaluate whether the approach is sound. Adversarial review ensures nothing slips through. 30 minutes.
-- **Loop Layer:** Mechanical execution with automated verification. Runs continuously — or overnight. No human intervention needed, but results are logged and observable.
+- **Gate Layer:** AI personas evaluate whether the approach is sound. Independent challenge, domain expertise, intent integrity, security, compliance, and architecture live here.
+- **Loop Layer:** Mechanical execution with automated verification. Runs continuously — or overnight. No human intervention needed while it remains inside its Intent Contract; results are logged and observable.
 
 ---
 
@@ -92,14 +92,16 @@ steering/
     ├── 05-nfr-kpi-mandate.md      # Measurable targets requirement
     ├── 06-existing-project-assessment.md  # How to assess projects that already have code
     ├── 07-auto-research-protocol.md       # Autonomous solution iteration system
-    └── 08-loop-engineering.md             # Loop engineering: verifiers, state, cost control
+    ├── 08-loop-engineering.md             # Loop engineering: verifiers, state, cost control
+    └── 12-intent-integrity.md             # Intent Contracts, Do No Harm, Primum circuit breaker
 templates/
     ├── B-TEAM-REVIEW-PACKAGE.md   # Copy-paste template for B-Team reviews
     ├── CODE-REVIEW-PROMPT-QWEN.md # Domain-specific code review prompt for reasoning models
     ├── GATE-EVIDENCE-CHECKLIST.md  # Per-gate artifact tracking with binary states
     ├── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
     ├── HOOKS-SESSION-STATE.md     # Agent hooks for session continuity + PHI guards
-    └── NFR-TEMPLATE.md            # Non-functional requirements template
+    ├── NFR-TEMPLATE.md            # Non-functional requirements template
+    └── INTENT-CONTRACT.md         # Persistent human-authorized goal, constraints, harm boundaries
 WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
 LOOP-ENGINEERING-GUIDE.md          # Deep-dive: loop engineering rationale and patterns
 ```
@@ -115,6 +117,8 @@ LOOP-ENGINEERING-GUIDE.md          # Deep-dive: loop engineering rationale and p
 5. When you say "review this," it invokes the appropriate personas
 6. Gate decisions are always yours — the AI provides evidence, you decide
 7. Between gates, loops run continuously to verify consistency, run tests, and catch drift
+8. Primum continuously checks loop behavior against the human-approved Intent Contract
+9. Quill observes G0–G6 and preserves the initiative's decisions, failures, evidence, and lessons
 
 ### Auto-Research Mode
 
@@ -226,15 +230,28 @@ What changed:
 
 The insight: most teams put everything in one layer. Either everything needs human approval (slow) or everything runs autonomously (dangerous). The three-layer model lets each task find its correct altitude.
 
+### Intent Integrity Extension
+
+As agentic implementation velocity increases, human line-by-line review becomes a bottleneck and eventually an inadequate primary control. The framework therefore treats human-authorized intent as persistent system state.
+
+- **Primum (Intent Integrity / Do No Harm)** monitors goal drift, scope expansion, metric gaming, collateral impact, irreversible actions, verifier manipulation, and privilege expansion.
+- **Intent Contracts** define goals, protected constraints, non-goals, harm boundaries, escalation conditions, success evidence, reversibility, and authority boundaries.
+- **Circuit breakers** halt autonomous work when behavior leaves authorized intent.
+- **Domain Expert Personas** scale access to scarce subject-matter expertise without pretending to replace the human expert.
+- **Quill** operates as an embedded journalist / organizational historian across the entire lifecycle, preserving how and why the system evolved.
+
+The objective is not to make humans review machine-speed output faster. It is to move repeatable assurance into CI/CD, automated testing, policy enforcement, independent verification, and continuous evidence — while preserving human judgment for consequential decisions.
+
 ---
 
 ## Customization
 
 - **Industry-specific:** Edit `01-governance-gates.md` to add domain-specific gate criteria (HIPAA, SOC2, PCI-DSS, etc.)
-- **Team-specific:** Edit `02-personas.md` to rename personas or adjust responsibilities
+- **Team-specific:** Edit `02-personas.md` to rename personas, define Domain Expert Personas, or adjust responsibilities
 - **Standards:** Edit `03-coding-standards.md` to match your tech stack's conventions
 - **Lighter governance:** Remove gates you don't need (but keep G0, G4, and G6 at minimum)
 - **Loop tuning:** Edit `08-loop-engineering.md` to adjust retry limits, cost tiers, or verifier requirements
+- **Intent integrity:** Edit `12-intent-integrity.md` and `templates/INTENT-CONTRACT.md` to define harm boundaries, escalation rules, and authority constraints
 - **Domain-specific reviews:** Create tailored B-Team prompts for your platform (see `04-adversarial-review.md` for examples)
 - **Existing projects:** Use `templates/EXISTING-PROJECT-ASSESSMENT.md` to assess where you stand before applying gates
 
@@ -242,9 +259,11 @@ The insight: most teams put everything in one layer. Either everything needs hum
 
 ## Philosophy
 
+> "Machine-speed execution. Human-grade checks and balances."
+>
 > "AI loops for execution. Gates for judgment. Humans for decisions. Evidence proves all three."
 
-Based on Robert Cooper's Stage-Gate® (1986), extended with loop engineering for automated verification. Adapted for a world where AI agents produce code faster than humans can review it. The gates ensure that speed doesn't compromise safety. The loops ensure that mechanical tasks don't bottleneck on human availability.
+Based on Robert Cooper's Stage-Gate® (1986), extended with loop engineering for automated verification and intent-integrity controls for bounded autonomy. Adapted for a world where AI agents produce code faster than humans can review line by line. The goal is not less rigor — it is moving rigor into architecture: CI/CD, automated tests, independent verifiers, security tooling, policy enforcement, domain expertise, durable evidence, and selective human judgment.
 
 ---
 

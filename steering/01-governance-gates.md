@@ -6,7 +6,7 @@ inclusion: auto
 
 # Governance Gates
 
-Every initiative passes through seven gates. No gate passes on confidence — only on evidence. Between gates, automated loops run continuously to verify consistency, run tests, and catch drift.
+Every initiative passes through seven gates. No gate passes on confidence — only on evidence. Between gates, automated loops run continuously to verify consistency, run tests, and catch drift. Non-trivial initiatives also carry an **Intent Contract** so autonomous work can be checked continuously against the human-authorized goal, scope, constraints, harm boundaries, and escalation rules.
 
 ## The Gates
 
@@ -31,12 +31,14 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - Build verification (compile, lint, type-check)
 - Regression detection (performance benchmarks, API contract compliance)
 - Drift monitoring (schema changes, dependency updates, config divergence)
+- Intent-integrity checks (scope drift, protected-constraint regression, verifier manipulation)
 
 **G-LOOP does NOT handle:**
 - Design decisions
 - Architecture changes
 - Compliance interpretation
 - Anything requiring "it depends" reasoning
+- Redefining human intent, waiving harm boundaries, or accepting consequential residual risk
 
 **Rule:** If a verifier can judge it, it belongs in G-LOOP. If it needs human judgment, it goes through a gate.
 
@@ -52,6 +54,7 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - Risk classification (does it touch sensitive data, identity, release logic?)
 - Stakeholders identified
 - Scope boundaries (what's in, what's out)
+- Intent Contract: goal, protected constraints, non-goals, harm boundaries, escalation conditions
 
 **Passes when:** The problem is worth solving and the scope is honest.
 
@@ -78,6 +81,7 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - Backend traceability (if integrating with existing systems)
 - Open assumptions documented
 - B-Team adversarial review completed
+- Intent Contract traced into acceptance criteria and NFRs
 
 **Passes when:** Requirements are testable, traceable, and survived adversarial review.
 
@@ -105,6 +109,7 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - Decomposed tickets with acceptance criteria
 - 3 Amigos approval on each execution ticket (Product + Dev + Test)
 - B-Team review of architecture and threat model
+- Authority boundaries and irreversible-action controls defined for agents/loops
 
 **Passes when:** The design is implementable, secure, testable, and the team knows what to build.
 
@@ -130,6 +135,8 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - Security review passed (no open CRITICALs)
 - Accessibility audit passed
 - Traceability updated (requirement → test → verification)
+- Primum intent-integrity review passed with no unresolved HALT condition
+- Any verifier/baseline changes independently justified and reviewed
 
 **Passes when:** The code works, is proven to work, and the proof is documented.
 
@@ -159,6 +166,7 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - NFR targets met (with evidence)
 - KPI baseline collected (or measurement plan documented)
 - Full B-Team final review
+- Intent Contract revalidated against release behavior and protected constraints
 
 **Passes when:** The system is safe to put in front of users.
 
@@ -184,6 +192,7 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 - Reliability metrics (crash-free rate, error rate, uptime)
 - User feedback summary
 - Follow-up actions identified
+- Quill lifecycle narrative completed (intent, decisions, dissent, failures, discoveries, evidence, outcomes)
 - Documentary capture (what worked, what didn't, what we'd change)
 
 **Passes when:** We've learned from the release and captured it for the next one.
@@ -204,13 +213,15 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 1. **User safety outranks throughput.** We don't ship faster by skipping gates.
 2. **Evidence, not confidence.** "We think it's fine" is not a gate pass.
-3. **B-Team reviews every gate.** Different AI, different perspectives, different blind spots.
+3. **B-Team reviews every gate.** Independent context and model diversity reduce correlated reasoning failures and confirmation bias; they do not eliminate them.
 4. **No single persona self-approves.** Separation of duties is non-negotiable.
 5. **NFRs, KPIs, and Benchmarks are mandatory.** If you can't measure it, you can't ship it.
 6. **Accessibility is every-phase, not a late fix.** Every ticket includes accessibility acceptance criteria.
-7. **100% test coverage on new code.** If AI writes it, AI tests it. No exceptions without approval.
+7. **Automate repeatable assurance.** If AI writes at machine speed, CI/CD, tests, security tooling, and independent verifiers must scale with it. Coverage is evidence, not proof of correctness.
 8. **Kill early, kill cheap.** The answer to a bad idea is G0 rejection, not G5 failure.
 9. **Loop the mechanical, gate the judgment.** Verifiable tasks run autonomously. Judgment tasks require human decision.
+10. **Intent is a control surface.** Agents may optimize execution, not silently redefine the goal.
+11. **Do no harm.** When execution conflicts with authorized intent, protected constraints, or harm boundaries, autonomy yields to HALT + escalation.
 
 ---
 

@@ -19,7 +19,7 @@ The builder cannot review their own work. A **separate AI** (different model, di
 - **A-Team** (Builders): Primary AI assistant. Designs, specs, implements, delivers.
 - **B-Team** (Critics): Different AI model. Reviews, challenges, finds weaknesses.
 
-Teams NEVER use the same AI model. This eliminates model-specific confirmation bias.
+Teams SHOULD use different model families and independent review contexts whenever practical. This **reduces correlated reasoning failures and model-specific confirmation bias; it does not eliminate them.** Evidence and human judgment remain required.
 
 ---
 
@@ -43,7 +43,7 @@ Frontier models with large context windows. Best for generation, refactoring, an
 | **DeepSeek-R1** | Strong logic and edge-case analysis | Add explicit security instruction — less thorough on security by default. |
 | **Claude (extended thinking)** | Good if A-Team used a different model family | Do not use if Claude built the code. |
 
-**Rule:** Do not use the same model family as the A-Team for B-Team review. If Claude built it, do not use Claude to review it.
+**Rule:** Prefer a different model family from the A-Team for B-Team review. If the same family must be used, isolate the review context, withhold the builder's rationale until after first-pass findings, and treat the result as less independent.
 
 ### Zero-Context Reviewer (optional, recommended at G5)
 Any capable model in a clean session with no system prompt or project files. The goal is a naive read — fresh eyes catch undocumented assumptions and invisible jargon.
@@ -158,6 +158,7 @@ If the verdict is FAIL or PASS WITH CONDITIONS (with CRITICALs), fix and resubmi
 - Before any release candidate is approved
 - When the team disagrees on risk level
 - When the feature touches security, privacy, or compliance
+- When Primum raises intent-integrity concerns that need independent challenge
 
 ---
 
