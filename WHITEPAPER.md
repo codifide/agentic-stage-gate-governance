@@ -348,5 +348,5 @@ Between every gate, G-LOOP runs: automated verification that catches drift, main
 
 ---
 
-**Author:** Douglas Jones | Sharecare Health Data Services
+**Author:** Douglas Jones | Codifide
 **Date:** May 2026 (v1.0), July 2026 (v2.0 — Loop Evolution)

@@ -174,7 +174,7 @@ The teams that get this right won't just ship faster — they'll ship with confi
 
 ---
 
-*Douglas Jones leads healthcare AI engineering at Sharecare, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.*
+*Douglas Jones leads healthcare AI engineering at Codifide, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.*
 
 *The [Agentic Stage-Gate Governance](https://github.com/codifide/agentic-stage-gate-governance) framework is open source.*
 
