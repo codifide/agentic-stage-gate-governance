@@ -4,6 +4,12 @@
 
 A ready-to-use governance system for AI-assisted software development that combines stage-gates (structured human judgment) with loop engineering (automated verification). It recreates the **checks and balances of a mature software organization inside an agentic execution environment**.
 
+> **📖 Documentation & Research:**
+> - [Agentic SDLC Governance](https://www.codifide.com/governance-whitepaper) — full framework specification
+> - [Loop Engineering: A Pragmatic Guide](https://www.codifide.com/loop-engineering) — production lessons from agentic loops
+> - [AI Security Changed in 90 Days](https://www.codifide.com/ai-security-threats) — why traditional SDLC security breaks
+> - [About the Author](https://www.codifide.com/douglas-jones) — Douglas Jones, Codifide
+
 ---
 
 ## The Three-Layer Model
