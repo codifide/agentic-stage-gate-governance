@@ -37,7 +37,7 @@ If your task has all three, loop it. If it's missing any one, gate it.
 | Run ETL, verify data consistency | Yes | Measurable: row counts match, MV consistent |
 | Fix a failing test | Yes | Verifier IS the test |
 | Refactor to a known pattern | Yes | Build + existing tests verify |
-| Implement CMS measure logic | No | "Correct per CMS spec" isn't testable without Gretchen |
+| Implement CMS measure logic | No | "Correct per CMS spec" isn't testable without a Domain Expert |
 | Design a new feature | No | No verifier for "good design" |
 | Performance optimization | Yes | Benchmark is the verifier |
 | Security review | No | Absence of findings ≠ security |
@@ -99,7 +99,7 @@ The overhead of loop engineering comes from three sources. Minimize each:
 
 **Sweet spot:** Review the VERIFIER, not the output. If you trust the verifier, you trust the loop. Invest review time in making verifiers honest, then let them run.
 
-**Practical:** Our Gretchen review of the Quality Measures page found 8 issues that "passed the build." The build wasn't the right verifier. A CMS-compliance checklist verifier (is MIPS score computed correctly? are inverse measures flagged?) would have caught 6 of 8 automatically.
+**Practical:** A Domain Expert review of the Quality Measures page found 8 issues that "passed the build." The build wasn't the right verifier. A compliance-checklist verifier (is the score computed correctly? are inverse measures flagged?) would have caught 6 of 8 automatically.
 
 ---
 
