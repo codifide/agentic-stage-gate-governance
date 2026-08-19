@@ -52,7 +52,7 @@
 <p>Then MCP connections changed everything again. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.</p>
 <p>That earned enough trust for the next step: building components. Well-defined modules, one at a time, with human review after each. An ETL connector. A measure engine. A frontend page.</p>
 <p>Then whole systems. Not one component — the full stack. Architecture, data model, API, frontend, deployment. Simulating a traditional development team at 10x speed. Architect drafts the design. Developer implements. Tester verifies. Security reviews. The AI played all the roles.</p>
-<p>But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed 4.0% instead of 22.5/30. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.</p>
+<p>But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed a fraction of the expected value. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.</p>
 <p>That's when we built the governance layer — stage-gates, adversarial review, domain expert personas, persistent session state. Not to slow things down, but to catch the 40% of errors that "it builds" doesn't catch.</p>
 <p>And now we're adding the final piece: automated verification loops that run without asking permission. Not replacing the governance — augmenting it with mechanical consistency checks that catch drift between pipeline runs.</p>
 <p>Each stage earned the right to exist by solving the pain of the previous one.</p>
@@ -75,7 +75,7 @@
 <p>When do you install these gates?</p>
 <p><strong>Don't gate during discovery.</strong> When you're building 8 measure engines in an afternoon, changing the API contract twice, pivoting the UI based on live feedback — tests are drag. You need flow state. The human IS the verifier.</p>
 <p><strong>Gate when interfaces solidify.</strong> Once the same bug bites you twice. Once the pipeline steps are stable. That's when you know the interface has settled enough to be worth encoding. The signal is: it broke because of <em>drift</em>, not <em>change</em>.</p>
-<p><strong>Gate what repeats.</strong> If you run it once, verify manually. If you run it daily for 220 clients, gate it. Verifier construction cost ÷ future executions = ROI. For 880 executions/year, even expensive tests pay for themselves in a month.</p>
+<p><strong>Gate what repeats.</strong> If you run it once, verify manually. If you run it daily for hundreds of clients, gate it. Verifier construction cost ÷ future executions = ROI. For hundreds of executions per year, even expensive tests pay for themselves in a month.</p>
 <hr />
 <h2>The Merged Model</h2>
 <p>Neither stage-gates alone nor loops alone are sufficient.</p>
@@ -116,7 +116,7 @@
 <hr />
 <h2>The Uncomfortable Truth</h2>
 <p>Here's what nobody in the loop engineering hype wants to say: most software problems don't have clean verifiers.</p>
-<p>Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to 2,200 clients?" requires production traffic.</p>
+<p>Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to thousands of clients?" requires production traffic.</p>
 <p>Loop engineering works brilliantly for the 60% that's mechanical. For the other 40% — design, compliance, judgment calls — you still need gates. You still need the uncomfortable conversation where someone says "this isn't right."</p>
 <p>The teams that pretend everything can be looped will ship fast and break things that matter. The teams that refuse to loop anything will be too slow to compete.</p>
 <p>The sweet spot is knowing the difference.</p>
@@ -147,7 +147,7 @@
 <p>Loop the mechanical. Gate the judgment. Invest in honest verifiers. And test your verifiers against stale data — because a verifier that cries wolf trains you to ignore it.</p>
 <p>The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't the product. Correctness is. Confidence is what you earn when the verifier agrees.</p>
 <hr />
-<p><em><a href="/douglas-jones" style="color:inherit">Douglas Jones</a> leads healthcare AI engineering at Sharecare Health Data Solutions, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.</em></p>
+<p><em><a href="/douglas-jones" style="color:inherit">Douglas Jones</a> leads healthcare AI engineering at Sharecare Health Data Solutions, where the team has shipped nearly 200 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.</em></p>
 <p><em>The <a href="https://github.com/codifide/agentic-stage-gate-governance">Agentic Stage-Gate Governance</a> framework is open source.</em></p>
 <hr />
 <h2>References</h2>
@@ -251,8 +251,8 @@
 </ol>
 <h3>The Numbers</h3>
 <ul>
-<li>199 measures × 220 clients × 4 quarterly refreshes = <strong>175,560 loop-cycles/year</strong> (automated)</li>
-<li>Scaling to: 199 measures × 2,200 clients × millions of patients = <strong>1.75M loop-cycles/year</strong></li>
+<li>Hundreds of measures × hundreds of clients × quarterly refreshes = <strong>hundreds of thousands of loop-cycles/year</strong> (automated)</li>
+<li>Scaling to: hundreds of measures × thousands of clients × millions of patients = <strong>millions of loop-cycles/year</strong></li>
 <li>7 gates × 6 initiatives/year = <strong>42 gated decisions/year</strong> (human judgment)</li>
 <li>At scale ratio: <strong>41,800 automated executions per human decision</strong></li>
 </ul>
