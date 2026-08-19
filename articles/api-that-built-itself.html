@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The API That Built Itself: How 13 AI Personas Delivered a Regulated Service | Douglas Jones</title>
+<meta name="description" content="How a team of 13 AI personas delivered a production-grade regulated healthcare API in a single day — with 100% test coverage, 16 architecture decisions, and zero governance shortcuts. A documentary record of agentic SDLC governance in practice." />
+<link rel="canonical" href="https://www.codifide.com/api-that-built-itself" />
+<meta property="og:title" content="The API That Built Itself: How 13 AI Personas Delivered a Regulated Service" />
+<meta property="og:description" content="How a team of 13 AI personas delivered a production-grade regulated healthcare API in a single day — with 100% test coverage, 16 ADRs, and zero governance shortcuts." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://www.codifide.com/api-that-built-itself" />
+<meta property="og:image" content="https://www.codifide.com/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The API That Built Itself: How 13 AI Personas Delivered a Regulated Service" />
+<meta name="twitter:description" content="13 AI personas. 388 tests. 100% coverage. One day. Zero governance shortcuts." />
+<meta name="twitter:image" content="https://www.codifide.com/og-image.png" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The API That Built Itself: How 13 AI Personas Delivered a Regulated Service",
+  "datePublished": "2026-04-15",
+  "dateModified": "2026-08-19",
+  "author": {
+    "@type": "Person",
+    "@id": "https://www.codifide.com/douglas-jones#person",
+    "name": "Douglas Jones",
+    "jobTitle": "Founder & Engineering Leader",
+    "url": "https://www.codifide.com/douglas-jones"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "@id": "https://www.codifide.com/#organization",
+    "name": "Codifide",
+    "url": "https://www.codifide.com"
+  }
+}
+</script>
+<link rel="icon" href="favicon.ico" />
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/article.css"/>
+</head>
+<body>
+<nav class="article-nav">
+  <a href="/"><img src="/codifide-gem.svg" alt="Codifide" class="nav-logo"/></a>
+  <a href="/" class="nav-back">Back to Codifide</a>
+</nav>
+
+<div class="container">
+<article>
+
+<h1>The API That Built Itself</h1>
+<p class="subtitle">How 13 AI Personas Delivered a Regulated Healthcare Service</p>
+<p style="font-size:0.85rem; color:var(--muted, #64748b);"><em>By Quill &mdash; Documentary Record &mdash; April 2026</em></p>
+
+<h2>The Problem</h2>
+
+<p>A large healthcare organization processes approximately 30,000 Release of Information requests daily. Each requires matching a patient's demographics against an EMR system to find the right medical record. Get it right: records flow. Get it wrong: the wrong patient's records could be disclosed.</p>
+
+<p>The existing system used fragile exact-string matching. It worked &mdash; but it left yield on the table, generated unnecessary operations exceptions, and couldn't explain its decisions.</p>
+
+<p>The mandate: build a better matcher. Deterministic. Tiered. Auditable. Safe.</p>
+
+<h2>The Experiment</h2>
+
+<p>Build it with AI. Not a single model generating code &mdash; a structured team of <strong>13 specialized personas</strong>, each with a defined role, operating under the same SDLC governance that a 10-person human team would follow.</p>
+
+<h3>The AI Team</h3>
+
+<table style="width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:0.9rem;">
+<tbody>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Aegis</strong></td><td style="padding:0.5rem;">Director/Enforcer &mdash; Gates, stop-ship, governance</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Harper</strong></td><td style="padding:0.5rem;">Product Owner &mdash; Scope, acceptance, priority</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Mary</strong></td><td style="padding:0.5rem;">Business Analyst &mdash; Requirements, evidence, domain</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Winston</strong></td><td style="padding:0.5rem;">Solution Architect &mdash; ADRs, design, tradeoffs</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Rowan</strong></td><td style="padding:0.5rem;">FHIR/EMR Specialist &mdash; HL7 semantics, identity safety</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Amelia</strong></td><td style="padding:0.5rem;">Developer &mdash; Implementation, tests</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Tessa</strong></td><td style="padding:0.5rem;">Test Architect &mdash; Coverage, traceability, QA</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Sentinel</strong></td><td style="padding:0.5rem;">Security Engineer &mdash; Threats, PHI, hardening</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Ruth</strong></td><td style="padding:0.5rem;">Privacy &amp; Compliance &mdash; HIPAA, audit, controls</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Sable</strong></td><td style="padding:0.5rem;">Platform/SRE &mdash; Infrastructure, observability</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Paige</strong></td><td style="padding:0.5rem;">Technical Writer &mdash; Documentation, audit scribe</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Forge</strong></td><td style="padding:0.5rem;">Performance Engineer &mdash; Load testing, NFR validation</td></tr>
+<tr><td style="padding:0.5rem; font-family:monospace; white-space:nowrap;"><strong>Quill</strong></td><td style="padding:0.5rem;">Journalist &mdash; This document</td></tr>
+</tbody>
+</table>
+
+<p>The rules were strict:</p>
+<ul>
+<li>No code without a tracked issue</li>
+<li>No execution without 3 Amigos approval (Product + Dev + QA)</li>
+<li>100% test coverage enforced by CI</li>
+<li>Documentary log entry every session</li>
+<li>Every decision recorded as an Architecture Decision Record (ADR)</li>
+</ul>
+
+<h2>The Foundation</h2>
+
+<p>Phase 0 produced <strong>26 design artifacts and 16 ADRs</strong> before a single line of domain code was written. Gate checklists. QA traceability matrix. Error taxonomy. Resilience policy. PHI-safe logging rules. Operations workflow.</p>
+
+<p>This felt slow. It was not slow.</p>
+
+<p>When the project later transferred from one AI system to another, the handoff succeeded with <strong>zero artifact loss</strong> &mdash; because the artifacts were the memory, not the session. The governance layer made the work portable across AI models.</p>
+
+<h2>The Build</h2>
+
+<p>The domain implementation happened in a <strong>single day</strong>:</p>
+
+<div style="background:var(--gray-50, #f8fafc); border:1px solid var(--border, #e2e8f0); border-radius:8px; padding:1.5rem; margin:1.5rem 0; font-size:0.85rem; font-family:'JetBrains Mono', monospace;">
+<p style="margin:0 0 0.75rem; font-weight:600;">Session 06 &mdash; Build Day</p>
+<ul style="list-style:none; padding:0; margin:0; line-height:1.8;">
+<li>&bull; Backlog reconciliation (caught drift from prior AI session)</li>
+<li>&bull; Coverage gate restoration (100% line + branch)</li>
+<li>&bull; Common internal data model &mdash; 11 immutable records</li>
+<li>&bull; EMR FHIR adapter &mdash; WireMock fixtures, entry boundaries</li>
+<li>&bull; Normalization library &mdash; name, DOB, gender, ZIP, phone, email</li>
+<li>&bull; Decision engine &mdash; 3 tiers, Jaro-Winkler, duplicate evidence</li>
+<li>&bull; Match orchestration &mdash; validate &rarr; adapt &rarr; evaluate &rarr; audit</li>
+<li>&bull; API endpoint &mdash; POST /api/patient-match, PHI-safe errors</li>
+<li>&bull; Adapter resilience &mdash; circuit breaker + retry</li>
+<li>&bull; Infrastructure as Code &mdash; 6 Terraform modules</li>
+<li>&bull; Follow-on fixes &mdash; security, compliance, integration tests</li>
+<li>&bull; 12/12 persona review and sign-off</li>
+<li>&bull; ADR-011 through ADR-016 (command decisions)</li>
+</ul>
+<p style="margin:0.75rem 0 0; font-weight:600;">Session 07 &mdash; Hardening</p>
+<ul style="list-style:none; padding:0; margin:0; line-height:1.8;">
+<li>&bull; CVE remediation &mdash; framework and dependency updates</li>
+<li>&bull; Load testing harness &mdash; synthetic data, stubs, 4 profiles</li>
+<li>&bull; Checkpoint 08 &mdash; deployment-ready</li>
+</ul>
+</div>
+
+<h2>What Was Built</h2>
+
+<p>The request flow:</p>
+
+<div style="background:var(--gray-50, #f8fafc); border:1px solid var(--border, #e2e8f0); border-radius:8px; padding:1.5rem; margin:1.5rem 0; font-family:'JetBrains Mono', monospace; font-size:0.8rem; text-align:center;">
+Request &rarr; Validate &rarr; EMR FHIR Search &rarr; Normalize &rarr; Decide<br><br>
+<strong>MATCHED</strong> &nbsp;|&nbsp; <strong>AMBIGUOUS</strong> &nbsp;|&nbsp; <strong>NO_MATCH</strong><br><br>
+&darr; Audit Trail &rarr; Response
+</div>
+
+<p>The decision engine evaluates candidates in three tiers:</p>
+
+<table style="width:100%; border-collapse:collapse; margin:1.5rem 0;">
+<thead>
+<tr style="border-bottom:2px solid var(--border, #e2e8f0); text-align:left;">
+<th style="padding:0.75rem;">Tier</th>
+<th style="padding:0.75rem;">Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);">
+<td style="padding:0.75rem;"><strong>Tier 1</strong></td>
+<td style="padding:0.75rem;">Exact same-entry first + last name match (official/usual name entries)</td>
+</tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);">
+<td style="padding:0.75rem;"><strong>Tier 2</strong></td>
+<td style="padding:0.75rem;">Exact historical/alternate name match (maiden, nickname, prior entries)</td>
+</tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);">
+<td style="padding:0.75rem;"><strong>Tier 3</strong></td>
+<td style="padding:0.75rem;">Approximate single-field match (Jaro-Winkler &ge; 0.85 on one name, exact on the other)</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>Safety rules:</strong></p>
+<ul>
+<li>DOB must match exactly before any tier is evaluated</li>
+<li>Cross-entry name mixing is blocked (negative tests prove it)</li>
+<li>Multiple top-tier candidates &rarr; AMBIGUOUS (never over-select)</li>
+</ul>
+
+<h2>The Numbers</h2>
+
+<table style="width:100%; border-collapse:collapse; margin:1.5rem 0;">
+<tbody>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Tracked issues</td><td style="padding:0.5rem; text-align:right;"><strong>78</strong> (77 closed, 1 pending deployment)</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Open CVEs</td><td style="padding:0.5rem; text-align:right;"><strong>0</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">AI personas</td><td style="padding:0.5rem; text-align:right;"><strong>13</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Design artifacts</td><td style="padding:0.5rem; text-align:right;"><strong>28</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Architecture Decision Records</td><td style="padding:0.5rem; text-align:right;"><strong>16</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Production classes</td><td style="padding:0.5rem; text-align:right;"><strong>~35</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Test cases</td><td style="padding:0.5rem; text-align:right;"><strong>388</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Test coverage</td><td style="padding:0.5rem; text-align:right;"><strong>100%</strong> (line + branch, enforced)</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Terraform modules</td><td style="padding:0.5rem; text-align:right;"><strong>6</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Observability panels</td><td style="padding:0.5rem; text-align:right;"><strong>10</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Alerting rules</td><td style="padding:0.5rem; text-align:right;"><strong>7</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Synthetic test data</td><td style="padding:0.5rem; text-align:right;"><strong>600,000 records</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Checkpoints</td><td style="padding:0.5rem; text-align:right;"><strong>8</strong></td></tr>
+<tr><td style="padding:0.5rem;">Documentary entries</td><td style="padding:0.5rem; text-align:right;"><strong>25+</strong></td></tr>
+</tbody>
+</table>
+
+<h2>What Surprised Us</h2>
+
+<p><strong>The backlog drift.</strong> Three tickets were implemented by the prior AI session without updating the backlog. The ticket-first rule caught it immediately &mdash; the checkpoint said "not started" but the code existed. The governance layer worked as a safety net, not just ceremony.</p>
+
+<p><strong>The compound boolean pattern.</strong> JaCoCo can't track short-circuit evaluation through Java record constructors. A human team would have argued for weeks about lowering the coverage threshold. The AI team documented the pattern and applied it consistently across every file.</p>
+
+<p><strong>The command decision moment.</strong> Six open blockers &mdash; queue technology, database, key management, operations ownership, deployment model, observability &mdash; resolved in one pass. No committee. No three-week RFC. Just decisions with rationale, recorded permanently as ADRs.</p>
+
+<p><strong>The all-persona review.</strong> Twelve personas reviewed the work independently and produced specific, actionable findings. Not rubber stamps &mdash; real concerns about PHI in exception logs, untyped audit payloads, missing fallback observability. Every finding became a ticket. Every ticket was executed.</p>
+
+<h2>What This Proves</h2>
+
+<p>This experiment does not prove that AI can replace a 10-person team. It proves that <strong>AI can execute the same governance, ceremony, and discipline that a 10-person regulated team would follow</strong> &mdash; and do it in hours instead of weeks.</p>
+
+<p>The governance was not overhead. It was the mechanism that made the speed possible.</p>
+
+<h3>Why Governance Worked</h3>
+
+<table style="width:100%; border-collapse:collapse; margin:1.5rem 0;">
+<tbody>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;"><strong>Ticket-first rule</strong></td><td style="padding:0.5rem;">Caught backlog drift across AI sessions</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;"><strong>3 Amigos gate</strong></td><td style="padding:0.5rem;">Prevented invisible scope expansion</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;"><strong>100% coverage gate</strong></td><td style="padding:0.5rem;">Caught every untested path</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;"><strong>Documentary log</strong></td><td style="padding:0.5rem;">Made the process reviewable and teachable</td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;"><strong>Persona separation</strong></td><td style="padding:0.5rem;">Security found PHI risks that Dev missed</td></tr>
+<tr><td style="padding:0.5rem;"><strong>Decision log</strong></td><td style="padding:0.5rem;">Made command decisions traceable</td></tr>
+</tbody>
+</table>
+
+<h2>What's Next</h2>
+
+<p>The AI team built the machine. Two human engineers are taking the keys.</p>
+
+<p>Their job:</p>
+<ol>
+<li>Review the architecture and decisions</li>
+<li>Provision the infrastructure</li>
+<li>Deploy the service</li>
+<li>Run the load tests at scale</li>
+<li>Activate shadow mode against real EMR traffic</li>
+</ol>
+
+<p>The hardest part isn't the code. It's the moment when synthetic test data gives way to real patient demographics, and the decision engine has to prove it can match safely at scale.</p>
+
+<div class="callout callout-info">
+<div class="callout-title">The governance insight</div>
+<p>Speed without governance produces garbage that looks like gold. This project shipped in hours &mdash; not because it skipped rigor, but because it <em>automated</em> rigor: gates enforced by CI, coverage enforced by tooling, decisions enforced by ADRs, reviews enforced by persona separation. The governance was the architecture.</p>
+</div>
+
+<h2>Related Articles</h2>
+<ul>
+<li><a href="/governance-whitepaper">Agentic Stage-Gate-Loop Whitepaper</a> &mdash; the full framework specification</li>
+<li><a href="/loop-engineering">Loop Engineering: A Pragmatic Guide</a> &mdash; designing and governing autonomous AI coding loops</li>
+<li><a href="/agentic-sdlc-governance">Agentic SDLC Governance</a> &mdash; checks and balances for AI-native software development</li>
+<li><a href="/ai-coding-agent-governance">AI Coding Agent Governance</a> &mdash; authority boundaries when agents write production code</li>
+<li><a href="/healthcare-case-study">Building a Regulated Healthcare Platform</a> &mdash; production case study</li>
+</ul>
+
+<hr />
+<p><em><a href="/douglas-jones" style="color:inherit">Douglas Jones</a> &middot; <a href="/" style="color:inherit">Codifide</a></em></p>
+
+</article>
+</div>
+
+<footer class="article-footer" style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border, #e2e8f0); font-size:0.75rem; color:var(--muted, #64748b); text-align:center;">
+<p>Codifide&reg; and Confidence in Code&reg; are registered trademarks of Codifide Inc. &middot; <a href="/trademarks" style="color:inherit;">Trademarks</a></p>
+</footer>
+</body>
+</html>
