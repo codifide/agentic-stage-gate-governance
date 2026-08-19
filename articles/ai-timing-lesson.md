@@ -14,7 +14,7 @@
 
 ## The Problem
 
-Release of Information (ROI) processing is the invisible infrastructure that keeps healthcare moving. Authorization forms arrive via fax as degraded photocopies with dozens of fields requiring manual entry. At scale, the processing cost is significant — and every delay is a delay in patient care.
+Medical records exchange processing is the invisible infrastructure that keeps healthcare moving. Authorization forms arrive via fax as degraded photocopies with dozens of fields requiring manual entry. At scale, the processing cost is significant — and every delay is a delay in patient care.
 
 ## The Vendor Attempt
 
