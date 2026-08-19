@@ -1,3 +1,10 @@
+> **Note:** The canonical version of this article is the HTML file in this directory.
+> The Markdown version below may be out of date. For the latest, see:
+> - [loop-engineering-pragmatic-guide.html](./loop-engineering-pragmatic-guide.html)
+> - Live at [codifide.com/loop-engineering](https://www.codifide.com/loop-engineering)
+
+---
+
 # We Were Already Doing Loop Engineering. We Just Didn't Know It.
 
 *"If you are still prompting, we are dead."*
@@ -12,7 +19,7 @@ This is the story of how we got here, what we learned, and where it goes next.
 
 ## The Evolution: How We Got Here
 
-A year ago I started using AI for coding the way most people do — as a better Stack Overflow. "How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.
+When ChatGPT launched in late 2022, I started using AI for coding the way most people did — as a better Stack Overflow. "How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.
 
 Then MCP connections changed everything. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.
 
@@ -66,7 +73,7 @@ When do you install these gates?
 
 **Gate when interfaces solidify.** Once the same bug bites you twice. Once the pipeline steps are stable. That's when you know the interface has settled enough to be worth encoding. The signal is: it broke because of *drift*, not *change*.
 
-**Gate what repeats.** If you run it once, verify manually. If you run it daily for 220 clients, gate it. Verifier construction cost ÷ future executions = ROI. For 880 executions/year, even expensive tests pay for themselves in a month.
+**Gate what repeats.** If you run it once, verify manually. If you run it daily for hundreds of clients, gate it. Verifier construction cost ÷ future executions = ROI. For hundreds of executions per year, even expensive tests pay for themselves in a month.
 
 ---
 
@@ -118,7 +125,7 @@ Three mechanisms:
 
 Here's what nobody in the loop engineering hype wants to say: most software problems don't have clean verifiers.
 
-Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to 2,200 clients?" requires production traffic.
+Training loss is numeric. Test pass/fail is binary. But "Is this measure engine CMS-compliant?" requires a human expert with 10 years of MIPS knowledge. "Is this UI clear to a quality administrator?" requires watching someone use it. "Will this scale to thousands of clients?" requires production traffic.
 
 Loop engineering works brilliantly for the 60% that's mechanical. For the other 40% — design, compliance, judgment calls — you still need gates. You still need the uncomfortable conversation where someone says "this isn't right."
 
@@ -174,7 +181,7 @@ The teams that get this right won't just ship faster — they'll ship with confi
 
 ---
 
-*Douglas Jones leads healthcare AI engineering at Codifide, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.*
+*Douglas Jones leads healthcare AI engineering at Sharecare Health Data Solutions, where the team has shipped nearly 200 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.*
 
 *The [Agentic Stage-Gate Governance](https://github.com/codifide/agentic-stage-gate-governance) framework is open source.*
 
@@ -230,8 +237,8 @@ Three questions:
 
 ### The Numbers
 
-- 199 measures × 220 clients × 4 quarterly refreshes = **175,560 loop-cycles/year** (automated)
-- Scaling to: 199 measures × 2,200 clients × millions of patients = **1.75M loop-cycles/year**
+- Hundreds of measures × hundreds of clients × quarterly refreshes = **hundreds of thousands of loop-cycles/year** (automated)
+- Scaling to: Hundreds of measures × thousands of clients × millions of patients = **millions of loop-cycles/year**
 - 7 gates × 6 initiatives/year = **42 gated decisions/year** (human judgment)
 - At scale ratio: **41,800 automated executions per human decision**
 

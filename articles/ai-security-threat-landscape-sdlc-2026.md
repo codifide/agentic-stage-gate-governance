@@ -1,3 +1,10 @@
+> **Note:** The canonical version of this article is the HTML file in this directory.
+> The Markdown version below may be out of date. For the latest, see:
+> - [ai-security-threat-landscape-sdlc-2026.html](./ai-security-threat-landscape-sdlc-2026.html)
+> - Live at [codifide.com/ai-security-threats](https://www.codifide.com/ai-security-threats)
+
+---
+
 # The AI Security Threat Landscape: A 90-Day Shift Report and SDLC Implications
 
 **How the convergence of AI-as-weapon, AI-as-attack-surface, and AI-as-developer demands an architectural response in the software development lifecycle.**
@@ -12,7 +19,7 @@
 
 ## Abstract
 
-The AI security threat landscape underwent a structural transformation between May and July 2026. Three forces converged simultaneously: AI became a confirmed offensive weapon (first AI-generated zero-day exploit), AI infrastructure became a high-value attack surface (supply chain compromises targeting packages with 95 million monthly downloads), and AI agents became the primary authors of production code (40%+ of enterprise code with only 10.5% meeting security standards). This paper examines each shift, evaluates why traditional gate-based SDLCs cannot absorb these changes at their current architecture, and proposes a three-layer governance model — Human, Gate, and Loop — that enables daily deployment cadence without sacrificing security posture. The model is grounded in the Agentic Stage-Gate-Loop framework and validated against the CISA/Five Eyes agentic AI guidance, the OWASP Agentic AI Top 10, and the EU AI Act high-risk obligations activating August 2, 2026.
+The AI security threat landscape underwent a structural transformation between May and July 2026. Three forces converged simultaneously: AI became a confirmed offensive weapon (first AI-assisted zero-day exploit), AI infrastructure became a high-value attack surface (supply chain compromises targeting packages with 95 million monthly downloads), and AI-generated code became a dominant source of production software (40%+ of enterprise code with only 10.5% meeting security standards). This paper examines each shift, evaluates why traditional gate-based SDLCs cannot absorb these changes at their current architecture, and proposes a three-layer governance model — Human, Gate, and Loop — that enables daily deployment cadence without sacrificing security posture. The model is grounded in the Agentic Stage-Gate-Loop framework and validated against the CISA/Five Eyes agentic AI guidance, the OWASP Agentic AI Top 10, and the EU AI Act high-risk obligations with Annex III obligations moved to December 2, 2027.
 
 ---
 
@@ -22,7 +29,7 @@ For two decades, software security has operated on a shared assumption: humans w
 
 AI coding agents — Cursor, Claude Code, GitHub Copilot, Kiro, and others — now select dependencies, generate implementations, execute build steps, create pull requests, and push changes to repositories at velocities no human reviewer can match. By end of 2026, Gartner projects that 40% of enterprise applications will embed task-specific AI agents, up from under 5% in 2025 [1]. Checkmarx surveys indicate roughly 70% of organizations already estimate more than 40% of their code is AI-generated [2].
 
-Simultaneously, the tools that attackers use have crossed the same threshold. The first confirmed AI-generated zero-day exploit appeared in May 2026 [3]. Autonomous AI attack campaigns ran multi-step intrusions across nine government agencies with minimal human direction [4]. And the AI infrastructure that developers depend on — model gateways, agent frameworks, inference SDKs — proved to be catastrophically vulnerable to supply chain compromise [5].
+Simultaneously, the tools that attackers use have crossed the same threshold. In May 2026, Google's Threat Intelligence Group identified what it believes to be the first zero-day exploit developed with AI assistance in May 2026 [3]. Autonomous AI attack campaigns ran multi-step intrusions across nine government agencies with minimal human direction [4]. And the AI infrastructure that developers depend on — model gateways, agent frameworks, inference SDKs — proved to be catastrophically vulnerable to supply chain compromise [5].
 
 This is not a problem that can be solved by adding another scanner or scheduling an additional quarterly pen test. It is an architectural problem that requires an architectural response. The purpose of this paper is to document what changed, why existing SDL controls are structurally insufficient, and what the replacement architecture looks like.
 
