@@ -274,3 +274,8 @@ Based on Robert Cooper's Stage-Gate® (1986), extended with loop engineering for
 ---
 
 *Version 2.0 — July 2026*
+
+
+---
+
+Codifide®, Confidence in Code®, and the Codifide logo mark are registered trademarks of Codifide Inc.
