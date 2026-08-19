@@ -3,383 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>We Were Already Doing Loop Engineering. We Just Didn't Know It.</title>
-<style>
+<title>Loop Engineering: A Pragmatic Guide to Agentic Software Development | Douglas Jones</title>
+<meta name="description" content="Production lessons from designing autonomous AI coding loops: independent verifiers, persistent state, stop conditions, cost control, human judgment, and the failures that taught us what works." />
+<link rel="canonical" href="https://www.codifide.com/loop-engineering" />
+<meta property="og:title" content="Loop Engineering: A Pragmatic Guide | Douglas Jones" />
+<meta property="og:description" content="How humans, gates, and autonomous loops work together in production agentic software development." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://www.codifide.com/loop-engineering" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Loop Engineering: A Pragmatic Guide to Agentic Software Development",
+  "datePublished": "2026-07-15",
+  "dateModified": "2026-08-18",
+  "author": {
+    "@type": "Person",
+    "name": "Douglas Jones",
+    "url": "https://www.codifide.com/douglas-jones"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Codifide",
+    "url": "https://www.codifide.com"
+  }
+}
+</script>
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --navy: #1a1a2e;
-  --bg: #fafaf9;
-  --accent: #2563eb;
-  --red: #dc2626;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --card-bg: #ffffff;
-  --green: #16a34a;
-}
-html { font-size: 18px; }
-body {
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
-}
-/* Layout */
-.container { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
-article { padding-bottom: 4rem; }
-
-/* Header banner */
-.hero {
-  background: var(--navy);
-  color: #fff;
-  padding: 4rem 1.5rem 3rem;
-  text-align: center;
-}
-.hero h1 {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 2.4rem;
-  line-height: 1.2;
-  max-width: 720px;
-  margin: 0 auto 1rem;
-  font-weight: 700;
-}
-.hero .subtitle {
-  font-size: 1.1rem;
-  color: #94a3b8;
-  max-width: 600px;
-  margin: 0 auto;
-  font-style: italic;
-}
-
-/* Typography */
-h2 {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.8rem;
-  margin: 3rem 0 1rem;
-  color: var(--navy);
-  line-height: 1.3;
-}
-h3 {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.3rem;
-  margin: 2rem 0 0.75rem;
-  color: var(--navy);
-}
-p { margin-bottom: 1.2rem; }
-strong { color: var(--navy); }
-em { color: var(--muted); }
-hr {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 3rem 0;
-}
-
-/* Pull quotes */
-.pull-quote {
-  border-left: 4px solid var(--accent);
-  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
-  padding: 1.5rem 2rem;
-  margin: 2rem 0;
-  border-radius: 0 8px 8px 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.2rem;
-  font-style: italic;
-  color: var(--navy);
-  line-height: 1.5;
-}
-.pull-quote.warning {
-  border-left-color: var(--red);
-  background: linear-gradient(135deg, #fef2f2, #fff7ed);
-}
-.pull-quote.conclusion {
-  border-left-color: var(--green);
-  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-}
-.pull-quote cite {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-top: 0.75rem;
-  font-style: normal;
-}
-
-/* Timeline */
-.timeline {
-  position: relative;
-  padding: 1rem 0 1rem 2.5rem;
-  margin: 2rem 0;
-}
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(to bottom, var(--accent), var(--green));
-  border-radius: 2px;
-}
-.timeline-item {
-  position: relative;
-  margin-bottom: 1.5rem;
-  padding: 1rem 1.25rem;
-  background: var(--card-bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  left: -2.05rem;
-  top: 1.3rem;
-  width: 12px;
-  height: 12px;
-  background: var(--accent);
-  border: 3px solid var(--bg);
-  border-radius: 50%;
-}
-.timeline-item .stage-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent);
-  margin-bottom: 0.25rem;
-}
-.timeline-item .stage-title {
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 0.3rem;
-}
-.timeline-item .stage-desc {
-  font-size: 0.88rem;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-/* Three-layer model */
-.layer-model {
-  margin: 2rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.layer-box {
-  padding: 1.25rem 1.5rem;
-  text-align: center;
-  font-weight: 600;
-  font-size: 1rem;
-  position: relative;
-}
-.layer-box .layer-subtitle {
-  font-weight: 400;
-  font-size: 0.85rem;
-  opacity: 0.85;
-  display: block;
-  margin-top: 0.25rem;
-}
-.layer-human {
-  background: var(--navy);
-  color: #fff;
-  border-radius: 8px 8px 0 0;
-}
-.layer-gate {
-  background: var(--accent);
-  color: #fff;
-}
-.layer-loop {
-  background: var(--green);
-  color: #fff;
-  border-radius: 0 0 8px 8px;
-}
-.layer-arrow {
-  text-align: center;
-  font-size: 1.2rem;
-  color: var(--muted);
-  padding: 0.25rem 0;
-  background: var(--bg);
-}
-
-/* Comparison cards */
-.comparison-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1.5rem;
-  margin: 2rem 0;
-}
-@media (max-width: 600px) {
-  .comparison-grid { grid-template-columns: 1fr; }
-}
-.comp-card {
-  background: var(--card-bg);
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-}
-.comp-card-header {
-  padding: 1rem 1.25rem;
-  font-weight: 700;
-  font-size: 1rem;
-  font-family: Georgia, 'Times New Roman', serif;
-}
-.comp-card-header.sg { background: #eff6ff; color: var(--navy); border-bottom: 2px solid var(--accent); }
-.comp-card-header.le { background: #f0fdf4; color: #14532d; border-bottom: 2px solid var(--green); }
-.comp-card-body { padding: 1rem 1.25rem; }
-.badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  margin-right: 0.4rem;
-}
-.badge-green { background: #dcfce7; color: #166534; }
-.badge-red { background: #fee2e2; color: #991b1b; }
-.comp-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  margin-bottom: 0.6rem;
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-
-/* Rule cards */
-.rules-grid {
-  display: grid;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-.rule-card {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.rule-icon {
-  font-size: 1.8rem;
-  flex-shrink: 0;
-  width: 2.5rem;
-  text-align: center;
-}
-.rule-number {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.rule-title {
-  font-weight: 700;
-  margin: 0.15rem 0 0.3rem;
-  color: var(--navy);
-}
-.rule-desc {
-  font-size: 0.9rem;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-/* Decision nodes */
-.decision-framework {
-  margin: 2rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.decision-node {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  border-radius: 10px;
-  border: 2px solid;
-}
-.decision-node:nth-child(1) { border-color: var(--accent); background: #eff6ff; }
-.decision-node:nth-child(2) { border-color: var(--red); background: #fef2f2; }
-.decision-node:nth-child(3) { border-color: var(--green); background: #f0fdf4; }
-.decision-number {
-  font-size: 1.8rem;
-  font-weight: 800;
-  font-family: Georgia, serif;
-  flex-shrink: 0;
-  width: 2.5rem;
-  text-align: center;
-}
-.decision-node:nth-child(1) .decision-number { color: var(--accent); }
-.decision-node:nth-child(2) .decision-number { color: var(--red); }
-.decision-node:nth-child(3) .decision-number { color: var(--green); }
-.decision-question { font-weight: 600; margin-bottom: 0.2rem; }
-.decision-answer { font-size: 0.88rem; color: var(--muted); }
-
-/* References */
-.references {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.5rem 2rem;
-  margin: 2rem 0;
-}
-.references ol {
-  padding-left: 1.25rem;
-  font-size: 0.88rem;
-  line-height: 1.8;
-}
-.references a {
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-.references a:hover { border-bottom-color: var(--accent); }
-
-/* Author */
-.author-box {
-  background: var(--navy);
-  color: #cbd5e1;
-  padding: 1.5rem 2rem;
-  border-radius: 10px;
-  margin: 3rem 0 1rem;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-.author-box a { color: #60a5fa; text-decoration: none; }
-.author-box a:hover { text-decoration: underline; }
-
-/* Print */
-@media print {
-  .hero { background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; }
-  .hero .subtitle { color: #333 !important; }
-  body { font-size: 11pt; }
-  .container { max-width: 100%; padding: 0; }
-  .timeline::before { background: #000; }
-  .timeline-item::before { background: #000; }
-  .layer-human, .layer-gate, .layer-loop { color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .rule-card, .comp-card, .decision-node, .references { break-inside: avoid; }
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  html { font-size: 16px; }
-  .hero { padding: 2.5rem 1rem 2rem; }
-  .hero h1 { font-size: 1.7rem; }
-  .container { padding: 1.25rem 1rem; }
-  h2 { font-size: 1.5rem; }
-}
-
-</style>
-</head>
-<body>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/><link rel="stylesheet" href="/article.css"/></head>
+<body><nav class="article-nav"><a href="/"><img src="/codifide-gem.svg" alt="Codifide" class="nav-logo"/></a><a href="/#governance" class="nav-back">Back to Codifide</a></nav>
 
 <header class="hero">
 <h1>We Were Already Doing Loop Engineering.<br>We Just Didn't Know It.</h1>
@@ -395,8 +47,9 @@ hr {
 <p>This is the story of how we got here, what we learned, and where it goes next.</p>
 <hr />
 <h2>The Evolution: How We Got Here</h2>
-<p>A year ago I started using AI for coding the way most people do — as a better Stack Overflow. "How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums.</p>
-<p>Then MCP connections changed everything. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.</p>
+<p>When ChatGPT launched in late 2022, I started using AI for coding the way most people did — as a better Stack Overflow. "How do I parse a C-CDA XML document?" Immediate answer, no context switching, faster than searching forums. But the code it produced wasn't worth the time to debug. You'd spend as long fixing hallucinated APIs and subtle logic errors as you would have spent writing it yourself.</p>
+<p>That changed when Claude arrived. For the first time, AI-generated code was consistently correct enough to use in production — not just syntactically valid, but architecturally sound. The quality gap between "interesting demo" and "real engineering tool" closed practically overnight.</p>
+<p>Then MCP connections changed everything again. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.</p>
 <p>That earned enough trust for the next step: building components. Well-defined modules, one at a time, with human review after each. An ETL connector. A measure engine. A frontend page.</p>
 <p>Then whole systems. Not one component — the full stack. Architecture, data model, API, frontend, deployment. Simulating a traditional development team at 10x speed. Architect drafts the design. Developer implements. Tester verifies. Security reviews. The AI played all the roles.</p>
 <p>But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed 4.0% instead of 22.5/30. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.</p>
@@ -494,7 +147,7 @@ hr {
 <p>Loop the mechanical. Gate the judgment. Invest in honest verifiers. And test your verifiers against stale data — because a verifier that cries wolf trains you to ignore it.</p>
 <p>The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't the product. Correctness is. Confidence is what you earn when the verifier agrees.</p>
 <hr />
-<p><em>Douglas Jones leads healthcare AI engineering at Codifide, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.</em></p>
+<p><em><a href="/douglas-jones" style="color:inherit">Douglas Jones</a> leads healthcare AI engineering at Codifide, where the team has shipped 199 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.</em></p>
 <p><em>The <a href="https://github.com/codifide/agentic-stage-gate-governance">Agentic Stage-Gate Governance</a> framework is open source.</em></p>
 <hr />
 <h2>References</h2>
