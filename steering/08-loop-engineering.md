@@ -313,7 +313,7 @@ Promote: After 3 successful migrations, extract template
 
 **Problem:** A verifier that compares new output against historical data will produce false failures when the system's behavior has legitimately changed (different engine routing, different data, different configuration).
 
-**Example:** Bitmap pipeline verifier compared against `quality.measure` data from a prior run that used different engine routing rules. 15 of 176 measures showed "discrepancies" that were actually correct new behavior.
+**Example:** Bitmap pipeline verifier compared against the results table data from a prior run that used different engine routing rules. A subset of measures showed "discrepancies" that were actually correct new behavior.
 
 **Solution:** Verifiers must either:
 1. **Use fresh baselines** — regenerate the reference data immediately before comparison
@@ -335,7 +335,7 @@ A verifier that compares against stale data is worse than no verifier — it tra
 ### B-Team Estimates Are Miscalibrated for Looped Execution
 
 Gate reviews (B-Team adversarial review) estimate effort based on traditional sequential human execution. When a task is looped, the actual effort is typically 5-25× less than B-Team estimates because:
-- Shared abstraction boundaries (e.g., BaseEngine) make changes surgical
+- Shared abstraction boundaries (e.g., a shared base class) make changes surgical
 - The verifier catches errors immediately (no manual testing cycle)
 - No context-switching between files (the AI holds full context)
 

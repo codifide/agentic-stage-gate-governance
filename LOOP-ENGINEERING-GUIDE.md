@@ -76,7 +76,7 @@ The overhead of loop engineering comes from three sources. Minimize each:
 **Sweet spot:** Write verifiers for things that will be checked repeatedly. A test you run once isn't worth writing. A test that runs after every commit for the next 2 years is worth 10x its construction cost.
 
 **Practical:** Start with the tests that would have caught THIS session's bugs:
-- MV matches quality.measure (would have caught stale scorecard)
+- MV matches the results table (would have caught stale scorecard)
 - quality.score matches MV (would have caught the MIPS_238 mismatch)
 - All engines have MEASURE_ID set (would have caught missing exclusions)
 - API returns non-empty for known-good org (would have caught the 500 error)
@@ -162,7 +162,7 @@ Based on this analysis, our immediate loop engineering additions:
 
 | Addition | Loop Type | Verifier |
 |---|---|---|
-| Post-pipeline data consistency check | Automated | MV = quality.measure, quality.score = MV |
+| Post-pipeline data consistency check | Automated | MV = the results table, quality.score = MV |
 | Engine smoke test | Automated | All 57 engines import + have MEASURE_ID |
 | API health probe | Automated | /actuator/health + /scores returns non-empty |
 | Frontend build on save | Automated | Vite build passes |
