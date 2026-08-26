@@ -102,7 +102,8 @@ steering/
     └── 12-intent-integrity.md             # Intent Contracts, Do No Harm, Primum circuit breaker
 templates/
     ├── B-TEAM-REVIEW-PACKAGE.md   # Copy-paste template for B-Team reviews
-    ├── CODE-REVIEW-PROMPT-QWEN.md # Domain-specific code review prompt for reasoning models
+    ├── CODE-REVIEW-PROMPT-QWEN.md # Forensic code review prompt for reasoning models (bounded pass)
+    ├── CODE-REVIEW-PROMPT-CLAUDE.md # Adversarial gate review prompt for Claude (final pass — a miss ships)
     ├── GATE-EVIDENCE-CHECKLIST.md  # Per-gate artifact tracking with binary states
     ├── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
     ├── HOOKS-SESSION-STATE.md     # Agent hooks for session continuity + PHI guards
@@ -111,6 +112,8 @@ templates/
 WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
 LOOP-ENGINEERING-GUIDE.md          # Deep-dive: loop engineering rationale and patterns
 ```
+
+**Three-model review slot assignment:** The framework prescribes adversarial review from a model that did not build the code. In practice, this means two review passes with different assignments: local/reasoning models (Qwen3, o3, DeepSeek-R1) handle the high-volume bounded pass — every PR, every module, every iteration. Claude handles the adversarial gate pass — the final review before code ships, where a miss reaches production. The bounded pass catches 80% at low cost; the gate pass catches the 20% that would otherwise ship.
 
 ---
 
