@@ -10,6 +10,13 @@
 <meta property="og:description" content="How humans, gates, and autonomous loops work together in production agentic software development." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://www.codifide.com/loop-engineering" />
+<meta property="og:image" content="https://www.codifide.com/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Loop Engineering: A Pragmatic Guide | Douglas Jones" />
+<meta name="twitter:description" content="How humans, gates, and autonomous loops work together in production agentic software development." />
+<meta name="twitter:image" content="https://www.codifide.com/og-image.png" />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -19,11 +26,14 @@
   "dateModified": "2026-08-18",
   "author": {
     "@type": "Person",
+    "@id": "https://www.codifide.com/douglas-jones#person",
     "name": "Douglas Jones",
+    "jobTitle": "Founder & Engineering Leader",
     "url": "https://www.codifide.com/douglas-jones"
   },
   "publisher": {
     "@type": "Organization",
+    "@id": "https://www.codifide.com/#organization",
     "name": "Codifide",
     "url": "https://www.codifide.com"
   }
@@ -41,6 +51,12 @@
 <div class="container">
 <article>
 <h1>We Were Already Doing Loop Engineering. We Just Didn't Know It.</h1>
+
+<div class="callout callout-info" style="margin:1.5rem 0;">
+<div class="callout-title">Disclosure</div>
+<p style="font-size:0.9rem;">This article describes generalized engineering patterns from production experience in regulated healthcare. Specific system names, architectures, client identifiers, and proprietary implementation details have been removed or abstracted. The engineering lessons are the author's own.</p>
+</div>
+
 <p><em>"If you are still prompting, we are dead."</em></p>
 <p>I didn't know what he meant. I'd already integrated Karpathy's autoresearch concept into the system — autonomous iteration with adversarial review and convergence criteria. But "loop engineering" was a different frame. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research it. So I did.</p>
 <p>What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.</p>
@@ -52,7 +68,7 @@
 <p>Then MCP connections changed everything again. Suddenly the AI could pull database state, server logs, and configuration files together in one context. We started solving production issues that humans couldn't correlate manually — the kind where the answer lives across 4 systems and 6 log files.</p>
 <p>That earned enough trust for the next step: building components. Well-defined modules, one at a time, with human review after each. An ETL connector. A measure engine. A frontend page.</p>
 <p>Then whole systems. Not one component — the full stack. Architecture, data model, API, frontend, deployment. Simulating a traditional development team at 10x speed. Architect drafts the design. Developer implements. Tester verifies. Security reviews. The AI played all the roles.</p>
-<p>But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed a fraction of the expected value. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.</p>
+<p>But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the quality score showed a fraction of the expected value. A materialized view was stale. The API reported zero where the pipeline had computed a nonzero result. The AI said "done" when the system was internally inconsistent.</p>
 <p>That's when we built the governance layer — stage-gates, adversarial review, domain expert personas, persistent session state. Not to slow things down, but to catch the 40% of errors that "it builds" doesn't catch.</p>
 <p>And now we're adding the final piece: automated verification loops that run without asking permission. Not replacing the governance — augmenting it with mechanical consistency checks that catch drift between pipeline runs.</p>
 <p>Each stage earned the right to exist by solving the pain of the previous one.</p>
@@ -73,15 +89,15 @@
 
 <p>This is the part most people get wrong about AI personas. They treat them as role-play — "act like a senior engineer." That produces confident-sounding output with no actual depth. What works is what Brian Madison calls the <a href="https://github.com/bmadcode/BMAD-METHOD" target="_blank" rel="noopener noreferrer">BMAD method</a>: personas aren't characters, they're <em>skill compositions with documented authority boundaries</em>. Each persona knows what it's responsible for, what it's allowed to decide, and — critically — where it must escalate to a human.</p>
 
-<p>The most valuable persona I built was <strong>Virtual Gretchen</strong> — a clinical quality domain expert grounded in the terminology, decision patterns, and judgment of real MIPS/HEDIS specialists I work with. Not a generic "healthcare AI." A persona that knows the difference between a numerator exclusion and a denominator exception, that catches when a measure engine applies screening criteria to the wrong encounter type, that says "CMS changed the steward on this measure in the 2025 update — your logic references the old specification."</p>
+<p>The most valuable persona I built was a <strong>clinical quality domain expert</strong> — grounded in the terminology, decision patterns, and judgment of real specialists in the domain. Not a generic "healthcare AI." A persona that knows the difference between a numerator exclusion and a denominator exception, that catches when a measure engine applies screening criteria to the wrong encounter type, that says "the specification changed in the latest update — your logic references the old version."</p>
 
-<p>Virtual Gretchen exists because domain expertise is expensive to access. The real specialists have limited availability. Engineering decisions happen continuously, not on a meeting cadence. Most domain questions have clear answers an experienced specialist would give immediately — those should be available at machine speed. The hard questions — the ones requiring genuine clinical judgment — are identifiable by the persona and escalated. The result: faster routine decisions, better-quality escalation, and a documented reasoning chain the real experts can audit.</p>
+<p>That domain expert persona exists because domain expertise is expensive to access. The real specialists have limited availability. Engineering decisions happen continuously, not on a meeting cadence. Most domain questions have clear answers an experienced specialist would give immediately — those should be available at machine speed. The hard questions — the ones requiring genuine clinical judgment — are identifiable by the persona and escalated. The result: faster routine decisions, better-quality escalation, and a documented reasoning chain the real experts can audit.</p>
 
 <p>The other persona that changed how the system works is <strong>the Journalist</strong> — what we now call Quill. Someone has to tell the story. Not the code comments. Not the commit messages. The actual narrative of what happened, why decisions were made, what was tried and abandoned, what the system <em>means</em>. Without that, you accumulate what I call comprehension debt: the system works but nobody — including future-you — can explain why it works the way it does. Quill produces organizational memory that compounds instead of evaporating.</p>
 
 <p>These aren't optional flourishes. They're structural. Remove the domain expert and the AI makes clinically incorrect decisions with high confidence. Remove the journalist and the project becomes opaque within weeks. The governance harness only works because the personas bring <em>specific knowledge</em> the AI doesn't have on its own.</p>
 
-<p>The critical gap was always <em>systems coherence verification</em>. An AI that writes beautiful code to populate <code>quality.measure</code>, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.</p>
+<p>The critical gap was always <em>systems coherence verification</em>. An AI that writes beautiful code to populate the results table, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.</p>
 <p>That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. As an automated gate that fails loudly when things drift.</p>
 <hr />
 <h2>The Timing Question</h2>
@@ -96,7 +112,7 @@
 <p>Loops without gates: everything runs autonomously, including compliance logic. Dangerous.</p>
 <p>The merged system gives each task its correct altitude:</p>
 <ul>
-<li><em>"Implement MIPS_476 with proper IPSS score extraction"</em> → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.</li>
+<li><em>"Implement a clinical quality measure with proper score extraction"</em> → Human defines goal. Gate verifies compliance. Loop handles coding and testing.</li>
 <li><em>"Is our pipeline too slow for large orgs?"</em> → Human flags it. Gate investigates architecture. Loop benchmarks and optimizes.</li>
 <li><em>"Refresh all materialized views after pipeline"</em> → Pure loop. No human needed. Verifier: row counts match source tables.</li>
 </ul>
@@ -125,7 +141,7 @@
 <p>Three mechanisms:</p>
 <p><strong>Tier the loops.</strong> Pre-computed checks (row counts, schema matches) cost zero tokens. Parameterized SQL verifiers cost zero tokens. Only truly novel verification needs AI — rare and cached.</p>
 <p><strong>Invest in the verifier, not the loop.</strong> A good test suite runs in 10 seconds and catches 90% of problems. Cheaper than an AI retrying 5 times at 10,000 tokens each.</p>
-<p><strong>Promote aggressively.</strong> Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. First client costs tokens. The 220th costs nothing.</p>
+<p><strong>Promote aggressively.</strong> Every time a loop discovers something (like "scores are extractable from clinical notes with a simple pattern"), promote it to a template. First client costs tokens. The 220th costs nothing.</p>
 <hr />
 <h2>The Uncomfortable Truth</h2>
 <p>Here's what nobody in the loop engineering hype wants to say: most software problems don't have clean verifiers.</p>
@@ -136,9 +152,9 @@
 <hr />
 <h2>The Stale Baseline Trap</h2>
 <p>Here's something the academic papers don't mention: verifiers can be correct AND misleading.</p>
-<p>We built a verifier that compared our new bitmap pipeline output against the legacy <code>quality.measure</code> table — 176 measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.</p>
-<p>The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures (eCQM engines now handle some measures that attestation used to), the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.</p>
-<p>15 of 176 measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.</p>
+<p>We built a verifier that compared new pipeline output against a legacy results table — hundreds of measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.</p>
+<p>The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures, the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.</p>
+<p>A subset of measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.</p>
 <p><strong>The lesson:</strong> A comparison verifier is only as good as its reference data. If the reference was produced by a different system configuration, you're not testing correctness — you're testing backward compatibility. Those are different things.</p>
 <p><strong>Three fixes:</strong>
 1. Regenerate the baseline fresh before every comparison (expensive but honest)
@@ -150,17 +166,17 @@
 <p>The B-Team adversarial review estimated 3-6 weeks for the bitmap pipeline rewrite. The actual implementation took 8 hours.</p>
 <p>This isn't because the B-Team was incompetent. It's because their estimation model assumed traditional execution: one developer, switching between files, running manual tests, waiting for code review, writing documentation. That's how the 3-6 week number makes sense.</p>
 <p>But looped execution changes the math:
-- The pipeline had a single shared output interface (<code>BaseEngine.write_results()</code>). Changing it to <code>write_bitmap_results()</code> was one method addition + find-and-replace across 68 call sites. That's 20 minutes of mechanical work, not 2 days.
+- The pipeline had a single shared output interface. Changing a method signature was one addition plus a find-and-replace across dozens of call sites. That's minutes of mechanical work, not days.
 - The verifier ran immediately after each change — no "wait for QA" cycle.
-- The AI held full context (all 68 call sites, the base class, the verifier, the state file) simultaneously. No context-switching tax.</p>
-<p><strong>The calibration insight:</strong> If your adversarial review estimates effort for a looped task, ask the reviewer to identify the shared abstraction boundary. If there IS one (like BaseEngine), the actual effort is the boundary change + repetition count × cost-per-repetition. The repetition cost for a find-and-replace is ~zero. The total effort is dominated by the boundary change alone.</p>
+- The AI held full context (all call sites, the base class, the verifier, the state file) simultaneously. No context-switching tax.</p>
+<p><strong>The calibration insight:</strong> If your adversarial review estimates effort for a looped task, ask the reviewer to identify the shared abstraction boundary. If there IS one, the actual effort is the boundary change + repetition count × cost-per-repetition. The repetition cost for a find-and-replace is ~zero. The total effort is dominated by the boundary change alone.</p>
 <p>Our B-Team now knows to ask: "Is there a single interface point?" before estimating. If yes, divide the estimate by the number of consumers — they're not independent tasks.</p>
 <hr />
 <h2>The Bottom Line</h2>
 <p>Loop the mechanical. Gate the judgment. Invest in honest verifiers. And test your verifiers against stale data — because a verifier that cries wolf trains you to ignore it.</p>
 <p>The teams that get this right won't just ship faster — they'll ship with confidence. And in healthcare, where a wrong number can cost a practice $75,000 in MIPS penalties, confidence isn't the product. Correctness is. Confidence is what you earn when the verifier agrees.</p>
 <hr />
-<p><em><a href="/douglas-jones" style="color:inherit">Douglas Jones</a> leads healthcare AI engineering at Sharecare Health Data Solutions, where the team has shipped nearly 200 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.</em></p>
+<p><em><a href="/douglas-jones" style="color:inherit">Douglas Jones</a> is an engineering leader and founder of <a href="/" style="color:inherit">Codifide</a>, focused on AI-native software development with stage-gate governance in regulated domains.</em></p>
 <p><em>The <a href="https://github.com/codifide/agentic-stage-gate-governance">Agentic Stage-Gate Governance</a> framework is open source.</em></p>
 <hr />
 <h2>References</h2>
@@ -270,7 +286,18 @@
 <li>At scale ratio: <strong>41,800 automated executions per human decision</strong></li>
 </ul>
 <p>That's the leverage.</p>
+
+<h2>Related Articles</h2>
+<ul>
+  <li><a href="/governance-whitepaper">Agentic Stage-Gate-Loop Whitepaper</a> — the full framework specification</li>
+  <li><a href="/ai-security-threats">AI Security Changed in 90 Days. Most SDLCs Didn't.</a> — why traditional SDLC security breaks at agent speed</li>
+  <li><a href="/agentic-sdlc-governance">Agentic SDLC Governance</a> — checks and balances for AI-native software development</li>
+  <li><a href="/ai-coding-agent-governance">AI Coding Agent Governance</a> — authority boundaries and verification when agents write production code</li>
+  <li><a href="/healthcare-case-study">Building a Regulated Healthcare Platform</a> — production case study applying these patterns</li>
+</ul>
+
 </article>
 </div>
+<footer class="article-footer" style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border, #e2e8f0); font-size:0.75rem; color:var(--muted, #64748b); text-align:center;"><p>Codifide&reg; and Confidence in Code&reg; are registered trademarks of Codifide Inc. &middot; <a href="/trademarks" style="color:inherit;">Trademarks</a></p></footer>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why AI Timing Matters More Than Strategy — A Healthcare Document Automation Story | Douglas Jones</title>
-<meta name="description" content="How a healthcare organization spent six figures on a vendor AI project that couldn't deliver, waited for the technology to mature, then built a production system internally in months on platform AI. The lesson: timing matters more than strategy." />
+<meta name="description" content="How a healthcare organization invested heavily in a vendor AI project that couldn't deliver, waited for the technology to mature, then built a production system internally in months on platform AI. The lesson: timing matters more than strategy." />
 <link rel="canonical" href="https://www.codifide.com/ai-timing-lesson" />
 <meta property="og:title" content="Why AI Timing Matters More Than Strategy" />
 <meta property="og:description" content="Vendor AI project couldn't deliver. Months later, built it internally on platform AI for a fraction of the cost. Timing matters more than strategy." />
@@ -58,6 +58,11 @@
 <p class="subtitle">A Healthcare Document Automation Story</p>
 <p style="font-size:0.85rem; color:var(--muted, #64748b);"><em>Douglas Jones &middot; 2026</em></p>
 
+<div class="callout callout-info" style="margin:2rem 0;">
+<div class="callout-title">Disclosure</div>
+<p style="font-size:0.9rem;">This article describes generalized engineering patterns from production experience in regulated healthcare. Specific system names, architectures, client identifiers, financial figures, and proprietary implementation details have been removed or abstracted. The engineering lessons are the author's own.</p>
+</div>
+
 <h2>The Problem</h2>
 
 <p>Medical records exchange processing is the invisible infrastructure that keeps healthcare moving. When insurance companies need records to approve a claim, when hospital systems need patient history for treatment, when government entities conduct audits &mdash; they all depend on records processors to get the right documents to the right place at the right time.</p>
@@ -76,7 +81,7 @@
 
 <p>Challenges emerged quickly. The system struggled with multi-page documents. Functional constraints remained unresolved. Timelines slipped repeatedly. And the cost reality diverged sharply from the initial proposal &mdash; actual infrastructure costs were orders of magnitude higher than projected. The economics collapsed.</p>
 
-<p>After nearly a year of effort and significant six-figure investment in upfront vendor costs plus supporting infrastructure, leadership paused the project. Had it actually reached production at the vendor's infrastructure requirements, the projected annual operating cost would have been <strong>well into seven figures</strong> &mdash; for a single document processing workflow.</p>
+<p>After nearly a year of effort and substantial investment in upfront vendor costs plus supporting infrastructure, leadership paused the project. Had it actually reached production at the vendor's infrastructure requirements, the projected annual operating cost would have been <strong>unsustainable</strong> &mdash; for a single document processing workflow.</p>
 
 <h2>The Learning</h2>
 
@@ -165,7 +170,7 @@
 </tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);">
 <td style="padding:0.75rem;"><strong>Cost trajectory</strong></td>
-<td style="padding:0.75rem;">Six figures upfront, seven figures/year projected</td>
+<td style="padding:0.75rem;">Substantial upfront + unsustainable projected annual</td>
 <td style="padding:0.75rem;">Fraction of manual processing cost per document</td>
 </tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);">

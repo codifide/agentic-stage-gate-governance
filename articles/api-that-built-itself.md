@@ -14,7 +14,7 @@
 
 ## The Problem
 
-A large healthcare organization processes approximately 30,000 Release of Information requests daily. Each requires matching a patient's demographics against an EMR system to find the right medical record. Get it right: records flow. Get it wrong: the wrong patient's records could be disclosed.
+A large healthcare organization processes tens of thousands of medical records requests daily. Each requires matching a patient's demographics against an EMR system to find the right medical record. Get it right: records flow. Get it wrong: the wrong patient's records could be disclosed.
 
 The existing system used fragile exact-string matching. It worked — but it left yield on the table, generated unnecessary operations exceptions, and couldn't explain its decisions.
 
@@ -70,9 +70,9 @@ The domain implementation happened in a **single day**:
 - Normalization library — name, DOB, gender, ZIP, phone, email
 - Decision engine — 3 tiers, Jaro-Winkler, duplicate evidence
 - Match orchestration — validate → adapt → evaluate → audit
-- API endpoint — POST /api/patient-match, PHI-safe errors
+- API endpoint — RESTful patient-match service, PHI-safe errors
 - Adapter resilience — circuit breaker + retry
-- Infrastructure as Code — 6 Terraform modules
+- Infrastructure as Code — Terraform modules
 - Follow-on fixes — security, compliance, integration tests
 - 12/12 persona review and sign-off
 - ADR-011 through ADR-016 (command decisions)
@@ -107,7 +107,7 @@ The decision engine evaluates candidates in three tiers:
 |------|----------|
 | **Tier 1** | Exact same-entry first + last name match (official/usual name entries) |
 | **Tier 2** | Exact historical/alternate name match (maiden, nickname, prior entries) |
-| **Tier 3** | Approximate single-field match (Jaro-Winkler ≥ 0.85 on one name, exact on the other) |
+| **Tier 3** | Approximate single-field match (fuzzy string similarity on one name, exact on the other) |
 
 **Safety rules:**
 - DOB must match exactly before any tier is evaluated

@@ -27,7 +27,7 @@ That earned enough trust for the next step: building components. Well-defined mo
 
 Then whole systems. Not one component — the full stack. Architecture, data model, API, frontend, deployment. Simulating a traditional development team at 10x speed. Architect drafts the design. Developer implements. Tester verifies. Security reviews. The AI played all the roles.
 
-But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the MIPS score showed 4.0% instead of 22.5/30. The materialized view was stale. The measure showed "Met: 0" when the data said 19. The AI said "done" when the system was internally inconsistent.
+But speed without governance produced garbage that looked like gold until you inspected it closely. The code compiled. The build passed. But the quality score showed a fraction of the expected value. A materialized view was stale. The API reported zero where the pipeline had computed a nonzero result. The AI said "done" when the system was internally inconsistent.
 
 That's when we built the governance layer — stage-gates, adversarial review, domain expert personas, persistent session state. Not to slow things down, but to catch the 40% of errors that "it builds" doesn't catch.
 
@@ -59,7 +59,7 @@ I spent hundreds of hours building the governance harness — personas, gates, s
 
 The harness simulates all the checks and balances of a real development team: the tech lead who catches architecture drift, the QA engineer who tests the output, the domain expert who says "that's not how CMS works." It reduced the frustration significantly. But it didn't eliminate it.
 
-The critical gap was always *systems coherence verification*. An AI that writes beautiful code to populate `quality.measure`, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.
+The critical gap was always *systems coherence verification*. An AI that writes beautiful code to populate the results table, then forgets to refresh the materialized view the API reads from, has produced a system where the database says one thing and the screen says another. No persona review catches that — it only manifests at runtime, across service boundaries.
 
 That's what loop engineering adds: the ability to say "after every pipeline run, verify that every downstream artifact matches the source of truth." Not as a suggestion. As an automated gate that fails loudly when things drift.
 
@@ -87,7 +87,7 @@ Loops without gates: everything runs autonomously, including compliance logic. D
 
 The merged system gives each task its correct altitude:
 
-- *"Implement MIPS_476 with proper IPSS score extraction"* → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.
+- *"Implement a clinical quality measure with proper score extraction"* → Human defines goal. Gate verifies CMS compliance. Loop handles coding and testing.
 - *"Is our pipeline too slow for large orgs?"* → Human flags it. Gate investigates architecture. Loop benchmarks and optimizes.
 - *"Refresh all materialized views after pipeline"* → Pure loop. No human needed. Verifier: row counts match source tables.
 
@@ -117,7 +117,7 @@ Three mechanisms:
 
 **Invest in the verifier, not the loop.** A good test suite runs in 10 seconds and catches 90% of problems. Cheaper than an AI retrying 5 times at 10,000 tokens each.
 
-**Promote aggressively.** Every time a loop discovers something (like "IPSS scores are regex-extractable from notes"), promote it to a template. First client costs tokens. The 220th costs nothing.
+**Promote aggressively.** Every time a loop discovers something (like "scores are extractable from clinical notes with a simple pattern"), promote it to a template. First client costs tokens. The 220th costs nothing.
 
 ---
 
@@ -139,11 +139,11 @@ The sweet spot is knowing the difference.
 
 Here's something the academic papers don't mention: verifiers can be correct AND misleading.
 
-We built a verifier that compared our new bitmap pipeline output against the legacy `quality.measure` table — 176 measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.
+We built a verifier that compared our new bitmap pipeline output against the legacy the results table table — hundreds of measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.
 
 The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures (eCQM engines now handle some measures that attestation used to), the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.
 
-15 of 176 measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.
+15 of hundreds of measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.
 
 **The lesson:** A comparison verifier is only as good as its reference data. If the reference was produced by a different system configuration, you're not testing correctness — you're testing backward compatibility. Those are different things.
 
@@ -163,11 +163,11 @@ The B-Team adversarial review estimated 3-6 weeks for the bitmap pipeline rewrit
 This isn't because the B-Team was incompetent. It's because their estimation model assumed traditional execution: one developer, switching between files, running manual tests, waiting for code review, writing documentation. That's how the 3-6 week number makes sense.
 
 But looped execution changes the math:
-- The pipeline had a single shared output interface (`BaseEngine.write_results()`). Changing it to `write_bitmap_results()` was one method addition + find-and-replace across 68 call sites. That's 20 minutes of mechanical work, not 2 days.
+- The pipeline had a single shared output interface (a shared output interface). Changing it to the new method was one method addition + find-and-replace across dozens of call sites. That's 20 minutes of mechanical work, not 2 days.
 - The verifier ran immediately after each change — no "wait for QA" cycle.
-- The AI held full context (all 68 call sites, the base class, the verifier, the state file) simultaneously. No context-switching tax.
+- The AI held full context (all dozens of call sites, the base class, the verifier, the state file) simultaneously. No context-switching tax.
 
-**The calibration insight:** If your adversarial review estimates effort for a looped task, ask the reviewer to identify the shared abstraction boundary. If there IS one (like BaseEngine), the actual effort is the boundary change + repetition count × cost-per-repetition. The repetition cost for a find-and-replace is ~zero. The total effort is dominated by the boundary change alone.
+**The calibration insight:** If your adversarial review estimates effort for a looped task, ask the reviewer to identify the shared abstraction boundary. If there IS one , the actual effort is the boundary change + repetition count × cost-per-repetition. The repetition cost for a find-and-replace is ~zero. The total effort is dominated by the boundary change alone.
 
 Our B-Team now knows to ask: "Is there a single interface point?" before estimating. If yes, divide the estimate by the number of consumers — they're not independent tasks.
 
@@ -181,7 +181,7 @@ The teams that get this right won't just ship faster — they'll ship with confi
 
 ---
 
-*Douglas Jones leads healthcare AI engineering at Sharecare Health Data Solutions, where the team has shipped nearly 200 CMS quality measure engines serving millions of patients across hundreds of organizations using agentic development with stage-gate governance.*
+*Douglas Jones is an engineering leader and founder of Codifide, focused on AI-native software development with stage-gate governance in regulated domains.*
 
 *The [Agentic Stage-Gate Governance](https://github.com/codifide/agentic-stage-gate-governance) framework is open source.*
 

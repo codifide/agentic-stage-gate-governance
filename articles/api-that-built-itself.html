@@ -58,9 +58,14 @@
 <p class="subtitle">How 13 AI Personas Delivered a Regulated Healthcare Service</p>
 <p style="font-size:0.85rem; color:var(--muted, #64748b);"><em>By Quill &mdash; Documentary Record &mdash; April 2026</em></p>
 
+<div class="callout callout-info" style="margin:2rem 0;">
+<div class="callout-title">Disclosure</div>
+<p style="font-size:0.9rem;">This article describes generalized engineering patterns from production experience in regulated healthcare. Specific system names, architectures, client identifiers, thresholds, and proprietary implementation details have been removed or abstracted. The engineering lessons are the author's own.</p>
+</div>
+
 <h2>The Problem</h2>
 
-<p>A large healthcare organization processes approximately 30,000 Release of Information requests daily. Each requires matching a patient's demographics against an EMR system to find the right medical record. Get it right: records flow. Get it wrong: the wrong patient's records could be disclosed.</p>
+<p>A large healthcare organization processes tens of thousands of medical records requests daily. Each requires matching a patient's demographics against an EMR system to find the right record. Get it right: records flow. Get it wrong: the wrong patient's records could be disclosed.</p>
 
 <p>The existing system used fragile exact-string matching. It worked &mdash; but it left yield on the table, generated unnecessary operations exceptions, and couldn't explain its decisions.</p>
 
@@ -121,9 +126,9 @@
 <li>&bull; Normalization library &mdash; name, DOB, gender, ZIP, phone, email</li>
 <li>&bull; Decision engine &mdash; 3 tiers, Jaro-Winkler, duplicate evidence</li>
 <li>&bull; Match orchestration &mdash; validate &rarr; adapt &rarr; evaluate &rarr; audit</li>
-<li>&bull; API endpoint &mdash; POST /api/patient-match, PHI-safe errors</li>
+<li>&bull; API endpoint &mdash; RESTful patient-match service, PHI-safe errors</li>
 <li>&bull; Adapter resilience &mdash; circuit breaker + retry</li>
-<li>&bull; Infrastructure as Code &mdash; 6 Terraform modules</li>
+<li>&bull; Infrastructure as Code &mdash; Terraform modules</li>
 <li>&bull; Follow-on fixes &mdash; security, compliance, integration tests</li>
 <li>&bull; 12/12 persona review and sign-off</li>
 <li>&bull; ADR-011 through ADR-016 (command decisions)</li>
@@ -166,7 +171,7 @@ Request &rarr; Validate &rarr; EMR FHIR Search &rarr; Normalize &rarr; Decide<br
 </tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);">
 <td style="padding:0.75rem;"><strong>Tier 3</strong></td>
-<td style="padding:0.75rem;">Approximate single-field match (Jaro-Winkler &ge; 0.85 on one name, exact on the other)</td>
+<td style="padding:0.75rem;">Approximate single-field match (fuzzy string similarity on one name, exact on the other)</td>
 </tr>
 </tbody>
 </table>
@@ -175,7 +180,7 @@ Request &rarr; Validate &rarr; EMR FHIR Search &rarr; Normalize &rarr; Decide<br
 <ul>
 <li>DOB must match exactly before any tier is evaluated</li>
 <li>Cross-entry name mixing is blocked (negative tests prove it)</li>
-<li>Multiple top-tier candidates &rarr; AMBIGUOUS (never over-select)</li>
+<li>Multiple top-tier candidates &rarr; AMBIGUOUS (conservative — never over-select)</li>
 </ul>
 
 <h2>The Numbers</h2>
@@ -190,7 +195,7 @@ Request &rarr; Validate &rarr; EMR FHIR Search &rarr; Normalize &rarr; Decide<br
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Production classes</td><td style="padding:0.5rem; text-align:right;"><strong>~35</strong></td></tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Test cases</td><td style="padding:0.5rem; text-align:right;"><strong>388</strong></td></tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Test coverage</td><td style="padding:0.5rem; text-align:right;"><strong>100%</strong> (line + branch, enforced)</td></tr>
-<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Terraform modules</td><td style="padding:0.5rem; text-align:right;"><strong>6</strong></td></tr>
+<tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Terraform modules</td><td style="padding:0.5rem; text-align:right;"><strong>Yes</strong></td></tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Observability panels</td><td style="padding:0.5rem; text-align:right;"><strong>10</strong></td></tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Alerting rules</td><td style="padding:0.5rem; text-align:right;"><strong>7</strong></td></tr>
 <tr style="border-bottom:1px solid var(--border, #e2e8f0);"><td style="padding:0.5rem;">Synthetic test data</td><td style="padding:0.5rem; text-align:right;"><strong>600,000 records</strong></td></tr>
@@ -238,7 +243,7 @@ Request &rarr; Validate &rarr; EMR FHIR Search &rarr; Normalize &rarr; Decide<br
 <li>Provision the infrastructure</li>
 <li>Deploy the service</li>
 <li>Run the load tests at scale</li>
-<li>Activate shadow mode against real EMR traffic</li>
+<li>Activate shadow mode against real traffic</li>
 </ol>
 
 <p>The hardest part isn't the code. It's the moment when synthetic test data gives way to real patient demographics, and the decision engine has to prove it can match safely at scale.</p>
