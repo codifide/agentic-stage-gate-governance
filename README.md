@@ -148,7 +148,7 @@ Say `"Loop this task"` or `"Define a loop: [task]"` to create an automated execu
 - Sets stop conditions and cost limits
 - Runs autonomously until the verifier passes or retry limit is hit
 
-Example: `"Define a loop: Run all 199 measure engines and verify scorecard consistency"`
+Example: `"Define a loop: Run all measure engines and verify scorecard consistency"`
 
 ### IDE-Specific Context Loading
 
