@@ -247,7 +247,7 @@ As agentic implementation velocity increases, human line-by-line review becomes 
 - **Intent Contracts** define goals, protected constraints, non-goals, harm boundaries, escalation conditions, success evidence, reversibility, and authority boundaries.
 - **Circuit breakers** halt autonomous work when behavior leaves authorized intent.
 - **Domain Expert Personas** scale access to scarce subject-matter expertise without pretending to replace the human expert.
-- **Quill** operates as an embedded journalist / organizational historian across the entire lifecycle, preserving how and why the system evolved.
+- **Quill** operates as an embedded journalist across the entire lifecycle — recording decisions, failures, and organizational memory with structural independence from the builders.
 
 The objective is not to make humans review machine-speed output faster. It is to move repeatable assurance into CI/CD, automated testing, policy enforcement, independent verification, and continuous evidence — while preserving human judgment for consequential decisions.
 
