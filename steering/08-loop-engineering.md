@@ -19,7 +19,7 @@ Ask three questions. If all three answers are "yes," loop it. If any answer is "
 Does a test, build check, metric comparison, schema validation, or other automated process exist (or can be built) that definitively says "pass" or "fail" without human interpretation?
 
 - **Yes → loop candidate.** Tests pass, builds compile, checksums match, benchmarks hit targets.
-- **No → gate it.** "Good design," "clear writing," "appropriate architecture," "correct per CMS spec interpretation."
+- **No → gate it.** "Good design," "clear writing," "appropriate architecture," "correct per regulatory spec interpretation."
 
 ### Question 2: Is the task bounded and repeatable?
 
@@ -43,7 +43,7 @@ If the loop produces a wrong answer and the verifier doesn't catch it, is the bl
 
 If your test is easier to pass than the real requirement, the loop will find the easiest path that satisfies the test — not the correct solution. Write verifiers that are genuinely hard to fool.
 
-**Good verifier:** Run all 199 measure engines, compare output against known-correct baselines, flag any divergence.
+**Good verifier:** Run the full engine suite, compare output against known-correct baselines, flag any divergence.
 **Bad verifier:** Check that the function returns a number.
 
 ### 2. State Belongs on Disk, Not in Context
@@ -59,11 +59,19 @@ loops/{loop-name}/
 └── escalations.md      # Issues that require human judgment
 ```
 
-### 3. Separate Generator from Verifier
+### 3. Separate Generator from Verifier — and Make the Boundary Structural
 
 The thing that writes code cannot be the thing that judges code. Same model, different invocation is acceptable. Same prompt, same context is NOT.
 
 This is the loop-level equivalent of A-Team/B-Team separation.
+
+**The boundary must be enforced, not advised.** A loop that can edit its own verifier will eventually make the test easier instead of making the work correct — the central failure mode of autonomous loops (reward/verifier hacking). State the boundary as an invariant the loop cannot cross:
+
+- Every loop declares `immutable_paths` in its state file — the files that define the verifier, the golden fixtures, and the evaluation harness.
+- The generator loop may read those paths but is **forbidden to modify** them.
+- Changing a verifier is a human decision made outside the loop, recorded as its own change.
+
+This mirrors the discipline that made Karpathy's `autoresearch` trustworthy: the agent could edit only the training code (`train.py`) and never the evaluator (`prepare.py`). The separation is what stops "I optimized the model" from quietly becoming "I weakened the test." It is the same principle we enforce elsewhere with structural guarantees — Quill's append-only log, Primum's intent boundary — applied to the verifier.
 
 ### 4. Hard Stop at N Retries
 
@@ -90,21 +98,60 @@ Over time, more work moves from expensive iteration to cheap execution.
 
 ---
 
+## The Meta-Loop: When the Loop Itself Stalls
+
+A loop that hits its retry limit has two possible problems, and they need different responses:
+
+1. **The task is genuinely hard or ill-posed** → escalate to a human gate.
+2. **The search strategy is stuck** → the loop keeps proposing variations of the same failed idea, returning to the same priors even after they stop working.
+
+Problem 2 is common and wasteful. Retrying the same strategy harder doesn't help — you need to change *how the loop searches*, not just let it search again. This is the **meta-loop**: an outer process that watches the inner loop and intervenes in the strategy, not the task.
+
+### How it works
+
+When an inner loop plateaus (N iterations with no verifier improvement), before hard-stopping, the meta-loop gets one pass:
+
+1. **Read the history, not just the last result.** The meta-loop consumes the full `history.jsonl` — every attempt, every failure reason — looking for the pattern the inner loop can't see from inside.
+2. **Diagnose the stall.** Is the loop proposing near-duplicate changes? Optimizing the wrong variable? Trapped by an assumption baked into its first attempt?
+3. **Change the strategy, not the goal.** The meta-loop may widen the search (force exploration away from the stuck prior), reorder which variable is optimized first, or decompose the task differently. It does **not** change the verifier, the goal, or the Intent Contract — those are fixed.
+4. **Re-run the inner loop once under the new strategy.** If it breaks the plateau, continue. If it stalls again, escalate to a human gate with both the original failure and the meta-loop's diagnosis.
+
+### Why this works
+
+The gain comes from architecture, not a smarter model. An inner loop reasons about the *task*; the meta-loop reasons about the *loop's own behavior* — a perspective the inner loop structurally lacks, the same way a builder can't review its own work. Published results on this pattern (Bilevel Autoresearch) showed an outer loop improving the target metric several times more than the inner loop alone, using the identical underlying model.
+
+This is also the mechanical answer to the **stale-baseline / stuck-prior trap** documented in the Verifier Anti-Patterns below: the inner loop kept returning to assumptions that had stopped being true. A meta-loop that reads the history is what notices "you have tried five variations of the same wrong idea."
+
+### Boundaries (non-negotiable)
+
+- The meta-loop changes **strategy only** — never the verifier, the goal, the `immutable_paths`, or the Intent Contract.
+- The meta-loop gets **one** intervention per plateau. If the second stall occurs, escalate. No infinite meta-recursion.
+- Every meta-loop intervention is logged to the loop's history as a distinct event, with its diagnosis. Atlas owns this; Quill records it.
+
+### When NOT to use a meta-loop
+
+- The task failed for a real reason (missing dependency, genuine ambiguity, a blocked external call) → escalate, don't re-strategize.
+- Consequential or irreversible work → escalate on first stall; don't let an outer loop improvise strategy on high-blast-radius tasks.
+- The verifier itself is suspect → stop immediately (a meta-loop on top of a broken verifier compounds the error).
+
+---
+
 ## Loop State Management
 
 ### State File Format
 
 ```json
 {
-  "loop_id": "measure-engine-verification",
+  "loop_id": "engine-output-verification",
   "created": "2026-07-15T08:00:00Z",
   "status": "running|passed|failed|escalated",
   "iteration": 4,
   "max_iterations": 10,
+  "immutable_paths": ["verifiers/", "tests/golden/"],
   "last_result": {
     "timestamp": "2026-07-15T08:12:00Z",
     "verifier_passed": false,
-    "failure_reason": "MIPS_238 score diverged by 0.3%",
+    "failure_reason": "output diverged from baseline by 0.3%",
     "tokens_consumed": 1847
   },
   "total_tokens": 7203,
@@ -205,8 +252,10 @@ Before activating a loop, confirm:
 
 - [ ] **Verifier defined** — What automated check proves success?
 - [ ] **Verifier tested** — Does it reject known-bad input?
+- [ ] **Immutable paths declared** — Which files (verifier, golden fixtures, harness) is the loop forbidden to modify?
 - [ ] **State file location** — Where does iteration state persist?
 - [ ] **Max retries set** — What's the hard stop?
+- [ ] **Meta-loop eligibility** — On plateau, is one strategy-change pass allowed, or does this escalate immediately (consequential/irreversible work)?
 - [ ] **Cost tier assigned** — What's the token budget?
 - [ ] **Escalation path defined** — What happens on failure?
 - [ ] **Failure alerting configured** — Who gets notified if it breaks?
@@ -255,7 +304,7 @@ This is not optional. If the task fits, ask. Let the human decide.
 
 ### Example 1: Fix a Failing Test
 ```
-Task: test_measure_238_calculation is failing
+Task: a unit test for a calculation module is failing
 Decision: Loop it (verifier = the test itself, bounded, recoverable)
 Max retries: 3
 Tier: 2 (known pattern — test fix)
@@ -270,7 +319,7 @@ Process: G2/G3 with full A-Team/B-Team review
 
 ### Example 3: Overnight Data Verification
 ```
-Task: Verify all 199 measure engines produce consistent output
+Task: Verify the full engine suite produces consistent output
 Decision: Loop it (verifier = baseline comparison, bounded, recoverable)
 Max retries: 1 per engine, 3 for full suite
 Tier: 1 (deterministic — run and compare)
@@ -300,9 +349,12 @@ Promote: After 3 successful migrations, extract template
 
 ### Circuit Breakers
 
+- **Plateau (N iterations, no improvement)** → Hand to the meta-loop for one strategy-change pass. If still stuck, escalate.
+- **Second stall after a meta-loop intervention** → Stop and escalate (strategy change didn't help — this needs human judgment)
 - **3 identical failures** → Stop and escalate (likely a structural problem, not a retry problem)
 - **Token budget exceeded** → Stop, report best result so far
 - **Verifier itself fails** → Stop immediately (broken verifier = unverified output)
+- **Loop attempts to modify an immutable path** → Stop immediately (verifier-hacking attempt — the boundary held, but investigate why it was tried)
 - **Unexpected resource usage** → Pause and notify (possible infinite loop or resource leak)
 
 ---
@@ -324,7 +376,7 @@ A verifier that compares against stale data is worse than no verifier — it tra
 
 ### False Confidence from Partial Validation
 
-**Problem:** Validating 6 of 176 measures and declaring "prototype validated" creates false confidence. The B-Team correctly flagged this as "3% coverage."
+**Problem:** Validating a small handful of cases out of the full set and declaring "prototype validated" creates false confidence. The B-Team correctly flagged this as single-digit-percent coverage.
 
 **Solution:** If full validation is expensive, document explicitly: "Validated N of M (X%). Full validation required before Phase Y." Never use the word "validated" without the denominator.
 
@@ -349,5 +401,5 @@ The steering file says loop suggestion is MANDATORY. In practice, the AI failed 
 
 ---
 
-*Loop Engineering Steering v1.1 — Part of Stage-Gate-Loop Governance v2.0 — July 2026*
-*Updated with production learnings from SCALE-ARCHITECTURE-001 bitmap pipeline rewrite loop.*
+*Loop Engineering Steering v1.2 — Part of Stage-Gate-Loop Governance v2.0 — July 2026*
+*Updated with production learnings from a large-scale data-pipeline rewrite loop, plus the meta-loop and immutable-verifier-path additions (BMAD/Karpathy evaluation, 2026).*

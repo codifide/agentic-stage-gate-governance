@@ -10,7 +10,7 @@ Loop engineering says: stop being the middleman between every AI turn. Define a 
 
 The other 40% — design decisions, compliance logic, architectural choices — still needs human judgment. The teams that win will be the ones who know which tasks belong in loops and which belong in gates.
 
-This guide shows how to get that right. It's built from real-world experience: 13 sessions shipping a healthcare compliance platform, running 199 MIPS measure engines, and learning the hard way what happens when you let things "just run" without verification.
+This guide shows how to get that right. It's built from real-world experience shipping a regulated healthcare compliance platform with a large suite of measure engines — and learning the hard way what happens when you let things "just run" without verification.
 
 Our system already does loop engineering. We just didn't call it that.
 
@@ -75,11 +75,11 @@ The overhead of loop engineering comes from three sources. Minimize each:
 
 **Sweet spot:** Write verifiers for things that will be checked repeatedly. A test you run once isn't worth writing. A test that runs after every commit for the next 2 years is worth 10x its construction cost.
 
-**Practical:** Start with the tests that would have caught THIS session's bugs:
-- MV matches the results table (would have caught stale scorecard)
-- quality.score matches MV (would have caught the MIPS_238 mismatch)
-- All engines have MEASURE_ID set (would have caught missing exclusions)
-- API returns non-empty for known-good org (would have caught the 500 error)
+**Practical:** Start with the tests that would have caught real production bugs:
+- Materialized view matches the results table (would have caught a stale scorecard)
+- The scored output matches the materialized view (would have caught a score mismatch)
+- All engines have their identifier set (would have caught missing exclusions)
+- API returns non-empty for a known-good tenant (would have caught the 500 error)
 
 ### 2. Retry Token Cost
 
@@ -162,7 +162,7 @@ Based on this analysis, our immediate loop engineering additions:
 
 | Addition | Loop Type | Verifier |
 |---|---|---|
-| Post-pipeline data consistency check | Automated | MV = the results table, quality.score = MV |
+| Post-pipeline data consistency check | Automated | materialized view = results table, scored output = materialized view |
 | Engine smoke test | Automated | All 57 engines import + have MEASURE_ID |
 | API health probe | Automated | /actuator/health + /scores returns non-empty |
 | Frontend build on save | Automated | Vite build passes |
@@ -252,6 +252,6 @@ Our system is already 70% there. The missing 30% is automated verification that 
 
 ---
 
-*Written from real-world experience: 13 sessions, 199 measures, 3 orgs, 1 demo deadline.*
+*Written from real-world experience building and governing a regulated healthcare compliance platform under a demo deadline.*
 *Reviewed by: Aegis, Winston, Tessa, Forge, Sable, Ruth, Atlas (new), Iris (new), Quill, Ink*
 *Agentic Stage-Gate Governance v1.2 — July 2026*

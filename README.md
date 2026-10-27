@@ -41,9 +41,13 @@ A ready-to-use governance system for AI-assisted software development that combi
 
 ## What This Is
 
-Copy the `steering/` folder from this repo into your project's AI context directory. The governance system activates automatically — personas, gates, loops, standards, and review processes are all baked in.
+**Stage-Gate-Loop (SGL)** is the framework — the Human → Gate → Loop model. The **SGL Harness** is the installable implementation of it: the `steering/` files, hooks, and templates in this repo that you strap onto an AI coding agent to instrument and constrain it. Think framework vs. the thing you actually `git clone` — the model is the idea, the harness is the rigging.
+
+Copy the `steering/` folder from this repo into your project's AI context directory. The harness activates automatically — personas, gates, loops, standards, and review processes are all baked in.
 
 The steering files are plain Markdown. They work with any AI coding assistant that supports custom instructions or context files, including Kiro, Cursor, Windsurf, GitHub Copilot, and others.
+
+> **Independently validated by convergence.** Two of the most-watched efforts in agentic development arrived at the same core ideas from different directions: BMAD now ships an unattended "build → verify → retro" loop module and a dedicated test-architect, and Karpathy's loop-engineering work evolved a *meta-loop* (a loop that watches the loop) to escape stuck search. The SGL Harness already encodes both patterns — Human/Gate/Loop separation, a verifier that must be harder than the task, generator/verifier isolation, and a meta-loop owned by Atlas.
 
 ---
 

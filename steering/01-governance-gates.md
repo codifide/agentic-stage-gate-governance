@@ -225,14 +225,26 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 ---
 
-## Fast-Track Rules
+## Scale-Adaptive Tracks
 
-Small features (< 1 week effort, read-only, no new security surface) may be fast-tracked:
-- Combined G0/G1 document
-- Skip standalone G2/G3 if architecture is already established
-- Still requires G4 evidence (tests, review)
-- Director must explicitly approve fast-track
-- G-LOOP still runs (fast-track doesn't bypass automated verification)
+Not every change needs the full seven-gate process. At G0, the Director selects a **track** that sizes process *depth* to the work. The critical rule: tracks change how much ceremony applies, **never whether evidence is required**. Every track still produces evidence and still runs G-LOOP. Right-size the depth; never drop the structure.
+
+| Track | When | Gate Path | Evidence still required |
+|-------|------|-----------|-------------------------|
+| **Express** | Bug fix or small change: < 1 week effort, read-only or additive, no new security surface, no compliance impact | Combined G0/G1 → G4 → ship. Skip standalone G2/G3 if architecture is already established. | Tests, review, G-LOOP verification |
+| **Standard** | A normal feature: new behavior, moderate surface area, established architecture | Full G0–G6 | Full gate evidence per gate |
+| **Enterprise** | Regulated, consequential, or high-blast-radius: touches sensitive data, identity, release logic, or irreversible actions | Full G0–G6 **plus** mandatory Intent Contract, domain-expert persona sign-off, and full adversarial (B-Team) review | Full gate evidence + Intent Contract + domain + adversarial |
+
+**Selecting a track:**
+- The track is chosen at G0 and recorded in the problem statement.
+- When in doubt, go up a track, not down. The cost of over-governing a small change is minutes; the cost of under-governing a consequential one is a production incident.
+- The Director must explicitly approve Express. Anything touching sensitive data, identity, or release logic cannot use Express — it is Enterprise by default.
+- A change can be **promoted mid-flight.** If Express work turns out to touch a security surface, it stops and re-enters as Standard or Enterprise. Discovering that is the gate working, not failing.
+
+**What never changes across tracks:**
+- G-LOOP runs on every track (automated verification is not optional).
+- Evidence over confidence — every track passes on artifacts, not assertions.
+- The go/kill/hold decision stays human.
 
 ---
 

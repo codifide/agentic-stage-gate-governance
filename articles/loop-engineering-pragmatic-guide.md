@@ -139,11 +139,11 @@ The sweet spot is knowing the difference.
 
 Here's something the academic papers don't mention: verifiers can be correct AND misleading.
 
-We built a verifier that compared our new bitmap pipeline output against the legacy the results table table — hundreds of measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.
+We built a verifier that compared new pipeline output against a legacy results table — hundreds of measures, exact match required. Sounds rigorous. And it was — until the verifier itself became the problem.
 
-The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures (eCQM engines now handle some measures that attestation used to), the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.
+The legacy table contained data from a prior pipeline run that used different engine routing rules. When we changed which engines handled which measures, the new pipeline correctly produced different numbers. But the verifier saw "different" and said FAIL.
 
-15 of hundreds of measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.
+A subset of measures showed discrepancies. We spent time investigating before realizing: the new output was right. The baseline was stale. The verifier was testing against yesterday's truth, not today's.
 
 **The lesson:** A comparison verifier is only as good as its reference data. If the reference was produced by a different system configuration, you're not testing correctness — you're testing backward compatibility. Those are different things.
 

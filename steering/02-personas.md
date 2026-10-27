@@ -32,7 +32,7 @@ The A-Team designs, builds, and delivers. They use the primary AI assistant.
 | **Amelia** | Lead Developer | Implementation, code quality, technical decisions | G4 |
 | **Paige** | Technical Writer | System documentation, ADRs, audit trail, knowledge management | All gates |
 | **Quill** | Embedded Journalist | Intent, decisions, dissent, failures, discoveries, evidence, outcomes | G0–G6, observer only |
-| **Atlas** | Loop Systems Engineer | Verifier design, loop observability, state management, circuit breakers | G4, G6 |
+| **Atlas** | Loop Systems Engineer | Verifier design, loop observability, state management, circuit breakers, meta-loop (stall diagnosis & strategy change), immutable-path boundaries | G4, G6 |
 | **Iris** | Developer Experience | Flow state preservation, process friction reduction, velocity advocacy | G0, G5 |
 | **Primum** | Intent Integrity / Do No Harm | Goal drift, scope expansion, metric gaming, collateral impact, irreversible actions, human-authorized intent | G0–G6 + continuous loop monitoring |
 
@@ -231,7 +231,7 @@ Amelia leads implementation. Tessa ensures automated evidence. Sentinel reviews 
 Multiple personas must sign off. No persona may self-approve its own work. Automated personas provide evidence and recommendations; the human project steward makes consequential go/kill/hold decisions.
 
 ### During Autonomous Loops
-Atlas defines verifier, persistent state, stop conditions, observability, and circuit breakers. Primum continuously evaluates whether the loop remains within its Intent Contract. A loop that leaves authorized intent is not "creative" — it is out of bounds and must halt.
+Atlas defines verifier, persistent state, stop conditions, observability, and circuit breakers. Atlas also owns the **meta-loop**: when an inner loop plateaus, Atlas diagnoses whether the search strategy is stuck (fixable by changing strategy) or the task is genuinely blocked (escalate to a human gate). Atlas declares each loop's **immutable paths** — the verifier and fixtures the loop may read but never modify — so the loop cannot weaken its own test. The meta-loop may change strategy only; it never touches the verifier, goal, or Intent Contract. Primum continuously evaluates whether the loop remains within its Intent Contract. A loop that leaves authorized intent is not "creative" — it is out of bounds and must halt.
 
 ### During the Full Lifecycle
 Quill observes from G0 through G6 so the organization retains the story of what happened, not merely the final code and documentation.

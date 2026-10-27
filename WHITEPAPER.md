@@ -306,11 +306,11 @@ Each task finds its correct altitude:
 - **Mechanical tasks** → Loop Layer (test execution, data verification, build checks, refactoring)
 - **Strategic tasks** → Human Layer (priorities, trade-offs, go/kill/hold)
 
-### The 41,800:1 Automation Ratio
+### The Automation Ratio
 
-In production use across 199 MIPS measure engines and 3 organizations:
+In production use across a large suite of measure engines and multiple organizations:
 - **1 human decision** (approve the measure logic) enables
-- **41,800 automated verifications** (engine runs × org × measure × verification type)
+- **tens of thousands of automated verifications** (engine runs × org × measure × verification type)
 
 The gates ensured the logic was correct. The loops ensured it STAYED correct across every execution, every organization, every data refresh — without a human re-approving each run.
 
@@ -326,7 +326,7 @@ Loop engineering does NOT replace gates. It augments them.
 | "Is this HIPAA compliant?" | "Do all tests pass after this change?" |
 | "Should we ship this?" | "Is the data consistent across all orgs?" |
 | "Is this architecture sound?" | "Did performance regress?" |
-| "Does this meet the CMS spec?" | "Are all 199 engines producing output?" |
+| "Does this meet the regulatory spec?" | "Are all engines producing output?" |
 
 The question isn't "gates or loops?" — it's "which tasks belong where?" The three-question framework (Can a machine verify it? Is it bounded? Is failure recoverable?) makes the distinction mechanical.
 
