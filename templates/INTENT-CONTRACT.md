@@ -103,17 +103,25 @@ What evidence proves the intended outcome, not merely proxy metrics?
 
 | Actor / Persona | May | May Not |
 |-----------------|-----|---------|
-| Human Project Steward | | |
-| Aegis | | |
-| Primum | HALT and escalate | Redefine intent; waive harm boundaries |
-| Atlas / loops | | |
-| A-Team | | |
-| B-Team | Review and challenge | Modify production |
-| Domain Expert Persona | | |
+| Human Steward (named below) | Pass/kill/hold gates; select track; approve exceptions, verifier changes, cloud resources; resume after HALT; change this contract | Delegate these to an AI persona |
+| Aegis | Enforce policy; require evidence; block | Pass a gate; grant exceptions; resume after HALT |
+| Primum | HALT (mandatory on boundary violation) and escalate | Redefine intent; waive harm boundaries; resume |
+| Atlas / loops | Run within scope; propose immutable paths | Modify immutable paths; touch security config; exceed budget |
+| A-Team | | Approve its own work |
+| B-Team (independent model) | Review and challenge | Modify code or production |
+| Domain Expert Persona | | Stand in for the human SME on consequential calls |
 
-## 11. Approvals
+## 11. Immutable Paths
 
-- **Human Project Steward:**
+Loops in scope may read but never modify the paths in `.sgl/immutable-paths` (verifiers, fixtures, baselines, harness, rubrics).
+
+- **Additions for this initiative:**
+- **Approved by (Human Steward):**
+
+## 12. Approvals
+
+- **Human Steward (name):**
+- **Delegates, if any (name + scope):**
 - **Date:**
 - **Current version:**
 - **Change history:**
@@ -130,4 +138,6 @@ When the goal, scope, protected constraints, harm boundaries, or authority bound
 2. record the reason;
 3. re-run affected gate reviews;
 4. invalidate stale verifier baselines if necessary;
-5. obtain human approval before autonomous work resumes.
+5. obtain Human Steward approval before autonomous work resumes.
+
+Only the Human Steward edits this contract. An agent may propose changes in a separate document.

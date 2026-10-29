@@ -1,7 +1,8 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-intent-integrity
+description: SGL Intent Contract requirements, Primum intent-integrity checks (goal, scope, constraints, metric and verifier integrity, reversibility, human impact), and the single authoritative HALT procedure. Load when writing an Intent Contract, issuing or handling a HALT, or changing any verifier, baseline, or threshold.
+# For non-Kiro tools, load this file on demand for intent or HALT work.
 ---
 
 # Intent Integrity and Do No Harm
@@ -32,11 +33,9 @@ The answer is not to ask humans to review faster. The answer is to make intent, 
 
 ## The Intent Contract
 
-Every non-trivial initiative SHOULD create:
+**Standard and Enterprise initiatives MUST create** `specifications/{ID}/INTENT_CONTRACT.md` at G0, using `templates/INTENT-CONTRACT.md`. The Human Steward approves it, and only the Human Steward may change it.
 
-`specifications/{ID}/INTENT_CONTRACT.md`
-
-Use `templates/INTENT-CONTRACT.md`.
+**Express initiatives MUST include an inline Intent block** in the combined G0/G1 note: goal, authorized scope, protected constraints, harm boundary, and rollback. That block is what Primum checks Express work against.
 
 The contract contains:
 
@@ -49,7 +48,8 @@ The contract contains:
 7. **Escalation Conditions** — situations that require human judgment
 8. **Success Evidence** — what proves the intended outcome was achieved
 9. **Reversibility Requirements** — what must be rollback-capable
-10. **Authority Boundaries** — which agents/personas may do what
+10. **Authority Boundaries** — which agents/personas may do what, and the named Human Steward
+11. **Immutable Paths** — pointer to `.sgl/immutable-paths` for any loops in scope
 
 The Intent Contract is persistent state. It must survive context-window resets and session boundaries.
 
@@ -91,7 +91,7 @@ Any change to:
 - evaluator prompts,
 - quality scoring,
 
-must be treated as a governance event and justified independently.
+is a governance event: made on its own change, with written justification, approved by the Human Steward, outside any loop that the verifier judges. Regenerating a baseline from the code under test is never acceptable.
 
 ### Reversibility
 Before destructive, production, migration, deletion, privilege, or customer-impacting operations:
@@ -105,29 +105,29 @@ Ask whether a technically successful outcome can still create unacceptable harm 
 
 ---
 
-## HALT Protocol
+## HALT Protocol (authoritative)
 
-Primum may issue:
+This is the only HALT procedure in the harness. Other files point here.
 
-`PRIMUM: HALT`
-
-when an action:
+Primum **MUST** issue `PRIMUM: HALT` when an action:
 - violates an explicit harm boundary;
 - exceeds authorized scope;
-- requires an escalation condition defined in the Intent Contract;
-- manipulates the verifier or evidence without independent approval;
-- creates consequential irreversible impact without authorization;
+- meets an escalation condition defined in the Intent Contract;
+- manipulates a verifier, baseline, or evidence without Human Steward approval;
+- creates consequential irreversible impact without authorization ("consequential" as defined in `00-welcome.md` §5: production, real user data, money, credentials or security posture, or no tested rollback; when unsure, it is consequential);
 - cannot be reconciled with human-authorized intent.
+
+Any agent or persona that observes one of these conditions must also stop and raise HALT; it does not need to wait for Primum.
 
 When HALT occurs:
 
 1. Stop the affected loop/action immediately.
-2. Persist all current state.
-3. Record the proposed action and why it triggered HALT.
-4. Preserve relevant logs, diffs, prompts, test results, and verifier output.
-5. Notify Aegis.
-6. Escalate to the human project steward.
-7. Do not resume until the human explicitly resolves the conflict.
+2. Persist current state.
+3. Record the proposed action and why it triggered HALT in `specifications/{ID}/HALT_LOG.md`.
+4. Preserve evidence: diffs, test results, verifier output, and the relevant prompts and logs. **Redact before preserving:** secrets, credentials, and real PHI/PII are referenced by ID, never copied. If a secret was exposed, say so and flag it for rotation.
+5. Notify Aegis (to block dependent gates).
+6. Escalate to the Human Steward with the record.
+7. **Do not resume until the Human Steward explicitly resolves the conflict in writing.** No AI persona, including Aegis and Primum, may resume.
 
 Primum can stop execution. It cannot waive the boundary that caused the stop.
 
@@ -151,33 +151,7 @@ These responsibilities overlap intentionally but are not interchangeable.
 
 ## Human Review at Agentic Velocity
 
-Humans cannot sustainably review every line of a large agent-generated change and still ship at agentic speed.
-
-The control model therefore shifts from **line-by-line human inspection as the primary assurance mechanism** to **automated evidence with selective human judgment**.
-
-Before a consequential release, the system should be able to show:
-
-- implementation conforms to approved architecture;
-- repeatable regression tests execute automatically;
-- security, dependency, and policy controls passed;
-- independent verifiers confirm required behavior;
-- no unauthorized scope expansion remains unresolved;
-- protected NFRs have not regressed;
-- intent-integrity checks passed;
-- B-Team challenges are resolved or explicitly accepted;
-- consequential exceptions were escalated to humans;
-- release and rollback evidence exists.
-
-Human reviewers then focus on:
-- intent;
-- architecture;
-- risk acceptance;
-- exceptions;
-- evidence quality;
-- domain judgment;
-- consequential decisions.
-
-**Automation does not reduce rigor. It is how rigor scales when implementation velocity exceeds human review capacity.**
+Humans can't review every line of agent-generated code at agentic speed. Assurance shifts to automated evidence (architecture conformance, regression tests, security and policy checks, independent verifiers, intent checks, resolved B-Team findings, rollback evidence). Human attention shifts to intent, architecture, risk acceptance, exceptions, evidence quality, and domain judgment.
 
 ---
 

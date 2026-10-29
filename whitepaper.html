@@ -292,9 +292,9 @@
         
         <h3>The Key Differences</h3>
         
-        <p><strong>1. Adversarial B-Team + Zero-Context Reviewer at every gate</strong></p>
+        <p><strong>1. Adversarial B-Team + Zero-Context Reviewer, sized to risk</strong></p>
         
-        <p>We don't let the builder review their own work. A separate B-Team AI (different model, different prompt, hostile persona) attacks the spec at every gate. But teams immersed in months of development have systematic blind spots. We can't see what we built wrong because we were thinking about it the same way the whole time.</p>
+        <p>We don't let the builder review their own work. A separate B-Team AI (different model family, independent context, hostile personas) attacks the work, with depth sized to risk: full review at the consequential gates, focused or verifier-only review on low-risk changes. The builder never role-plays its own critics. But teams immersed in months of development have systematic blind spots. We can't see what we built wrong because we were thinking about it the same way the whole time.</p>
         
         <p><strong>2. Evidence is code, not slides</strong></p>
         
@@ -364,48 +364,56 @@
                     <th>Gate</th>
                     <th>Question</th>
                     <th>Evidence Required</th>
-                    <th>Reviewers</th>
+                    <th>Evidence reviewers</th>
+                    <th>Decision</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><strong>G0</strong></td>
                     <td>Worth doing?</td>
-                    <td>Problem statement, users, risk classification, scope</td>
-                    <td>Product + Director</td>
+                    <td>Problem statement, users, risk classification, scope, Intent Contract</td>
+                    <td>Product + Primum (+ B-Team by track)</td>
+                    <td>Human Steward</td>
                 </tr>
                 <tr>
                     <td><strong>G1</strong></td>
                     <td>Requirements solid?</td>
-                    <td>Testable requirements, API contracts, NFRs, B-Team review, Zero-Context review</td>
-                    <td>Director + B-Team + Zero-Context</td>
+                    <td>Testable requirements, API contracts, NFRs, B-Team review</td>
+                    <td>Product + B-Team</td>
+                    <td>Human Steward</td>
                 </tr>
                 <tr>
                     <td><strong>G2/G3</strong></td>
                     <td>Design safe?</td>
-                    <td>ADRs, threat model, test strategy, 3 Amigos on tickets, Zero-Context assumptions audit</td>
-                    <td>Architect + Security + Zero-Context</td>
+                    <td>ADRs, threat model, test strategy, 3 Amigos on tickets</td>
+                    <td>Architect + Security + B-Team</td>
+                    <td>Human Steward</td>
                 </tr>
                 <tr>
                     <td><strong>G4</strong></td>
                     <td>Code works?</td>
-                    <td>100% coverage, security review, accessibility audit, integration tests, Zero-Context clarity check</td>
-                    <td>Test + Security + Director + Zero-Context</td>
+                    <td>Coverage, security review, accessibility audit, integration tests, per-change reviews</td>
+                    <td>Test + Security + Primum</td>
+                    <td>Human Steward</td>
                 </tr>
                 <tr>
                     <td><strong>G5</strong></td>
                     <td>Safe to ship?</td>
-                    <td>Pen test, rollback plan, monitoring, NFR evidence, full team sign-off, Zero-Context auditor perspective</td>
-                    <td>Everyone</td>
+                    <td>Pen test or accepted risk, rollback plan, monitoring, NFR evidence; Zero-Context read on high-risk work</td>
+                    <td>Full team + B-Team</td>
+                    <td>Human Steward</td>
                 </tr>
                 <tr>
                     <td><strong>G6</strong></td>
                     <td>What did we learn?</td>
                     <td>Production metrics, incidents, KPI actuals vs. targets</td>
-                    <td>Director + SRE + Journalist</td>
+                    <td>SRE + Product + Journalist</td>
+                    <td>Human Steward</td>
                 </tr>
             </tbody>
         </table>
+        <p>The operative, current rules (review levels by track, the authority rule, enforcement) live in the harness core, <code>steering/00-welcome.md</code>. This paper explains the reasoning.</p>
         
         <hr>
         
@@ -492,10 +500,10 @@
 │   2. Evidence, not confidence.                              │
 │      "We think it's fine" is not a gate pass.              │
 │                                                             │
-│   3. The B-Team reviews every gate.                        │
-│      Different AI. Different blind spots.                   │
+│   3. Independent B-Team review, sized to risk.             │
+│      Different AI. Different blind spots. Never self-run.   │
 │                                                             │
-│   4. Zero-Context reviews every gate.                      │
+│   4. Zero-Context review on high-risk releases.            │
 │      Naive eye catches invisible assumptions.               │
 │                                                             │
 │   5. AI builds. Humans decide.                             │

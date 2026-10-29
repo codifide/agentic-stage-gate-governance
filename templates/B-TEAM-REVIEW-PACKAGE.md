@@ -2,12 +2,17 @@
 
 ## Instructions
 
+This is the 12-persona prompt for **gate reviews** (spec, design, release package) and for the design/privacy/ops aspects of an R3 change. Process and rules: `steering/04-adversarial-review.md`.
+
 1. Copy this template
 2. Fill in the sections below with your project's artifacts
-3. Open a DIFFERENT AI model (not the one that built the system)
-4. Paste the **System Prompt** as the first message
-5. Paste the completed **Review Package** as the second message
-6. Bring the output back to the A-Team for response
+3. **Redact:** no secrets, credentials, or real PHI/PII. Run your secret scanner over the package.
+4. Confirm the reviewer's provider is approved for the package's data class
+5. Open a **separate session** that has not seen the builder's work, on a **different model family** when one is available. If only the same family is available, isolate the session, label the review `same-family`, and get the Human Steward's acknowledgment (`steering/04`). Never run this in the builder's own context. If no independent session is possible, stop here and tell the Human Steward.
+6. Paste the **System Prompt** as the first message
+7. Paste the completed **Review Package** as the second message
+8. Record the reviewer model, version, date, and provider
+9. Bring the output back to the A-Team for response (`steering/04`)
 
 ---
 
@@ -67,7 +72,7 @@ Output format:
 ### Project Context
 
 **Project:** [Your project name]
-**Gate:** [G1 / G2/G3 / G4 / G5]
+**Gate:** [G0 / G1 / G2/G3 / G4 / G5 / G6]  **Review Level:** [R2 / R3]
 **What was built:** [One paragraph describing what the A-Team produced]
 **A-Team model:** [Which AI built this — Claude, GPT-4, Gemini, etc.]
 

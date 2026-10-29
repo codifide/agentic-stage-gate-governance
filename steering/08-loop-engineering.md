@@ -1,7 +1,8 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-loop-engineering
+description: SGL loop engineering - loop-or-gate decision, rules for production loops, verifier immutability and enforcement, baselines, meta-loop, state files, Cost Classes C1-C3, retry limits, circuit breakers, and verifier anti-patterns. Load before designing, running, or debugging any automated loop.
+# For non-Kiro tools, load this file on demand for loop work.
 ---
 
 # Loop Engineering — Automated Verification and Execution
@@ -33,7 +34,7 @@ Does the task have a clear start, a clear end, and can it be retried without sid
 If the loop produces a wrong answer and the verifier doesn't catch it, is the blast radius contained?
 
 - **Yes → loop candidate.** Bad code that fails tests. Incorrect refactoring caught by existing tests.
-- **No → gate it.** Data migration with no rollback. Security logic. Compliance interpretation.
+- **No → gate it.** Data migration with no rollback. Security logic or security configuration (credentials, TLS, auth policy). Compliance interpretation.
 
 ---
 
@@ -65,13 +66,14 @@ The thing that writes code cannot be the thing that judges code. Same model, dif
 
 This is the loop-level equivalent of A-Team/B-Team separation.
 
-**The boundary must be enforced, not advised.** A loop that can edit its own verifier will eventually make the test easier instead of making the work correct — the central failure mode of autonomous loops (reward/verifier hacking). State the boundary as an invariant the loop cannot cross:
+**The boundary must be enforced, not advised.** A loop that can edit its own verifier will eventually make the test easier instead of making the work correct. This is the central failure mode of autonomous loops (verifier hacking).
 
-- Every loop declares `immutable_paths` in its state file — the files that define the verifier, the golden fixtures, and the evaluation harness.
-- The generator loop may read those paths but is **forbidden to modify** them.
-- Changing a verifier is a human decision made outside the loop, recorded as its own change.
+- **Declared by a human, outside the loop.** Immutable paths (verifier code, golden fixtures, baselines, evaluation harness, scoring rubrics, the existing test files the loop is trying to satisfy) are listed in `.sgl/immutable-paths`, one glob per line. Atlas proposes the list; the Human Steward approves it. The loop's state file may *copy* the list for reference, but the state file is not the source of truth.
+- **Enforced in two places.** A blocking PreToolUse hook rejects agent writes to those paths (`templates/enforcement/guard-immutable-paths.sh`). A CI check on **every PR** fails any diff that touches them, unless the Human Steward approved that change (`templates/enforcement/check-immutable-paths.sh`). The hook stops the attempt; CI is the backstop for anything the hook can't see (e.g., shell commands).
+- **The generator may read those paths but is forbidden to modify them.** `.sgl/immutable-paths` protects itself.
+- Changing a verifier is a human-approved change made on its own branch, outside the loop.
 
-This mirrors the discipline that made Karpathy's `autoresearch` trustworthy: the agent could edit only the training code (`train.py`) and never the evaluator (`prepare.py`). The separation is what stops "I optimized the model" from quietly becoming "I weakened the test." It is the same principle we enforce elsewhere with structural guarantees — Quill's append-only log, Primum's intent boundary — applied to the verifier.
+This is the same discipline as an autoresearch setup where the agent may edit the training code but never the evaluator.
 
 ### 4. Hard Stop at N Retries
 
@@ -80,7 +82,7 @@ No loop runs forever. Set limits based on task type:
 | Task Type | Max Retries | Escalation |
 |-----------|-------------|------------|
 | Build fix | 3 | Escalate to human with failure log |
-| Test fix | 5 | Escalate with root cause analysis |
+| Make a failing test pass (change the code; the test file is immutable) | 5 | Escalate with root cause analysis |
 | Research/exploration | 10 | Present best result so far |
 | Data migration | 1 | If it fails, escalate immediately |
 | Performance optimization | 7 | Accept best result above threshold |
@@ -89,10 +91,10 @@ No loop runs forever. Set limits based on task type:
 
 When a loop solves a problem, extract the pattern. Next time that problem type appears, it's a template, not an exploration.
 
-**Tier 3 → Tier 2 → Tier 1 promotion:**
-- **Tier 3:** First-time exploration. High token cost. Full iteration.
-- **Tier 2:** Known pattern with template. Medium cost. Fewer iterations.
-- **Tier 1:** Cached/deterministic. Near-zero token cost. Single execution.
+**Cost Class C3 → C2 → C1 promotion** (see Cost Control below):
+- **C3:** First-time exploration. High token cost. Full iteration.
+- **C2:** Known pattern with template. Medium cost. Fewer iterations.
+- **C1:** Cached/deterministic. Low token cost. Single execution.
 
 Over time, more work moves from expensive iteration to cheap execution.
 
@@ -109,22 +111,18 @@ Problem 2 is common and wasteful. Retrying the same strategy harder doesn't help
 
 ### How it works
 
-When an inner loop plateaus (N iterations with no verifier improvement), before hard-stopping, the meta-loop gets one pass:
+When an inner loop plateaus (**3 consecutive iterations with no verifier improvement**, unless the loop's design sets a different N), before hard-stopping, the meta-loop gets one pass:
 
 1. **Read the history, not just the last result.** The meta-loop consumes the full `history.jsonl` — every attempt, every failure reason — looking for the pattern the inner loop can't see from inside.
 2. **Diagnose the stall.** Is the loop proposing near-duplicate changes? Optimizing the wrong variable? Trapped by an assumption baked into its first attempt?
 3. **Change the strategy, not the goal.** The meta-loop may widen the search (force exploration away from the stuck prior), reorder which variable is optimized first, or decompose the task differently. It does **not** change the verifier, the goal, or the Intent Contract — those are fixed.
-4. **Re-run the inner loop once under the new strategy.** If it breaks the plateau, continue. If it stalls again, escalate to a human gate with both the original failure and the meta-loop's diagnosis.
+4. **Re-run the inner loop with one fresh retry budget** (the same max retries as the original run) under the new strategy. If it breaks the plateau, continue. If it stalls again, escalate to a human gate with both the original failure and the meta-loop's diagnosis.
 
-### Why this works
-
-The gain comes from architecture, not a smarter model. An inner loop reasons about the *task*; the meta-loop reasons about the *loop's own behavior* — a perspective the inner loop structurally lacks, the same way a builder can't review its own work. Published results on this pattern (Bilevel Autoresearch) showed an outer loop improving the target metric several times more than the inner loop alone, using the identical underlying model.
-
-This is also the mechanical answer to the **stale-baseline / stuck-prior trap** documented in the Verifier Anti-Patterns below: the inner loop kept returning to assumptions that had stopped being true. A meta-loop that reads the history is what notices "you have tried five variations of the same wrong idea."
+An inner loop reasons about the *task*; the meta-loop reasons about the *loop's own behavior*, a perspective the inner loop lacks. It is what notices "you have tried five variations of the same wrong idea."
 
 ### Boundaries (non-negotiable)
 
-- The meta-loop changes **strategy only** — never the verifier, the goal, the `immutable_paths`, or the Intent Contract.
+- The meta-loop changes **strategy only** — never the verifier, the goal, the paths in `.sgl/immutable-paths`, or the Intent Contract.
 - The meta-loop gets **one** intervention per plateau. If the second stall occurs, escalate. No infinite meta-recursion.
 - Every meta-loop intervention is logged to the loop's history as a distinct event, with its diagnosis. Atlas owns this; Quill records it.
 
@@ -147,7 +145,7 @@ This is also the mechanical answer to the **stale-baseline / stuck-prior trap** 
   "status": "running|passed|failed|escalated",
   "iteration": 4,
   "max_iterations": 10,
-  "immutable_paths": ["verifiers/", "tests/golden/"],
+  "immutable_paths_source": ".sgl/immutable-paths",
   "last_result": {
     "timestamp": "2026-07-15T08:12:00Z",
     "verifier_passed": false,
@@ -155,7 +153,7 @@ This is also the mechanical answer to the **stale-baseline / stuck-prior trap** 
     "tokens_consumed": 1847
   },
   "total_tokens": 7203,
-  "cost_tier": 2,
+  "cost_class": "C2",
   "escalation_threshold": "3 consecutive identical failures"
 }
 ```
@@ -198,30 +196,34 @@ Prefer cheaper verifiers. Escalate to expensive verifiers only when cheap ones p
 
 ## Cost Control
 
-### Tier System
+### Cost Classes
 
-| Tier | Description | Token Budget | Example |
-|------|-------------|--------------|---------|
-| **Tier 1** | Deterministic, cached, template-driven | 0–100 tokens | Run existing test suite, apply known fix |
-| **Tier 2** | Known pattern, minor adaptation needed | 100–5,000 tokens | Implement from template, fix similar bug |
-| **Tier 3** | Exploration, novel problem, iteration required | 5,000–50,000 tokens | Research new approach, optimize unknown |
+Cost Classes size a loop's **token budget**. They are unrelated to Review Levels R1–R3.
+
+| Class | Description | Budget per loop run (order of magnitude) | Example |
+|-------|-------------|------------------------------------------|---------|
+| **C1** | Deterministic, cached, template-driven | Up to ~10k tokens | Run existing suite, apply a known fix |
+| **C2** | Known pattern, minor adaptation | ~10k–200k tokens | Implement from template, fix a similar bug |
+| **C3** | Exploration, novel problem | ~200k–2M tokens | Research a new approach, optimize an unknown |
+
+Calibrate these to your models and codebase; the point is that every loop has a number before it starts.
 
 ### Cost Control Rules
 
-1. **Default to Tier 1.** Only escalate when lower tiers fail.
+1. **Default to the lowest class that can work.** Escalate only when it fails.
 2. **Track tokens per loop.** Every loop logs total token consumption.
 3. **Set budgets before starting.** A loop without a budget is a loop without a stop condition.
-4. **Fail fast, fail cheap.** Detect failure in the first 100 tokens, not after 5,000.
+4. **Fail fast, fail cheap.** Run the cheapest verifier first, on the first iteration, before spending on the next one.
 5. **Cache aggressively.** Never re-answer a question already answered.
 6. **ROI formula:** `(human hours saved × hourly rate) / (tokens consumed × $/token + verifier compute cost)`. If ROI < 1, the loop isn't worth running.
 
 ### Promote Patterns
 
-After a Tier 3 loop succeeds:
+After a C3 loop succeeds:
 1. Extract the solution pattern
 2. Create a template for the pattern
-3. Next occurrence uses the template (Tier 2)
-4. After 3 successful template uses, promote to Tier 1 (deterministic)
+3. Next occurrence uses the template (C2)
+4. After 3 successful template uses, promote to C1 (deterministic)
 
 ---
 
@@ -231,13 +233,13 @@ Loops ARE the inner cycle of auto-research. The relationship:
 
 ```
 Auto-Research (07-auto-research-protocol.md)
-├── Phase 1: GENERATE → multiple approaches (Gate: human picks direction)
+├── Phase 1: GENERATE → multiple approaches (human approves which directions to pursue)
 ├── Phase 2: BUILD → each approach implemented
 │   └── INNER LOOP: build → test → fix → verify (Loop: no human needed)
-├── Phase 3: EVALUATE → adversarial review (Gate: B-Team judgment)
+├── Phase 3: EVALUATE → independent B-Team review + verifier results
 ├── Phase 4: REFINE → address findings
 │   └── INNER LOOP: fix → verify → fix → verify (Loop: no human needed)
-└── Phase 5: CONVERGE CHECK (Gate: human decides continue/ship/kill)
+└── Phase 5: CONVERGE CHECK → human checkpoint decides continue / pivot / stop
 ```
 
 Auto-research is the outer cycle (gate-governed). Loops are the inner cycle (verifier-governed). The two compose naturally:
@@ -252,12 +254,13 @@ Before activating a loop, confirm:
 
 - [ ] **Verifier defined** — What automated check proves success?
 - [ ] **Verifier tested** — Does it reject known-bad input?
-- [ ] **Immutable paths declared** — Which files (verifier, golden fixtures, harness) is the loop forbidden to modify?
+- [ ] **Immutable paths approved** — Verifier, fixtures, baselines, and harness listed in `.sgl/immutable-paths` by the Human Steward; guard hook and CI check active
 - [ ] **State file location** — Where does iteration state persist?
 - [ ] **Max retries set** — What's the hard stop?
 - [ ] **Meta-loop eligibility** — On plateau, is one strategy-change pass allowed, or does this escalate immediately (consequential/irreversible work)?
-- [ ] **Cost tier assigned** — What's the token budget?
+- [ ] **Cost Class and budget assigned** — What's the token budget?
 - [ ] **Escalation path defined** — What happens on failure?
+- [ ] **Primum checkpoints scheduled** — fresh-context intent check (`00-welcome.md` §5) before the loop starts, at every plateau or escalation, before any meta-loop strategy change, and before output is merged. No fresh context available → the loop pauses there and the package goes to the human.
 - [ ] **Failure alerting configured** — Who gets notified if it breaks?
 - [ ] **PHI check** — Does the loop touch sensitive data? If yes, extra constraints apply.
 
@@ -306,8 +309,9 @@ This is not optional. If the task fits, ask. Let the human decide.
 ```
 Task: a unit test for a calculation module is failing
 Decision: Loop it (verifier = the test itself, bounded, recoverable)
-Max retries: 3
-Tier: 2 (known pattern — test fix)
+Immutable: the test file and its fixtures (fix the code, not the test)
+Max retries: 5
+Cost Class: C2 (known pattern)
 ```
 
 ### Example 2: Design a Permission System
@@ -322,7 +326,7 @@ Process: G2/G3 with full A-Team/B-Team review
 Task: Verify the full engine suite produces consistent output
 Decision: Loop it (verifier = baseline comparison, bounded, recoverable)
 Max retries: 1 per engine, 3 for full suite
-Tier: 1 (deterministic — run and compare)
+Cost Class: C1 (deterministic: run and compare)
 Run: Overnight, report by morning
 ```
 
@@ -331,7 +335,7 @@ Run: Overnight, report by morning
 Task: Migrate 50 components from class to functional
 Decision: Loop it (verifier = existing tests pass + build compiles)
 Max retries: 5 per component
-Tier: 2 (template-driven after first success)
+Cost Class: C2 (template-driven after first success)
 Promote: After 3 successful migrations, extract template
 ```
 
@@ -341,11 +345,13 @@ Promote: After 3 successful migrations, extract template
 
 ### What Loops Must NEVER Do
 
-1. **Make irreversible changes without human approval** — Data deletion, production deployment, security configuration changes
-2. **Access resources beyond their scope** — A loop fixing tests doesn't get database write access
-3. **Exceed their token budget silently** — Hard stop, then escalate
-4. **Store PHI in state files** — Reference by ID only
-5. **Self-approve gate decisions** — Loops run BETWEEN gates, not INSTEAD of gates
+1. **Make irreversible changes** — data deletion, production deployment
+2. **Touch security configuration** — credentials, secret rotation, TLS, auth policy, IAM. These are gated, always.
+3. **Access resources beyond their scope** — a loop fixing tests doesn't get database write access or cloud credentials
+4. **Modify immutable paths** — verifiers, fixtures, baselines, harness
+5. **Exceed their token budget silently** — hard stop, then escalate
+6. **Store PHI or secrets in state files** — reference by ID only
+7. **Self-approve gate decisions** — loops run BETWEEN gates, not INSTEAD of gates
 
 ### Circuit Breakers
 
@@ -354,7 +360,7 @@ Promote: After 3 successful migrations, extract template
 - **3 identical failures** → Stop and escalate (likely a structural problem, not a retry problem)
 - **Token budget exceeded** → Stop, report best result so far
 - **Verifier itself fails** → Stop immediately (broken verifier = unverified output)
-- **Loop attempts to modify an immutable path** → Stop immediately (verifier-hacking attempt — the boundary held, but investigate why it was tried)
+- **Guard hook or CI check blocks a write to an immutable path** → Stop immediately and escalate (a verifier-hacking attempt; the boundary held, but find out why it was tried)
 - **Unexpected resource usage** → Pause and notify (possible infinite loop or resource leak)
 
 ---
@@ -367,12 +373,12 @@ Promote: After 3 successful migrations, extract template
 
 **Example:** Bitmap pipeline verifier compared against the results table data from a prior run that used different engine routing rules. A subset of measures showed "discrepancies" that were actually correct new behavior.
 
-**Solution:** Verifiers must either:
-1. **Use fresh baselines** — regenerate the reference data immediately before comparison
-2. **Be self-contained** — verify round-trip correctness (write → read → compare input vs output) without depending on external historical state
-3. **Tolerate known divergences** — accept a threshold when the system configuration has explicitly changed, with documented reasoning
+**Solution:** Verifiers must do one of the following. **Never regenerate a baseline from the code under test**; that compares the system to itself and always passes.
+1. **Refresh the baseline from a trusted reference** — a known-good build, an independent implementation, or hand-verified data — as a human-approved baseline change (a governance event per `12`), made outside the loop.
+2. **Be self-contained** — verify round-trip correctness (write → read → compare input vs output) without depending on external historical state.
+3. **Tolerate known divergences** — only via a Human Steward-approved, documented threshold or exclusion list tied to the explicit configuration change. The loop may not widen tolerances itself.
 
-A verifier that compares against stale data is worse than no verifier — it trains the team to dismiss failures as "probably stale baseline again," which eventually hides a real bug.
+A verifier that compares against stale data trains the team to dismiss failures as "probably stale baseline again," which eventually hides a real bug. A verifier whose baseline the loop can refresh is no verifier at all.
 
 ### False Confidence from Partial Validation
 
@@ -384,22 +390,14 @@ A verifier that compares against stale data is worse than no verifier — it tra
 
 ## Practical Learnings: When Loops and Gates Interact
 
-### B-Team Estimates Are Miscalibrated for Looped Execution
+### Effort estimates for looped work
 
-Gate reviews (B-Team adversarial review) estimate effort based on traditional sequential human execution. When a task is looped, the actual effort is typically 5-25× less than B-Team estimates because:
-- Shared abstraction boundaries (e.g., a shared base class) make changes surgical
-- The verifier catches errors immediately (no manual testing cycle)
-- No context-switching between files (the AI holds full context)
+Reviewers estimate effort as if a human executes sequentially. Looped work with a shared interface and a fast verifier is often much faster. **Rule:** if a review estimates > 2 weeks for a looped task, challenge it: "What's the shared interface? How many unique changes vs. repetitions?"
 
-**Calibration rule:** If the B-Team estimates > 2 weeks for a looped task, challenge the estimate. Ask: "What's the shared interface? How many unique changes are needed vs how many repetitions?"
+### Classify before executing
 
-### The "Proactive Ask" Failure Mode
-
-The steering file says loop suggestion is MANDATORY. In practice, the AI failed to suggest looping until the human prompted. Root cause: the AI was in "implementation mode" (executing sequentially) rather than "planning mode" (classifying tasks before executing).
-
-**Fix:** Before starting any multi-step implementation, pause and classify each step: LOOP / GATE / DOCUMENT. Present the classification to the human before executing. This forces the proactive assessment.
+Before starting any multi-step implementation, classify each step LOOP / GATE / DOCUMENT and present the classification to the human before executing. Agents in "implementation mode" otherwise skip the loop-or-gate assessment.
 
 ---
 
-*Loop Engineering Steering v1.2 — Part of Stage-Gate-Loop Governance v2.0 — July 2026*
-*Updated with production learnings from a large-scale data-pipeline rewrite loop, plus the meta-loop and immutable-verifier-path additions (BMAD/Karpathy evaluation, 2026).*
+*Loop Engineering — SGL Harness v3.0 — October 2026*

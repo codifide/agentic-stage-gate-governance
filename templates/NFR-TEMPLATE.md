@@ -8,7 +8,7 @@
 4. Mark automated assertions in the test suite — these become hard CI gate blocks
 5. Reference this document from your `GATE_EVIDENCE_CHECKLIST.md`
 
-**Rule:** Every initiative that reaches G1 MUST have NFRs defined with measurable targets.
+**Rule:** Every Standard and Enterprise initiative that reaches G1 MUST have NFRs defined with measurable targets. Express initiatives state NFR impact in their G0/G1 note instead (`steering/05`).
 If you can't measure it, you can't ship it. (See `steering/05-nfr-kpi-mandate.md`)
 
 ---
@@ -32,7 +32,7 @@ Items marked **[GATE-BLOCKING]** must have passing evidence before the gate clos
 | NFR-PERF-005 | [Cold start / launch] to interactive | ≤ [Xs] | [measurement method] | G4 |
 
 **Guidance:**
-- Define separate targets for cold (no cache) and warm (cache hit) paths — they differ by 3–10×
+- Define separate targets for cold (no cache) and warm (cache hit) paths — they often differ substantially
 - P95 is the right percentile for user-facing latency; P99 for SLA commitments
 - Measure at the user's device/browser, not at the server — network is part of the experience
 - Hard timeouts in code must be ≤ your NFR target, not greater
@@ -109,7 +109,7 @@ Items marked **[GATE-BLOCKING]** must have passing evidence before the gate clos
 
 **Guidance:**
 - Automated label checks catch the most common failures cheaply — wire them into UI tests
-- Manual VoiceOver/screen reader walkthrough is required — automated tools miss ~40% of issues
+- Manual screen-reader walkthrough (VoiceOver, TalkBack, NVDA, or the platform equivalent) is required; automated tools miss many issues
 - WCAG 2.1 AA is the baseline; document any intentional deviations with rationale
 - Accessibility is a G4 gate item, not a post-launch nice-to-have
 
@@ -154,7 +154,7 @@ Wire measurable NFRs into your test suite. A CI failure on any of these is a har
 **Which NFRs require manual evidence:**
 - End-to-end latency (network involved) → stopwatch + log evidence
 - Field accuracy → structured field test with known ground truth
-- VoiceOver completability → manual walkthrough with notes
+- Screen-reader completability → manual walkthrough with notes
 - Color contrast → Accessibility Inspector screenshots
 
 ---
@@ -187,5 +187,4 @@ Notes: [any context]
 ---
 
 *Template version: 1.0 — May 2026*
-*Derived from: decode the sign v1.0 NFR gate experience*
 *Persona: Forge (Performance Engineer)*

@@ -1,14 +1,17 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-nfr-kpi-mandate
+description: SGL mandate for measurable NFRs, KPIs, and benchmarks - required formats, ownership, gate enforcement, and automated vs manual evidence. Load when defining requirements at G1 or collecting NFR/KPI evidence at G4-G6.
+# For non-Kiro tools, load this file on demand at G1 and for NFR evidence.
 ---
 
 # NFRs, KPIs, and Benchmarks Are Mandatory
 
 ## Rule
 
-Every initiative that reaches G1 MUST include measurable targets. If you can't measure it, you can't ship it.
+Every Standard and Enterprise initiative that reaches G1 MUST include measurable targets. If you can't measure it, you can't ship it.
+
+**Express track:** the combined G0/G1 note states the change's NFR impact: which existing NFRs it could affect and how they will be re-verified, or "no NFR change" with a one-line reason.
 
 ---
 
@@ -32,7 +35,7 @@ Use `templates/NFR-TEMPLATE.md` as your starting point. It covers:
 | NFR-SEC-001 | Vulnerability scan | 0 critical, 0 high | OWASP ZAP | G5 |
 
 **Key guidance from field experience:**
-- Define separate targets for cold (no cache) and warm (cache hit) paths — they differ by 3–10×
+- Define separate targets for cold (no cache) and warm (cache hit) paths — they often differ substantially
 - Wire measurable NFRs into the test suite as hard CI assertions — don't rely on manual checks alone
 - Parity tests (known input → known output) are the most reliable accuracy gate
 - "Graceful degradation" must be specific: what does the user see when a dependency is down?
@@ -68,8 +71,8 @@ Baseline comparisons (old vs. new, competitor vs. us).
 
 ## Enforcement
 
-- **G1 will not pass** without NFRs, KPIs, and Benchmarks defined
-- **G4 will not pass** without NFR evidence (test results, not promises)
+- **G1 will not pass** without NFRs, KPIs, and Benchmarks defined (Standard/Enterprise) or an NFR impact statement (Express)
+- **G4 will not pass** without NFR evidence (test results, not promises). Express: evidence that each NFR named in the impact statement was re-verified; "no NFR change" needs no NFR evidence.
 - **G5 will not pass** without KPI baseline collected or measurement plan documented
 - **G6 requires** KPI actuals vs. targets comparison
 
@@ -86,7 +89,7 @@ Baseline comparisons (old vs. new, competitor vs. us).
 | Graceful degradation | Mock dependency in test + assert fallback behavior |
 | Rate limiting | Assert correct HTTP status code (e.g. 429) in CI |
 | Accessible labels | UI test assertion in CI |
-| VoiceOver completability | Manual walkthrough with documented notes |
-| Color contrast | Accessibility Inspector screenshots |
+| Screen-reader completability | Manual walkthrough with documented notes |
+| Color contrast | Automated contrast checker output (synthetic data in any screenshots) |
 
 The goal: automate everything automatable. Manual evidence is for things that genuinely require a human or a deployed environment.

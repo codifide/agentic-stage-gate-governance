@@ -1,230 +1,132 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-adversarial-review
+description: How to prepare, run, and respond to an independent SGL B-Team adversarial review - review packages, reviewer model selection, data handling before sending code to an external model, A-Team response protocol, verdicts, and findings tracking. Load when a B-Team review is requested or required.
+# For non-Kiro tools, load this file on demand when a review is needed.
 ---
 
 # Adversarial Review Process
 
-Every gate review MUST include an adversarial review by the B-Team before the gate can pass.
+**When review is required** is defined once, in `00-welcome.md` §3 (gate reviews by track) and `11-tiered-adversarial-review.md` (change reviews by Review Level). This file defines **how** to run one.
 
 ---
 
 ## The Rule
 
-The builder cannot review their own work. A **separate AI** (different model, different prompt, hostile personas) attacks the spec/code at every gate.
+The builder cannot review their own work. B-Team review runs in a **separate context** that has not seen the builder's reasoning, using a **different model family when one is available**.
 
-## Teams
+- Same context, same prompt: **never** acceptable. This includes the builder "putting on the B-Team hat."
+- Same model family, isolated context: acceptable only when no other family is available. Withhold the builder's rationale until first-pass findings are in, label the review `same-family`, and have the Human Steward acknowledge it.
+- No independent reviewer reachable: **prepare the package, tell the human, and stop.** The review is not done.
 
-- **A-Team** (Builders): Primary AI assistant. Designs, specs, implements, delivers.
-- **B-Team** (Critics): Different AI model. Reviews, challenges, finds weaknesses.
-
-Teams SHOULD use different model families and independent review contexts whenever practical. This **reduces correlated reasoning failures and model-specific confirmation bias; it does not eliminate them.** Evidence and human judgment remain required.
+Model diversity reduces correlated reasoning failures; it does not eliminate them. Evidence and human judgment remain required.
 
 ---
 
-## Model Selection
+## Data Handling Before You Send Anything
 
-The choice of model for B-Team review is not arbitrary. Different model families have different failure modes, and the goal is to find what the builder missed — not to get a second opinion from a model with the same blind spots.
+A review package leaves your environment. Before sending it to any external model:
 
-### A-Team (Builder)
-Frontier models with large context windows. Best for generation, refactoring, and multi-file reasoning.
-- Claude Sonnet / Claude Opus
-- GPT-4o
-- Gemini 2.5 Pro
+1. **Check the provider is approved for the data class.** PHI requires a provider under a BAA (or equivalent). Restricted or proprietary code may require a self-hosted model. Record the provider and data class in the review record.
+2. **Never include secrets, credentials, or real PHI/PII.** Use synthetic fixtures. Scan the package with your secret scanner before sending.
+3. **Send the minimum.** The diff plus the context needed to judge it, not the whole repository, unless the review requires it and the provider is approved for it.
+4. Self-hosted open-weight models (e.g., Qwen3, DeepSeek-R1 run locally) avoid egress entirely and are a good default for sensitive codebases.
 
-### B-Team (Adversarial Reviewer)
-**Use reasoning/thinking models for code review.** These grind through logic systematically rather than pattern-matching to the most plausible answer. They are less susceptible to the RLHF bias toward confirming that code looks reasonable. They find more bugs — especially race conditions, state machine violations, idempotency failures, and security boundary gaps.
+---
 
-| Model | Strengths | Notes |
-|-------|-----------|-------|
-| **Qwen3** | Strong adversarial posture by default, extended thinking, ChatML native format | Recommended for code review. Use `<\|im_start\|>system` format and explicitly enable thinking. |
-| **o3** | Deep reasoning, excellent at security and correctness | Strong default; no special prompt needed to activate reasoning. |
-| **DeepSeek-R1** | Strong logic and edge-case analysis | Add explicit security instruction — less thorough on security by default. |
-| **Claude (extended thinking)** | Good if A-Team used a different model family | Do not use if Claude built the code. |
+## Choosing a Reviewer Model
 
-**Rule:** Prefer a different model family from the A-Team for B-Team review. If the same family must be used, isolate the review context, withhold the builder's rationale until after first-pass findings, and treat the result as less independent.
+Prefer a reasoning model from a **different family than the builder**. Reasoning models trace logic rather than pattern-match to "looks reasonable," and they find more race conditions, state-machine violations, idempotency failures, and security-boundary gaps.
 
-### Zero-Context Reviewer (optional, recommended at G5)
-Any capable model in a clean session with no system prompt or project files. The goal is a naive read — fresh eyes catch undocumented assumptions and invisible jargon.
-- Gemini 2.5 Flash
-- GPT-4o mini
-- Any model with no prior project context
+| Builder family | Good reviewer choices |
+|----------------|-----------------------|
+| Anthropic (Claude) | OpenAI reasoning models, Qwen3, DeepSeek-R1, Gemini, xAI Grok |
+| OpenAI | Claude (extended thinking), Qwen3, DeepSeek-R1, Gemini |
+| Google | Claude (extended thinking), OpenAI reasoning models, Qwen3, DeepSeek-R1 |
+| Open-weight | Any frontier family above |
+
+Model line-ups change quickly. Treat this table as a starting point and record the exact model and version used in every review record.
+
+**Zero-context reader (Enterprise G5):** any capable model in a clean session with no system prompt or project files, reading the release package cold. It catches undocumented assumptions and jargon.
 
 ---
 
 ## How to Run a B-Team Review
 
-### Step 1: Prepare the Review Package
+### Step 1: Prepare the package
 
-Concatenate the relevant artifacts into a single document for the B-Team to review. The B-Team must also receive links to the codebase BEFORE and AFTER the change so holistic comparison can be performed, avoiding code duplication or errors caused by looking at code in isolation.
+| Reviewing | Template |
+|-----------|----------|
+| Gate artifacts (spec, design, release package) | `templates/B-TEAM-REVIEW-PACKAGE.md` (12-persona prompt) |
+| A code change at R2 | The paste-ready R2 prompt in `11-tiered-adversarial-review.md` (Cipher + Jett + Blaze) |
+| A code change at R3 | `templates/CODE-REVIEW-PROMPT-QWEN.md` with all six forensic personas, **plus** the `B-TEAM-REVIEW-PACKAGE.md` 12-persona prompt for the design, privacy, accessibility, ops, and product aspects. Together they cover all 12 B-Team personas. |
 
-### Step 2: Use the B-Team System Prompt
+`templates/CODE-REVIEW-PROMPT-CLAUDE.md` is the same forensic prompt formatted for Anthropic models. Use it only when the builder was **not** Claude-family, or as a second, different-family pass at R3.
 
-Copy the system prompt below into a DIFFERENT AI (ChatGPT o3, GPT-4o, Gemini, etc.):
+Include the diff **and** the surrounding code before and after the change, so the reviewer can judge it in context rather than in isolation.
 
-```
-You are a team of 12 adversarial reviewers conducting a gate review. You are the B-Team — skeptics, critics, and specialists who did NOT build this system. Your job is to find what the builders missed.
+### Step 2: Run it in the independent context
 
-Your personas:
-1. Vex (Chief Critic) — Finds gaps between claims and proof.
-2. Kade (Product Strategist) — Finds vanity features and timeline fiction.
-3. Noor (Requirements Assassin) — Finds ambiguous, untestable, or contradictory requirements.
-4. Rook (Architecture Adversary) — Finds coupling, scaling walls, and leaky abstractions.
-5. Cipher (Offensive Security) — Finds attack paths the threat model missed.
-6. Jett (Code Surgeon) — Finds the bug that ships.
-7. Blaze (QA Destroyer) — Finds tests that prove nothing.
-8. Wren (Privacy Hawk) — Finds data exposure and compliance gaps.
-9. Slate (Ops Realist) — Finds what fails at 3am.
-10. Ember (Accessibility Advocate) — Finds what audits miss.
-11. Volt (Performance Skeptic) — Finds unrealistic benchmarks.
-12. Ink (Devil's Advocate) — Asks the question nobody wants to answer.
+Paste the system prompt, then the package. Let it run. Record: reviewer model and version, date, provider, data class, and whether it was `same-family`.
 
-Rules:
-- Classify every finding as CRITICAL, MAJOR, MINOR, or OBSERVATION
-- CRITICAL = stop-ship, must resolve before proceeding
-- MAJOR = significant risk, must address or formally accept
-- MINOR = improvement opportunity, can defer with ticket
-- OBSERVATION = not a defect, worth noting
-- Be specific. Cite the section and requirement.
-- Don't reject work just because you'd do it differently.
-- Acknowledge what's genuinely strong.
+### Step 3: Bring findings back
 
-Output format:
-## CRITICAL Findings
-[numbered list with section reference, problem, required action]
-
-## MAJOR Findings
-[numbered list]
-
-## MINOR Findings
-[numbered list]
-
-## OBSERVATIONS
-[numbered list]
-
-## Summary Verdict
-[PASS / PASS WITH CONDITIONS / FAIL]
-[One paragraph overall assessment]
-```
-
-### Step 3: Submit the Spec/Code
-
-Paste the review package after the system prompt. Let the B-Team run.
-
-### Step 4: Bring Findings Back
-
-Copy the B-Team output back to the A-Team (this conversation). The A-Team must respond to every finding:
+The A-Team responds to **every** finding:
 
 | Response | Meaning |
 |----------|---------|
-| **Accept & Fix** | Finding is valid. Will fix before gate. |
-| **Accept & Defer** | Finding is valid but not gate-blocking. Tracked with ticket and deadline. |
-| **Reject** | Finding is incorrect. Must provide counter-evidence (not just disagreement). |
-
-### A-Team Response Protocol
-
-The A-Team response MUST follow this format for each finding:
+| **Accept & Fix** | Valid. Fixed before the gate or merge. |
+| **Accept & Defer** | Valid but not blocking. Ticket, owner, and deadline required. |
+| **Reject** | Incorrect. Counter-evidence required (file, line, test, or spec section). "I disagree" is not a rejection. |
 
 ```markdown
-| # | Finding | Response | Rationale |
-|---|---------|----------|-----------|
-| C-1 | [brief description] | Accept & Fix / Accept & Defer / Reject | [why] |
-| M-1 | [brief description] | Accept & Fix / Accept & Defer / Reject | [why] |
+| # | Finding | Response | Rationale / Evidence |
+|---|---------|----------|----------------------|
+| C-1 | [brief description] | Accept & Fix / Accept & Defer / Reject | [why, with references] |
 ```
 
-**Rules for rejection:**
-- "I disagree" is not a valid rejection. You must cite specific evidence (file path, line number, existing test, or spec section) that proves the finding is incorrect.
-- If the B-Team didn't have codebase access, cite the code that already handles their concern.
-- If the B-Team misunderstood the architecture, explain the actual design with references.
+**Deferrals:** every deferral has an owner and a deadline. Deferrals past deadline escalate to MAJOR at the next gate. The Human Steward can reject any deferral.
 
-**Rules for deferral:**
-- Every deferral MUST have a deadline and an owner.
-- Deferrals past their deadline escalate to MAJOR at the next gate.
-- The human (project steward) can reject deferrals and require immediate fixes.
+### Step 4: Resubmit if needed
 
-### Step 5: Resubmit if Needed
-
-If the verdict is FAIL or PASS WITH CONDITIONS (with CRITICALs), fix and resubmit. Repeat until PASS.
-
-**Re-review scope:** Only the fixed items need re-review, not the entire package. The B-Team should confirm fixes and check for regressions introduced by the fixes.
+If the verdict is FAIL, fix and resubmit. Re-review covers the fixed items plus a regression check of the fixes.
 
 ---
 
-## When to Invoke B-Team
-
-- Before any gate passes (G0–G6)
-- Before any major architecture decision is finalized
-- Before any release candidate is approved
-- When the team disagrees on risk level
-- When the feature touches security, privacy, or compliance
-- When Primum raises intent-integrity concerns that need independent challenge
-
----
-
-## Scoring
+## Verdicts
 
 | Verdict | Meaning | Action |
 |---------|---------|--------|
-| **PASS** | No CRITICALs, no unresolved MAJORs | Gate can proceed |
-| **PASS WITH CONDITIONS** | No CRITICALs, MAJORs have resolution plan | Gate can proceed if conditions met |
-| **FAIL** | CRITICALs present OR too many unresolved MAJORs | Must fix and resubmit |
+| **PASS** | No CRITICALs, no unresolved MAJORs | Can proceed to the human decision |
+| **PASS WITH CONDITIONS** | No CRITICALs; every MAJOR has an owner, plan, and deadline | Can proceed once the Human Steward accepts the conditions |
+| **FAIL** | Any CRITICAL, or MAJORs without a resolution plan | Fix and resubmit |
+
+A B-Team verdict is evidence for the gate, not the gate decision. The Human Steward decides.
 
 ---
 
 ## Tracking
 
-All B-Team findings are tracked in a `MINOR_FINDINGS_TRACKER.md` with:
-- Finding ID
+All B-Team findings, of every severity, go in `specifications/{ID}/FINDINGS_TRACKER.md`:
+
+- Finding ID and severity
 - Description
-- Owner
-- Phase deadline
-- Resolution status
+- Response (fix / defer / reject) and evidence
+- Owner and deadline
+- Status
 
 Items past their deadline escalate to MAJOR at the next gate.
 
 ---
 
-## Review Package Template
+## Domain-Specific Code Review
 
-Use `templates/B-TEAM-REVIEW-PACKAGE.md` for a ready-to-use template that combines the system prompt and artifact sections into one copy-pasteable document.
+Code review needs different context than spec review. The reviewer has to trace execution paths, know which invariants must hold, know the attack surfaces, and know what "wrong" means in this domain. The code-review templates include a **context block** for exactly that. Without it, a reviewer finds generic issues and misses the domain bugs that matter.
 
----
+Extend the template's context block for platform-specific risks:
 
-## Domain-Specific Review Prompts
-
-The generic B-Team prompt works well for requirements and architecture reviews. For **code reviews**, use a domain-specific prompt that focuses on platform-specific risks and gives the reviewer the threat model context it needs to find domain-specific bugs.
-
-### Why Code Review Needs a Different Prompt
-
-The generic B-Team prompt is designed for reviewing specs and architecture — it asks 12 personas to evaluate claims, requirements, and design decisions. Code review is different. The reviewer needs to:
-
-1. Trace execution paths, not evaluate arguments
-2. Know what invariants must hold (so it can check whether they do)
-3. Know the attack surfaces (so it knows where to look for injection, bypass, and data corruption)
-4. Know what "wrong" looks like in this domain (a wrong parking verdict means a user gets a ticket)
-
-Without a context block that provides this information, a code reviewer — human or AI — is reviewing in a vacuum. It will find generic issues but miss the domain-specific bugs that actually matter.
-
-### The Code Review Template
-
-`templates/CODE-REVIEW-PROMPT-QWEN.md` contains:
-- The full system prompt in Qwen3 ChatML format (also works for o3 and DeepSeek-R1)
-- Instructions for writing the context block
-- A worked example from a real production module
-- Model-specific notes for Qwen3, o3, and DeepSeek-R1
-- A pre-submission checklist
-
-**Use this template for any G4 code review.** The generic B-Team prompt is for G1/G2/G3.
-
-### When to Create a Custom Domain-Specific Prompt
-
-If your codebase has platform-specific risks not covered by the generic template, extend it:
-
-- **Mobile apps (iOS/Android):** App Store rejection risks, memory management, concurrency, accessibility
-- **Web apps:** XSS, CSRF, CSP compliance, performance budgets, SEO
-- **APIs:** Rate limiting, auth bypass, input validation, versioning
+- **Mobile:** platform store policies, memory, concurrency, accessibility
+- **Web:** XSS, CSRF, CSP, performance budgets
+- **APIs:** rate limiting, auth bypass, input validation, versioning
 - **Infrastructure:** IAM policies, network segmentation, secrets management
-- **ML/AI pipelines:** Model drift, hallucination, bias, data poisoning
-
-Start from `templates/CODE-REVIEW-PROMPT-QWEN.md` and add platform-specific concerns to the personas and context block instructions.
+- **ML/AI pipelines:** model drift, hallucination, bias, data poisoning, prompt injection

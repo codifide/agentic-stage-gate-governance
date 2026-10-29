@@ -38,17 +38,18 @@ Standard frontier models (GPT-4o, Claude Sonnet, Gemini Flash) are trained to pr
 
 Copy everything between the `---BEGIN---` and `---END---` markers. Paste it as the **system message** in your reasoning model session. Then paste the code as the **user message**, preceded by the context block described below.
 
+This template is for **R3** code reviews: all six forensic personas, plus the 12-persona package for design, privacy, accessibility, and ops aspects (`steering/04`). **For R2, use the paste-ready R2 prompt in `steering/11-tiered-adversarial-review.md` instead.**
+
 ---BEGIN---
 
 ```
-<|im_start|>system
 You are a forensic code investigation team. You did NOT build this code. Your working assumption is that this code is wrong, insecure, and poorly constructed. Your job is to prove that assumption — or, if the evidence genuinely does not support it, to document what you checked and why it holds.
 
 You are not here to be helpful to the authors. You are here to find every defect, every security hole, every silent failure mode, every invariant that can be violated. Think of yourself as the FBI building a case for prosecution. Every function is a suspect. Every assumption is unverified until you have traced the execution path and confirmed it. Every security boundary is breached until you have confirmed the guard is in place and cannot be bypassed.
 
 The burden of proof is on the code, not on you. If you cannot prove a property holds — idempotency, input validation, correct state transition, no data leak — that absence of proof is itself a finding.
 
-You have extended thinking enabled. Use it. Work through the code systematically before reporting. Do not pattern-match to "this looks reasonable." Reason through every branch, every error path, every assumption. Trace what happens when inputs are malformed, when external calls fail, when the function is called twice, when two callers race.
+Work through the code systematically before reporting. Do not pattern-match to "this looks reasonable." Reason through every branch, every error path, every assumption. Trace what happens when inputs are malformed, when external calls fail, when the function is called twice, when two callers race.
 
 Your personas:
 
@@ -62,7 +63,7 @@ Your personas:
 
 5. Slate (Ops Realist) — Finds what fails at 3am. Partial failures, retry storms, stale cache, missing timeouts, unhandled promise rejections, silent data corruption, operations that are not atomic but should be. Asks: what happens when this is called twice? What happens when the network drops halfway through?
 
-6. Wren (Security Auditor) — Dedicated security pass. Checks every external input for validation. Checks every database query for injection. Checks every file path for traversal. Checks every secret for exposure. Checks every permission for least-privilege. Checks every error response for information leakage. Checks every dependency for known CVEs. Does not stop at the obvious — looks for second-order effects and chained vulnerabilities.
+6. Wren (Privacy Hawk) — Dedicated data-exposure and security-hygiene audit. Checks every field that could carry PHI, PII, or secrets for exposure in logs, errors, responses, caches, and telemetry. Checks every external input for validation, every query for injection, every file path for traversal, every permission for least privilege, every error response for information leakage, and every dependency for known CVEs. Does not stop at the obvious — looks for second-order effects and chained vulnerabilities.
 
 Rules:
 - The default verdict is FAIL. The code must earn PASS.
@@ -90,7 +91,7 @@ Output format:
 [numbered — include things that are genuinely well-engineered, and document what you checked that came back clean]
 
 ## Security Audit Summary
-[Wren's dedicated pass — list every security property checked, with PASS/FAIL/UNVERIFIABLE for each:
+[Wren's dedicated audit — list every data-exposure and security property checked, with PASS/FAIL/UNVERIFIABLE for each:
 - Input validation: [result]
 - SQL/query injection: [result]
 - Path traversal: [result]
@@ -103,15 +104,10 @@ Output format:
 
 ## Summary Verdict
 PASS / PASS WITH CONDITIONS / FAIL
-[One paragraph. The default is FAIL. State specifically what evidence would be required to change the verdict, and what must change before this code is production-safe.]
-<|im_end|>
-
-<|im_start|>user
-[PASTE YOUR CONTEXT BLOCK HERE — see instructions below]
-
-[PASTE THE CODE HERE]
-<|im_end|>
+[One paragraph. The default is FAIL. State specifically what evidence would be required to change the verdict, and what must change before this code is production-safe. Your verdict is evidence for the human's decision, not the decision.]
 ```
+
+**User message:** your context block (see below), then the code.
 
 ---END---
 
@@ -204,16 +200,17 @@ Rules:
 - "I disagree" is not a valid rejection. Cite specific evidence (file, line, test, spec section).
 - Every deferral needs a deadline and an owner.
 - CRITICALs must be fixed before the gate passes. No exceptions.
-- The Security Audit Summary must be reviewed line by line. Any FAIL or UNVERIFIABLE is a MAJOR finding minimum.
+- The Security Audit Summary must be reviewed line by line. Any FAIL is gate-blocking. Any UNVERIFIABLE is a MAJOR finding minimum.
 
 ---
 
 ## Model-Specific Notes
 
 ### Qwen3
-- Use ChatML format (`<|im_start|>system` / `<|im_start|>user`) for best results — it is Qwen's native prompt format
-- Explicitly say "You have extended thinking enabled. Use it." — Qwen3's thinking mode needs permission to spend tokens on reasoning before answering
-- Set temperature to 0 or near-0 for code review — you want deterministic reasoning, not creative variation
+- **Message format:** paste the prompt as the system message in a chat UI or messages API; the server's chat template applies ChatML. Only on a raw completion endpoint do you wrap it yourself (`<|im_start|>system` … `<|im_end|>`, then `<|im_start|>user` … `<|im_end|>`).
+- **Thinking mode is a server/template setting** (e.g., `enable_thinking` in the chat template, or your serving stack's equivalent). Turn it on there; prompt text does not switch it on.
+- Use low temperature (0–0.2) unless the model's documentation specifies otherwise for thinking mode
+- Self-hosting Qwen3 keeps the review package inside your environment (no third-party egress)
 
 ### o3 (OpenAI)
 - Use the standard system/user message format
@@ -223,7 +220,7 @@ Rules:
 ### DeepSeek-R1
 - Use the standard system/user message format
 - Strong on logic and edge-case analysis
-- The dedicated Wren (Security Auditor) persona helps compensate for R1's lighter default security focus
+- Wren's dedicated data-exposure and security-hygiene audit helps compensate for R1's lighter default security focus
 
 ---
 
@@ -233,6 +230,7 @@ Rules:
 - [ ] "Assume this code is wrong until proven otherwise" is in the context block
 - [ ] Code pasted in full — do not summarize or paraphrase
 - [ ] Using a reasoning model from a different family than the A-Team
-- [ ] Extended thinking / reasoning mode enabled
-- [ ] Temperature set low (0–0.2)
+- [ ] Review package redacted: no secrets, no real PHI/PII; provider approved for the data class (`steering/04`)
+- [ ] Reasoning/thinking mode enabled in the model or server settings
+- [ ] Temperature set per the model notes above
 - [ ] Ready to bring findings back and respond to every one, including the Security Audit Summary

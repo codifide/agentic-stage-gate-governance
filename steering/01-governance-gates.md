@@ -1,44 +1,52 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-governance-gates
+description: Full criteria for SGL gates G0, G1, G2/G3, G4, G5, G6, the G-LOOP, scale-adaptive tracks (Express/Standard/Enterprise), and governance principles. Load when running, preparing, or assessing any gate, or when selecting a track.
+# For non-Kiro tools, load this file on demand when gate work begins.
 ---
 
 # Governance Gates
 
-Every initiative passes through seven gates. No gate passes on confidence — only on evidence. Between gates, automated loops run continuously to verify consistency, run tests, and catch drift. Non-trivial initiatives also carry an **Intent Contract** so autonomous work can be checked continuously against the human-authorized goal, scope, constraints, harm boundaries, and escalation rules.
+Every initiative passes through **six gates**: G0, G1, G2/G3 (one combined design-and-architecture gate), G4, G5, G6. No gate passes on confidence, only on evidence. Between gates, automated loops (G-LOOP) verify consistency, run tests, and catch drift.
+
+**Authority:** the Human Steward decides every gate (see `00-welcome.md` §1). AI personas produce evidence and recommendations. Aegis may block a gate for missing evidence; it may never pass one.
+
+**Review requirements** for each gate and track are defined once, in `00-welcome.md` §3. This file does not restate them.
+
+**Intent Contract:** required at G0 for Standard and Enterprise (`templates/INTENT-CONTRACT.md`). Express uses an inline Intent block in the combined G0/G1 note.
 
 ## The Gates
 
-| Gate | Question | Who Decides |
-|------|----------|-------------|
-| **G0** | Is this worth exploring? | Product Owner + Director |
-| **G1** | Are the requirements and evidence strong enough? | Director + B-Team |
-| **G2/G3** | Is the design/architecture ready? | Architect + Security + Director |
-| **G4** | Build and verify. | Test Architect + Security + Director |
-| **G5** | Release readiness. | Full team |
-| **G6** | Post-release review. | Director + SRE + Journalist |
+| Gate | Question | Evidence owners (AI personas) | Decision |
+|------|----------|-------------------------------|----------|
+| **G0** | Is this worth exploring? | Harper, Mary, Primum | Human Steward |
+| **G1** | Are the requirements and evidence strong enough? | Harper, Mary, Forge, Ruth | Human Steward |
+| **G2/G3** | Is the design/architecture ready? | Winston, Sentinel, Tessa | Human Steward (+ Architecture/Security Lead on Enterprise) |
+| **G4** | Build and verify. | Amelia, Tessa, Sentinel, Primum | Human Steward |
+| **G5** | Release readiness. | Sable, Sentinel, Ruth, Forge | Human Steward |
+| **G6** | Post-release review. | Sable, Harper, Quill | Human Steward |
 
 ---
 
 ## G-LOOP — Automated Verification Between Gates
 
-**Purpose:** Between gates, automated loops run continuously. They don't require human approval but DO log their results.
+Between gates, automated loops run continuously. They don't require human approval but DO log their results.
 
 **G-LOOP handles:**
 - Running test suites after every change
-- Verifying data consistency (row counts, checksums, materialized view freshness)
+- Verifying data consistency (row counts, checksums, view freshness)
 - Build verification (compile, lint, type-check)
-- Regression detection (performance benchmarks, API contract compliance)
-- Drift monitoring (schema changes, dependency updates, config divergence)
+- Regression detection (benchmarks, API contract compliance)
+- Drift monitoring (schema, dependency, config divergence)
 - Intent-integrity checks (scope drift, protected-constraint regression, verifier manipulation)
+- Computing the Review Level floor for each change (`11`)
 
 **G-LOOP does NOT handle:**
-- Design decisions
-- Architecture changes
+- Design decisions or architecture changes
 - Compliance interpretation
 - Anything requiring "it depends" reasoning
-- Redefining human intent, waiving harm boundaries, or accepting consequential residual risk
+- Redefining intent, waiving harm boundaries, or accepting residual risk
+- Passing a gate
 
 **Rule:** If a verifier can judge it, it belongs in G-LOOP. If it needs human judgment, it goes through a gate.
 
@@ -46,166 +54,154 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 ## G0 — Is This Worth Exploring?
 
-**Purpose:** Confirm the work is real, bounded, and worth doing.
-
 **Must include:**
 - Business problem statement
 - Target users and workflow
-- Risk classification (does it touch sensitive data, identity, release logic?)
+- Risk classification (sensitive data, identity, release logic?)
 - Stakeholders identified
-- Scope boundaries (what's in, what's out)
-- Intent Contract: goal, protected constraints, non-goals, harm boundaries, escalation conditions
+- Scope boundaries (in / out)
+- Proposed track with rationale
+- Primum intent check (fresh context, `00` §5) against the draft Intent Contract
+- Intent Contract (Standard/Enterprise) or inline Intent block (Express), naming the Human Steward
 
-**Passes when:** The problem is worth solving and the scope is honest.
+**Passes when:** The Human Steward agrees the problem is worth solving, the scope is honest, and the track is right.
 
-**Template:** Create `specifications/{ID}/G0_PROBLEM_STATEMENT.md`
+**Template:** `specifications/{ID}/G0_PROBLEM_STATEMENT.md`
 
 ### Loop-Eligible Tasks at G0
 - Stakeholder identification from org charts and prior specs
 - Risk classification lookup against known patterns
 - Duplicate detection (has this been proposed before?)
-- Scope comparison against similar past initiatives
 
 ---
 
 ## G1 — Are the Requirements and Evidence Strong Enough?
 
-**Purpose:** Ensure we're building from evidence, not assumptions.
-
 **Must include:**
 - Evidence-backed requirements with acceptance criteria
 - Glossary and business rules
-- NFRs (Non-Functional Requirements) with measurable targets
-- KPIs (Key Performance Indicators) with baselines
+- NFRs with measurable targets, KPIs with baselines, and Benchmarks (`05`)
 - API contracts or integration specifications
 - Backend traceability (if integrating with existing systems)
 - Open assumptions documented
-- B-Team adversarial review completed
+- Gate review completed at the level required by `00` §3, findings dispositioned
 - Intent Contract traced into acceptance criteria and NFRs
+- Primum intent check (fresh context) passed
 
 **Passes when:** Requirements are testable, traceable, and survived adversarial review.
 
-**Template:** Create `specifications/{ID}/G1_REQUIREMENTS.md`
+**Template:** `specifications/{ID}/G1_REQUIREMENTS.md`
 
 ### Loop-Eligible Tasks at G1
-- Requirements completeness check (all acceptance criteria have testable conditions)
-- Glossary consistency verification (terms used consistently across docs)
-- NFR target validation (targets are measurable, not subjective)
+- Acceptance-criteria completeness check
+- Glossary consistency verification
+- NFR target validation (measurable, not subjective)
 - API contract schema validation
-- Traceability matrix generation (requirement → test mapping)
+- Traceability matrix generation (requirement → test)
 
 ---
 
 ## G2/G3 — Is the Design/Architecture Ready?
 
-**Purpose:** Prevent unsafe or unworkable design from reaching implementation.
+G2/G3 is **one gate**. The label is historical (design and architecture used to be separate gates); there is no standalone G2 or G3.
 
 **Must include:**
 - Architecture overview with module boundaries
-- ADRs for significant decisions (with alternatives considered)
-- Threat model (identify attack surfaces, mitigations, residual risk)
+- ADRs for significant decisions (with alternatives considered), including any new cloud service or account (requires Human Steward approval)
+- Threat model (attack surfaces, mitigations, residual risk)
 - Data flow and trust boundaries
 - Test strategy
 - Decomposed tickets with acceptance criteria
-- 3 Amigos approval on each execution ticket (Product + Dev + Test)
-- B-Team review of architecture and threat model
-- Authority boundaries and irreversible-action controls defined for agents/loops
+- 3 Amigos approval on each execution ticket (the product, development, and test owners for the ticket; humans where the organization has them, otherwise the Human Steward)
+- Gate review at the level required by `00` §3
+- Authority boundaries and irreversible-action controls for agents/loops, including `.sgl/immutable-paths`
 
-**Passes when:** The design is implementable, secure, testable, and the team knows what to build.
+**Passes when:** The design is implementable, secure, and testable, and the team knows what to build.
 
-**Template:** Create `specifications/{ID}/G2_ARCHITECTURE.md` + `ADR-*.md` + `THREAT-MODEL.md`
+**Template:** `specifications/{ID}/G2_ARCHITECTURE.md` + `ADR-*.md` + `THREAT-MODEL.md`
 
 ### Loop-Eligible Tasks at G2/G3
-- Dependency vulnerability scanning (known CVEs in proposed stack)
-- Interface contract validation (do all modules agree on data shapes?)
-- Architecture drift detection (does implementation match ADR decisions?)
-- Threat model pattern matching (common attack surfaces for this architecture type)
-- Ticket decomposition verification (every ticket has acceptance criteria)
+- Dependency vulnerability scanning on the proposed stack
+- Interface contract validation across modules
+- Architecture drift detection against ADRs
+- Ticket decomposition verification
 
 ---
 
 ## G4 — Build and Verify
 
-**Purpose:** Prove the implementation is correct before discussing release.
-
 **Must include:**
 - Code complete against ticket acceptance criteria
-- **100% test coverage on all new code** (no exceptions without Director-approved exception ticket)
-- Legacy/ported code: risk-based coverage (95% critical paths, 80% services)
+- Coverage meets the targets in `03-coding-standards.md` (the single coverage table). Exceptions are approved by the Human Steward.
 - Security review passed (no open CRITICALs)
 - Accessibility audit passed
+- Every change reviewed at its Review Level (`11`), with findings dispositioned
 - Traceability updated (requirement → test → verification)
-- Primum intent-integrity review passed with no unresolved HALT condition
-- Any verifier/baseline changes independently justified and reviewed
+- Primum intent-integrity check passed with no unresolved HALT
+- Any verifier, baseline, threshold, or immutable-path change approved by the Human Steward as its own change
 
 **Passes when:** The code works, is proven to work, and the proof is documented.
 
-**Template:** Create `specifications/{ID}/G4_VERIFICATION.md`
+**Template:** `specifications/{ID}/G4_VERIFICATION.md`
 
 ### Loop-Eligible Tasks at G4
-- Continuous test execution (run full suite on every commit)
-- Coverage enforcement (reject commits that drop below threshold)
-- Security scan automation (SAST, dependency audit, secret detection)
-- Accessibility linting (automated a11y checks on UI components)
-- Build verification (compile, lint, type-check on every change)
-- Performance regression detection (benchmark comparison against baseline)
-- Data consistency verification (ETL output matches expected state)
+- Continuous test execution on every commit
+- Coverage enforcement
+- Security scan automation (SAST, SCA, secret detection)
+- Accessibility linting
+- Build verification
+- Performance regression detection against an approved baseline
+- Immutable-path check on every PR (`templates/enforcement/check-immutable-paths.sh`)
 
 ---
 
 ## G5 — Release Readiness
 
-**Purpose:** Prove the system can be deployed and operated safely.
-
 **Must include:**
 - Release notes
 - Rollback plan (tested, not theoretical)
 - Monitoring and alerting configured
-- Security penetration test completed (or risk accepted with rationale)
-- Compliance review completed (if applicable)
+- Penetration test completed, **or** residual risk accepted in writing by the Human Steward with rationale
+- Compliance review completed (if applicable), signed by the Compliance Officer role
 - NFR targets met (with evidence)
 - KPI baseline collected (or measurement plan documented)
-- Full B-Team final review
+- Current AI-BOM (`10`) if AI components are used
+- Gate review at the level required by `00` §3, verdict PASS, or PASS WITH CONDITIONS where every condition has an owner and a deadline and the Human Steward has accepted the conditions in writing (`04`)
 - Intent Contract revalidated against release behavior and protected constraints
 
-**Passes when:** The system is safe to put in front of users.
+**Passes when:** The Human Steward is satisfied the system is safe to put in front of users.
 
-**Template:** Create `specifications/{ID}/G5_RELEASE_READINESS.md`
+**Template:** `specifications/{ID}/G5_RELEASE_READINESS.md`
 
 ### Loop-Eligible Tasks at G5
-- Rollback plan verification (automated dry-run of rollback procedure)
-- Monitoring configuration validation (all endpoints have health checks)
-- Alert threshold testing (verify alerts fire at configured thresholds)
-- NFR evidence collection (automated benchmark runs with reports)
-- Release artifact integrity (checksums, signatures, reproducible builds)
+- Rollback dry-run
+- Monitoring configuration validation
+- Alert threshold testing
+- NFR evidence collection
+- Release artifact integrity (checksums, signatures)
 
 ---
 
 ## G6 — Post-Release Review
 
-**Purpose:** Close the loop. Learn from reality.
-
 **Must include:**
 - Production observations (7-day minimum)
 - KPI actuals vs. targets
 - Incident review (if any)
-- Reliability metrics (crash-free rate, error rate, uptime)
+- Reliability metrics
 - User feedback summary
 - Follow-up actions identified
-- Quill lifecycle narrative completed (intent, decisions, dissent, failures, discoveries, evidence, outcomes)
-- Documentary capture (what worked, what didn't, what we'd change)
+- Quill lifecycle narrative completed (`specifications/{ID}/QUILL_LOG.md`)
 
 **Passes when:** We've learned from the release and captured it for the next one.
 
-**Template:** Create `specifications/{ID}/G6_RETROSPECTIVE.md`
+**Template:** `specifications/{ID}/G6_RETROSPECTIVE.md`
 
 ### Loop-Eligible Tasks at G6
-- KPI collection and dashboard updates (automated metric pulls)
-- Error rate monitoring and trend detection
-- Performance degradation alerts
-- User feedback aggregation (sentiment analysis on support tickets)
+- KPI collection and dashboard updates
+- Error-rate monitoring and trend detection
 - SLA compliance reporting
-- Loop health monitoring (are production loops still passing their verifiers?)
+- Loop health monitoring
 
 ---
 
@@ -213,47 +209,38 @@ Every initiative passes through seven gates. No gate passes on confidence — on
 
 1. **User safety outranks throughput.** We don't ship faster by skipping gates.
 2. **Evidence, not confidence.** "We think it's fine" is not a gate pass.
-3. **B-Team reviews every gate.** Independent context and model diversity reduce correlated reasoning failures and confirmation bias; they do not eliminate them.
-4. **No single persona self-approves.** Separation of duties is non-negotiable.
-5. **NFRs, KPIs, and Benchmarks are mandatory.** If you can't measure it, you can't ship it.
-6. **Accessibility is every-phase, not a late fix.** Every ticket includes accessibility acceptance criteria.
-7. **Automate repeatable assurance.** If AI writes at machine speed, CI/CD, tests, security tooling, and independent verifiers must scale with it. Coverage is evidence, not proof of correctness.
+3. **Independent adversarial review, sized to risk.** Review levels per `00` §3. Never self-conducted.
+4. **No single persona self-approves, and no AI approves.** AI recommends; humans decide.
+5. **NFRs, KPIs, and Benchmarks are mandatory** for Standard and Enterprise; Express states NFR impact (or "no NFR change") in its G0/G1 note.
+6. **Security and accessibility are every-phase.** Not a late fix.
+7. **Automate repeatable assurance.** Coverage is evidence, not proof of correctness.
 8. **Kill early, kill cheap.** The answer to a bad idea is G0 rejection, not G5 failure.
-9. **Loop the mechanical, gate the judgment.** Verifiable tasks run autonomously. Judgment tasks require human decision.
-10. **Intent is a control surface.** Agents may optimize execution, not silently redefine the goal.
-11. **Do no harm.** When execution conflicts with authorized intent, protected constraints, or harm boundaries, autonomy yields to HALT + escalation.
+9. **Loop the mechanical, gate the judgment.**
+10. **Intent is a control surface.** Agents may optimize execution, not redefine the goal.
+11. **Do no harm.** When execution conflicts with intent or harm boundaries, autonomy yields to HALT.
 
 ---
 
 ## Scale-Adaptive Tracks
 
-Not every change needs the full seven-gate process. At G0, the Director selects a **track** that sizes process *depth* to the work. The critical rule: tracks change how much ceremony applies, **never whether evidence is required**. Every track still produces evidence and still runs G-LOOP. Right-size the depth; never drop the structure.
+At G0 the Human Steward selects a **track** that sizes process depth to the work. Tracks change how much ceremony applies, **never whether evidence is required**.
 
-| Track | When | Gate Path | Evidence still required |
+| Track | When | Gate path | Evidence still required |
 |-------|------|-----------|-------------------------|
-| **Express** | Bug fix or small change: < 1 week effort, read-only or additive, no new security surface, no compliance impact | Combined G0/G1 → G4 → ship. Skip standalone G2/G3 if architecture is already established. | Tests, review, G-LOOP verification |
-| **Standard** | A normal feature: new behavior, moderate surface area, established architecture | Full G0–G6 | Full gate evidence per gate |
-| **Enterprise** | Regulated, consequential, or high-blast-radius: touches sensitive data, identity, release logic, or irreversible actions | Full G0–G6 **plus** mandatory Intent Contract, domain-expert persona sign-off, and full adversarial (B-Team) review | Full gate evidence + Intent Contract + domain + adversarial |
+| **Express** | < 1 week, read-only or additive, no new security surface, no sensitive data/identity/release logic, no compliance impact, architecture already established | Combined G0/G1 note → G4 → human ship decision | Inline Intent block; NFR impact statement; change reviews at their Review Level; G-LOOP; rollback note (how to revert and how to tell it worked) |
+| **Standard** | Normal feature on established architecture | G0 → G1 → G2/G3 → G4 → G5 → G6 | Full gate evidence; Intent Contract |
+| **Enterprise** | Sensitive data, identity, release logic, regulated, irreversible, or high blast radius | G0 → G1 → G2/G3 → G4 → G5 → G6 | Full gate evidence; Intent Contract; domain-expert sign-off (human SME); review levels per `00` §3 |
 
 **Selecting a track:**
-- The track is chosen at G0 and recorded in the problem statement.
-- When in doubt, go up a track, not down. The cost of over-governing a small change is minutes; the cost of under-governing a consequential one is a production incident.
-- The Director must explicitly approve Express. Anything touching sensitive data, identity, or release logic cannot use Express — it is Enterprise by default.
-- A change can be **promoted mid-flight.** If Express work turns out to touch a security surface, it stops and re-enters as Standard or Enterprise. Discovering that is the gate working, not failing.
+- Recorded in the G0 note with rationale; chosen by the Human Steward.
+- When in doubt, go up a track.
+- Anything touching sensitive data, identity, or release logic is Enterprise.
+- Work can be **promoted mid-flight**. If Express work turns out to touch a security surface, it stops and re-enters as Standard or Enterprise.
 
-**What never changes across tracks:**
-- G-LOOP runs on every track (automated verification is not optional).
-- Evidence over confidence — every track passes on artifacts, not assertions.
-- The go/kill/hold decision stays human.
+**What never changes across tracks:** G-LOOP runs; evidence over confidence; the Human Steward makes the go/kill/hold decision.
 
 ---
 
 ## For Existing Projects
 
-When applying this governance to an existing codebase:
-
-1. **Assess current state** — Which gate criteria does the project already meet?
-2. **Identify gaps** — What evidence is missing?
-3. **Create a gap-closure plan** — Prioritize: security gaps first, then coverage, then documentation
-4. **Don't retroactively gate everything** — Apply gates to NEW work going forward; address existing gaps as a separate workstream
-5. **Establish G-LOOP immediately** — Even before retroactive gating, set up automated verification loops for the current codebase (tests, builds, security scans)
+See `06-existing-project-assessment.md`. In short: assess each gate, close security gaps first (a missing threat model for a system handling user data is always P0), apply gates to new work going forward, and establish G-LOOP immediately.

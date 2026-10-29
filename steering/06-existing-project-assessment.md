@@ -1,7 +1,8 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-existing-project-assessment
+description: How to assess an existing codebase against the SGL gates - evidence rules, what to look for per gate, common project patterns, and remediation ordering. Load when asked to assess a codebase, run a gap analysis, or determine what gate a project is at.
+# For non-Kiro tools, load this file on demand for assessments.
 ---
 
 # Assessing Existing Projects
@@ -22,10 +23,10 @@ When applying governance to a project that already has working code, don't start
 
 ## Assessment Rules
 
-- **Only count what exists in the repository.** "We discussed it" is not evidence. "It's in the code" needs a document that says so.
+- **Only count what exists in the repository.** "We discussed it" is not evidence. Code, tests, CI config, and docs are evidence. When you cite code as evidence, point to it (file and line) in the assessment; a claim like "the code handles it" with no pointer doesn't count.
+- **The code IS evidence.** A working CI pipeline is G4 evidence. A comprehensive test suite is G4 evidence. Don't dismiss what exists just because it wasn't produced through the gate process.
 - **Don't retroactively gate everything.** Apply gates to NEW work going forward. Address existing gaps as a separate workstream.
-- **Security gaps first.** If the project handles user data, a threat model is P0 regardless of what else is missing.
-- **The code IS evidence.** A working CI pipeline is G4 evidence. A comprehensive test suite is G4 evidence. Don't dismiss what's already there just because it wasn't produced through the gate process.
+- **Security gaps first, always.** If the project handles user data, a missing threat model is P0 in every pattern below. The patterns set the order of everything *after* the security P0s.
 
 ---
 
@@ -78,7 +79,7 @@ Look in: dashboards, incident reports, retrospectives
 ### "Code-complete but governance-empty"
 The project works, has tests, has CI — but no formal gate documents. This is the most common pattern for AI-built projects. The code IS the evidence; the gap is documentation and formal review.
 
-**Strategy:** Close G0 and G1 first (low effort — the content exists, just needs formatting). Then focus on G4 evidence (coverage report, security review). G2/G3 can often be backfilled from the code structure.
+**Strategy (after security P0s):** Close G0 and G1 (low effort; the content exists and needs formatting). Then G4 evidence (coverage report, security review). G2/G3 can often be backfilled from the code structure.
 
 ### "Documentation-heavy but untested"
 Lots of specs and design docs, but test coverage is low and no security review exists.
@@ -88,7 +89,7 @@ Lots of specs and design docs, but test coverage is low and no security review e
 ### "Shipped but ungoverned"
 Already in production with users, but no formal governance was applied.
 
-**Strategy:** Start with G6 (you have production data — use it). Then work backwards: G5 (is monitoring in place?), G4 (is it tested?), G2/G3 (is the architecture documented?).
+**Strategy (after security P0s):** Start with G6 (you have production data; use it). Then work backwards: G5 (is monitoring in place?), G4 (is it tested?), G2/G3 (is the architecture documented?).
 
 ---
 
@@ -104,6 +105,6 @@ Say any of these to your AI assistant:
 - "Assess this codebase against the gates"
 - "Where does this project stand?"
 - "Run a gap analysis"
-- "What gate are we at?"
+- "What gate are we at?" (also listed in the core Quick Start)
 
 The AI will evaluate the project against each gate and produce a status matrix with remediation recommendations.

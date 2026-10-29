@@ -152,7 +152,7 @@ No loop runs forever. Set a limit. 10 iterations for research. 3 retries for a b
 
 ### 5. Promote Successful Patterns to Templates
 
-When a loop solves a problem, extract the pattern. Next time that problem type appears, it's a template (Tier 2) not an exploration (Tier 3). Over time, more work moves from expensive iteration to cheap execution. This is how you control cost at scale.
+When a loop solves a problem, extract the pattern. Next time that problem type appears, it's a template (Cost Class C2) not an exploration (C3). Over time, more work moves from expensive iteration to cheap execution. This is how you control cost at scale.
 
 ---
 
@@ -168,7 +168,7 @@ Based on this analysis, our immediate loop engineering additions:
 | Frontend build on save | Automated | Vite build passes |
 | Measure Evidence pre-compute | Scheduled | Evidence counts > 0 for orgs with data |
 
-These are all Tier 1 loops — cheap verifiers, high value, zero token cost once built.
+These are all Cost Class C1 loops: cheap verifiers, high value, low token cost once built.
 
 ---
 
@@ -183,7 +183,7 @@ For regulated work (healthcare, finance, compliance), the verifier MUST run in a
 Every loop needs metrics: iterations per attempt, token cost per success, wall-clock time, failure mode distribution. Without observability, you can't distinguish "running well" from "spinning." Add circuit breakers: escalating backoff, anomaly detection, graceful degradation (partial results > no results).
 
 ### Tests Gate Loops (Tessa)
-**No loop runs without at least Tier 1 tests as its verifier.** This is non-negotiable. An autonomous loop without an honest test suite is just an agent running unsupervised with no accountability.
+**No loop runs without an automated test suite as its verifier.** This is non-negotiable. An autonomous loop without an honest test suite is just an agent running unsupervised with no accountability.
 
 ### Token Economics (Forge)
 **Loop ROI formula:** `(human hours saved × hourly rate) / (tokens consumed × $/token + verifier compute cost)`
@@ -208,7 +208,7 @@ Loop state files must follow the same data classification as the data they refer
 - Loop metrics dashboards (iterations, cost, success rate, failure modes)
 - State file lifecycle (creation, persistence, garbage collection)
 - Circuit breaker and escalation logic
-- Promotion pipeline: Tier 3 → Tier 2 → Tier 1
+- Promotion pipeline: Cost Class C3 → C2 → C1
 
 **Gate responsibility:** G4 (verifiers are honest before deployment), G6 (loop health post-deployment)
 

@@ -67,9 +67,9 @@ Cooper's insight: **don't let bad projects consume resources.** Kill early, kill
 
 ### The Key Differences
 
-**1. Adversarial B-Team + Zero-Context Reviewer at every gate**
+**1. Adversarial B-Team + Zero-Context Reviewer, sized to risk**
 
-We don't let the builder review their own work. A separate B-Team AI (different model, different prompt, hostile persona) attacks the spec at every gate. But teams immersed in months of development share the same blind spots. So we add a Zero-Context Reviewer — an agent that knows nothing about the development, the system architecture, or the business assumptions. It reads the final spec and code as a regulator or auditor would, asking "why does this work this way?" Not to be hostile, but because nobody told it. It surfaces undocumented assumptions, catches things newcomers would find confusing, flags terminology gaps that would stop an auditor cold. In healthcare, this agent mimics the perspective of a compliance officer reading your system for the first time.
+We don't let the builder review their own work. A separate B-Team AI (different model family, independent context, hostile personas) attacks the work, with depth sized to risk: full review at the consequential gates, focused or verifier-only review on low-risk changes. The builder never role-plays its own critics. But teams immersed in months of development share the same blind spots. So we add a Zero-Context Reviewer — an agent that knows nothing about the development, the system architecture, or the business assumptions. It reads the final spec and code as a regulator or auditor would, asking "why does this work this way?" Not to be hostile, but because nobody told it. It surfaces undocumented assumptions, catches things newcomers would find confusing, flags terminology gaps that would stop an auditor cold. In healthcare, this agent mimics the perspective of a compliance officer reading your system for the first time.
 
 **2. Evidence is code, not slides**
 
@@ -108,14 +108,16 @@ Three days from "should we build this?" to a verified, secure, accessible workin
 
 ## The Gate Evidence Table
 
-| Gate | Question | Evidence Required | Reviewers |
-|------|----------|-------------------|-----------|
-| **G0** | Worth doing? | Problem statement, users, risk classification, scope | Product + Director |
-| **G1** | Requirements solid? | Testable requirements, API contracts, NFRs, B-Team review, Zero-Context review | Director + B-Team + Zero-Context |
-| **G2/G3** | Design safe? | ADRs, threat model, test strategy, 3 Amigos on tickets, Zero-Context assumptions audit | Architect + Security + Zero-Context |
-| **G4** | Code works? | 100% coverage, security review, accessibility audit, integration tests, Zero-Context clarity check | Test + Security + Director + Zero-Context |
-| **G5** | Safe to ship? | Pen test, rollback plan, monitoring, NFR evidence, full team sign-off, Zero-Context auditor perspective | Everyone |
-| **G6** | What did we learn? | Production metrics, incidents, KPI actuals vs. targets | Director + SRE + Journalist |
+| Gate | Question | Evidence Required | Evidence reviewers | Decision |
+|------|----------|-------------------|--------------------|----------|
+| **G0** | Worth doing? | Problem statement, users, risk classification, scope, Intent Contract | Product + Primum (+ B-Team by track) | Human Steward |
+| **G1** | Requirements solid? | Testable requirements, API contracts, NFRs, B-Team review | Product + B-Team | Human Steward |
+| **G2/G3** | Design safe? | ADRs, threat model, test strategy, 3 Amigos on tickets | Architect + Security + B-Team | Human Steward |
+| **G4** | Code works? | Coverage, security review, accessibility audit, integration tests, per-change reviews | Test + Security + Primum | Human Steward |
+| **G5** | Safe to ship? | Pen test or accepted risk, rollback plan, monitoring, NFR evidence; Zero-Context read on high-risk work | Full team + B-Team | Human Steward |
+| **G6** | What did we learn? | Production metrics, incidents, KPI actuals vs. targets | SRE + Product + Journalist | Human Steward |
+
+The operative, current rules (review levels by track, the authority rule, enforcement) live in the harness core, `steering/00-welcome.md`. This paper explains the reasoning.
 
 ---
 
@@ -203,10 +205,10 @@ In healthcare, this is the regulatory auditor asking "why is this the way it is?
 │   2. Evidence, not confidence.                              │
 │      "We think it's fine" is not a gate pass.              │
 │                                                             │
-│   3. The B-Team reviews every gate.                        │
-│      Different AI. Different blind spots.                   │
+│   3. Independent B-Team review, sized to risk.             │
+│      Different AI. Different blind spots. Never self-run.   │
 │                                                             │
-│   4. Zero-Context reviews every gate.                      │
+│   4. Zero-Context review on high-risk releases.            │
 │      Naive eye catches invisible assumptions.               │
 │                                                             │
 │   5. AI builds. Humans decide.                             │
@@ -349,4 +351,4 @@ Between every gate, G-LOOP runs: automated verification that catches drift, main
 ---
 
 **Author:** Douglas Jones | Codifide
-**Date:** May 2026 (v1.0), July 2026 (v2.0 — Loop Evolution)
+**Date:** May 2026 (v1.0), July 2026 (v2.0 — Loop Evolution), October 2026 (v3.0 harness — authority, review levels, enforcement)

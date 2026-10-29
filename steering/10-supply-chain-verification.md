@@ -1,7 +1,8 @@
 ---
 inclusion: auto
-# Note: The `inclusion: auto` front matter is used by Kiro to auto-load this file.
-# For other IDEs, place this file in the appropriate context directory for your tool.
+name: sgl-supply-chain-verification
+description: SGL supply chain verification loop for every dependency, lockfile, base image, or AI SDK change - provenance, vulnerability, behavioral, license, and AI-specific checks, the AI-BOM, CI credential isolation, the dependency review gate, and compromise response. Load before adding, bumping, or removing any dependency.
+# For non-Kiro tools, load this file on demand for dependency changes.
 ---
 
 # Supply Chain Verification — AI Infrastructure Security Loop
@@ -20,13 +21,13 @@ Traditional supply chain attacks compromise a dependency to inject malicious cod
 
 1. **Credential concentration** — AI proxy/gateway packages (LiteLLM, LangChain, etc.) hold API keys for multiple model providers, cloud credentials, and often database connection strings. One compromised package = all keys.
 2. **CI/CD as attack vector** — Build pipelines that run AI-powered security scanners can be compromised to steal publish tokens, which are then used to backdoor the AI packages themselves (recursive supply chain attack).
-3. **Implicit trust in AI outputs** — Developers implicitly trust AI-generated dependency recommendations. 49% of AI-recommended dependencies contain known vulnerabilities (Endor Labs, 2026).
+3. **Implicit trust in AI outputs** — AI-recommended dependencies are often outdated, vulnerable, or hallucinated (non-existent names that attackers can register).
 4. **Volume and velocity** — AI agents select, install, and integrate dependencies at machine speed. A human might evaluate a package before adding it. An agent adds it because it solves the immediate problem.
 
-### Reference Incidents
+### Reference Attack Patterns
 
-- **LiteLLM/TeamPCP (March 2026):** Backdoored versions of a package with 95M monthly downloads. Three-stage payload harvesting SSH keys, cloud credentials, Kubernetes secrets. Attack chain started by compromising an upstream security scanner.
-- **PyPI typosquatting campaigns (ongoing):** AI agents are more susceptible to typosquatting because they select packages by name similarity and popularity signals, not by manual verification.
+- **Backdoored AI gateway release:** an upstream CI tool is compromised, its access is used to steal a publish token, and a popular AI proxy package ships a release that harvests SSH keys, cloud credentials, and cluster secrets.
+- **Typosquatting and slopsquatting:** agents select packages by name similarity or invent plausible names; attackers publish packages under those names.
 
 ---
 
@@ -56,8 +57,8 @@ Step 1: PROVENANCE CHECK
 Step 2: VULNERABILITY SCAN (SCA)
 ├── Check against NVD, OSV, GitHub Advisory Database
 ├── Check transitive dependencies (not just direct)
-├── Flag any dependency with CVSS >= 7.0
-└── FAIL if: CRITICAL CVE in direct dependency, HIGH CVE without patch available
+├── Flag any dependency (direct or transitive) with CVSS >= 7.0 (HIGH or CRITICAL per `09`)
+└── FAIL if: CRITICAL CVE in any direct or transitive dependency, or HIGH CVE without a patch available
 
 Step 3: BEHAVIORAL ANALYSIS
 ├── Does the package access network resources unexpectedly?
@@ -83,18 +84,20 @@ Step 5: AI-SPECIFIC CHECKS (for AI/ML packages)
 
 ```json
 {
-  "package": "litellm",
-  "version": "1.85.0",
+  "package": "example-ai-gateway",
+  "version": "2.4.1",
   "provenance": "PASS",
   "vulnerability_scan": "PASS",
-  "behavioral_analysis": "FLAG - reads AWS_ACCESS_KEY_ID (expected for AI proxy)",
+  "behavioral_analysis": "FLAG - reads cloud credential environment variables",
   "license": "PASS",
   "ai_specific": "FLAG - telemetry enabled by default",
   "overall": "PASS WITH FLAGS",
-  "flags_require_review": false,
-  "notes": "Behavioral flags are expected for this package category. Telemetry should be disabled in production config."
+  "flags_require_review": true,
+  "notes": "Any FLAG requires the Dependency Review Gate below. The loop never self-waives a flag, even if the behavior looks expected for the package category."
 }
 ```
+
+**Rule:** `flags_require_review` is `true` whenever any check returns FLAG. Only a human reviewer in the Dependency Review Gate can clear a flag.
 
 ---
 
@@ -110,47 +113,46 @@ ai_bom:
   last_updated: "2026-07-28"
   
   model_providers:
-    - provider: "Anthropic"
-      models: ["claude-sonnet-4-20250514", "claude-opus-4-20250918"]
-      access_method: "API key"
+    - provider: "<provider A>"
+      models: ["<model id and version>"]
+      access_method: "Secrets-manager API key"
       data_residency: "US"
-      
-    - provider: "OpenAI"
-      models: ["gpt-4o", "o3"]
-      access_method: "API key"
+      approved_data_classes: ["internal", "synthetic"]   # e.g., add "PHI" only under a BAA
+
+    - provider: "<cloud model service>"
+      models: ["<model id and version>"]
+      access_method: "IAM role (no static keys)"
       data_residency: "US"
-  
+      approved_data_classes: ["internal", "PHI"]
+
   ai_infrastructure_packages:
-    - package: "litellm"
-      version: "1.85.0"
+    - package: "<ai-gateway-package>"
+      version: "<exact pinned version>"
       purpose: "Multi-model proxy/gateway"
-      credentials_managed: ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "AWS_ACCESS_KEY_ID"]
+      credentials_managed: ["<PROVIDER_A>_API_KEY (from secrets manager)", "cloud access via IAM role"]
       risk_classification: "HIGH - credential aggregator"
-      
-    - package: "langchain"
-      version: "0.3.x"
+
+    - package: "<agent-framework>"
+      version: "<exact pinned version>"
       purpose: "Agent orchestration"
-      credentials_managed: ["OPENAI_API_KEY"]
+      credentials_managed: ["<PROVIDER_A>_API_KEY (from secrets manager)"]
       risk_classification: "MEDIUM - orchestration layer"
   
   ai_development_tools:
-    - tool: "GitHub Copilot"
-      scope: "code generation"
-      data_sent: "code context, file contents"
-      
-    - tool: "Kiro"
+    - tool: "<IDE agent>"
       scope: "full SDLC assistance"
       data_sent: "workspace files, terminal output"
-  
+
+    - tool: "<B-Team reviewer model(s)>"
+      scope: "adversarial review"
+      data_sent: "review packages (redacted, synthetic data only)"
+
   training_data:
     - description: "No custom fine-tuned models in use"
-    
+
   inference_endpoints:
-    - endpoint: "api.anthropic.com"
-      authentication: "API key (rotated quarterly)"
-      
-    - endpoint: "api.openai.com"
-      authentication: "API key (rotated quarterly)"
+    - endpoint: "<provider A endpoint>"
+      authentication: "API key from secrets manager (rotated every 90 days)"
 ```
 
 ### AI-BOM Maintenance Rules
@@ -164,7 +166,7 @@ ai_bom:
 
 ## CI/CD Credential Isolation
 
-The LiteLLM incident demonstrated that CI/CD credentials are the attack vector for supply chain compromise. Protect them:
+CI/CD credentials are a primary vector for supply chain compromise. Protect them:
 
 ### Credential Segmentation
 
@@ -185,15 +187,17 @@ The LiteLLM incident demonstrated that CI/CD credentials are the attack vector f
 
 ---
 
-## Dependency Addition Gate (Human Judgment)
+## Dependency Review Gate (Human Judgment)
 
-When the supply chain verification loop FLAGS a dependency (but doesn't FAIL it), a lightweight gate review is required:
+Every dependency change is reviewed at **R2 minimum**, and AI infrastructure dependencies at **R3** (`11`). In addition, when the verification loop FLAGS a dependency (but doesn't FAIL it), a human must clear each flag:
 
-### Who Reviews
+### Who Clears Flags
 
-- **AI infrastructure packages** (model SDKs, proxies, agents): Security Lead + Architecture Lead
-- **Standard packages with behavioral flags**: Senior developer + automated risk assessment
-- **New-maintainer flags on critical packages**: Security Lead (expedited review)
+Clearing a flag is accepting a risk, so it follows `00-welcome.md` §1: the Human Steward, or a delegate the Intent Contract names for dependency review. The roles below must also agree. If the organization lacks a role, the Human Steward holds it.
+
+- **AI infrastructure packages** (model SDKs, proxies, agent frameworks): Security Lead + Architecture Lead
+- **Standard packages with behavioral flags**: a senior developer, informed by the automated risk assessment
+- **New-maintainer flags on critical packages**: Security Lead (expedited)
 
 ### Review Checklist
 
@@ -237,12 +241,11 @@ When a supply chain compromise is confirmed (vendor advisory, security researche
 
 ## Integration with Other Steering Files
 
-- **01-governance-gates.md** — Supply chain verification is part of G2/G3 (architecture safety) and G4 (build verification)
-- **03-coding-standards.md** — Dependency pinning and lockfile requirements
+- **01-governance-gates.md** — Supply chain verification is part of G2/G3 (architecture safety) and G4 (build verification); a current AI-BOM is G5 evidence
 - **08-loop-engineering.md** — Supply chain verification IS a loop (automated, verifier-driven, bounded)
-- **09-security-remediation-sla.md** — Supply chain compromises follow CRITICAL path by default
-- **11-tiered-adversarial-review.md** — Dependency changes touching AI infrastructure trigger Tier 2 review
+- **09-security-remediation-sla.md** — Supply chain compromises follow the CRITICAL path by default
+- **11-tiered-adversarial-review.md** — Any dependency change is R2 minimum; AI infrastructure dependencies are R3
 
 ---
 
-*Supply Chain Verification v1.0 — July 2026*
+*Supply Chain Verification — SGL Harness v3.0 — October 2026*
