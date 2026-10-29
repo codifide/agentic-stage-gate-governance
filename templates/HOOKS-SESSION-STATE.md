@@ -33,7 +33,7 @@ With hooks:
       "description": "Ensures ALL steering files are loaded at the start of every session — no subset, no skipping",
       "action": {
         "type": "agent",
-        "prompt": "MANDATORY: Before doing ANYTHING else, you MUST list the directory <YOUR_PROJECT>/.kiro/steering/ and then read EVERY .md file in it using read_files (batch them as needed). Do NOT skip any files — they are ALL institutional memory and ground truth. Start with next-session-prompt.md to understand current state, then load every remaining file. After all steering files are loaded, act on the next-session-prompt immediately."
+        "prompt": "MANDATORY: Before doing ANYTHING else, you MUST list the directory <YOUR_PROJECT>/.kiro/steering/ and then read EVERY .md file in it using read_files (batch them as needed). Do NOT skip any files — they are ALL institutional memory and ground truth. Start with next-session-prompt.md to understand current state. ALSO list .kiro/steering/sessions/ (if it exists) and read any files there — those are the handoffs of OTHER sessions that may be running concurrently; you must know what they are doing before you touch shared code. Then load every remaining steering file. After all files are loaded, act on the next-session-prompt immediately."
       }
     }
   ]
@@ -45,6 +45,7 @@ With hooks:
 1. **List the directory first, then load everything.** This means new steering files added between sessions are automatically picked up — no hook edits needed.
 2. **Start with `next-session-prompt.md`.** This gives the agent immediate context on what to do, while the remaining files provide the institutional knowledge to do it correctly.
 3. **"Do NOT skip any files"** is explicit because agents will optimize for brevity if given a choice. Every steering file exists for a reason.
+4. **Also read `sessions/`** so a starting session sees what concurrent sessions are doing. Under single-session use this directory is empty or absent — no effect. Under concurrency it is how a new session avoids stepping on live work. See `steering/13-concurrent-sessions.md`.
 
 ---
 
@@ -57,26 +58,35 @@ With hooks:
   "version": "v1",
   "hooks": [
     {
-      "name": "Update next-session-prompt on session end",
+      "name": "Update session state on session end",
       "trigger": "Stop",
-      "description": "Reminds the agent to update next-session-prompt.md before the session ends",
+      "description": "Reminds the agent to persist its handoff before the session ends — sharded to avoid clobbering concurrent sessions",
       "action": {
         "type": "agent",
-        "prompt": "Before this session ends, you MUST update .kiro/steering/next-session-prompt.md with: 1) What was accomplished this session, 2) Current initiative/gate status, 3) Immediate next actions for the following session, 4) Any key metrics or environment state changes. This is the institutional memory handoff — future sessions depend on it."
+        "prompt": "Before this session ends, you MUST persist your handoff with: 1) What was accomplished this session, 2) Current initiative/gate status, 3) Immediate next actions, 4) Any key metrics or environment state changes. WHERE to write it: if you are the ONLY active session, update .kiro/steering/next-session-prompt.md directly. If other sessions are active (there are files in .kiro/steering/sessions/ other than your own, or you were started in a git worktree for concurrent work), write ONLY to .kiro/steering/sessions/<your-session-id>.md and do NOT touch next-session-prompt.md — overwriting it would clobber other sessions' handoffs. The designated integrator session consolidates the per-session files back into next-session-prompt.md when the parallel work merges. This is the institutional memory handoff — future sessions depend on it."
       }
     }
   ]
 }
 ```
 
-### What Goes in `next-session-prompt.md`
+### Single-session vs. concurrent: where the handoff goes
+
+| Situation | Write handoff to |
+|---|---|
+| Only one session active (the default) | `next-session-prompt.md` directly — unchanged behavior |
+| Two or more sessions active | `.kiro/steering/sessions/<session-id>.md` — one file per session, no contention |
+
+The sharding exists to prevent the last-writer-wins clobber that occurs when two concurrent sessions both rewrite `next-session-prompt.md`. Under solo use nothing changes. See `steering/13-concurrent-sessions.md` for the full concurrency model.
+
+### What Goes in the Handoff
 
 The session state file is the agent's short-term memory between sessions. It should contain:
 
 | Section | Purpose |
 |---------|---------|
 | Current Status | What was just accomplished, when, git SHA |
-| Environment State | Which services are running, ports, health |
+| Environment State | Which services are running, ports, health; **worktree/branch if concurrent** |
 | Immediate Next Actions | Prioritized list of what to do next |
 | Key Metrics | Numbers that matter (scores, counts, rates) |
 | Architecture Decisions | Decisions made this session that affect future work |

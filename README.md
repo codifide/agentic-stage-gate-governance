@@ -102,8 +102,12 @@ steering/
     ├── 05-nfr-kpi-mandate.md      # Measurable targets requirement
     ├── 06-existing-project-assessment.md  # How to assess projects that already have code
     ├── 07-auto-research-protocol.md       # Autonomous solution iteration system
-    ├── 08-loop-engineering.md             # Loop engineering: verifiers, state, cost control
-    └── 12-intent-integrity.md             # Intent Contracts, Do No Harm, Primum circuit breaker
+    ├── 08-loop-engineering.md             # Loop engineering: verifiers, state, meta-loop, cost control
+    ├── 09-security-remediation-sla.md     # Security finding remediation timelines
+    ├── 10-supply-chain-verification.md    # Dependency provenance + supply-chain checks
+    ├── 11-tiered-adversarial-review.md    # Risk-tiered review depth
+    ├── 12-intent-integrity.md             # Intent Contracts, Do No Harm, Primum circuit breaker
+    └── 13-concurrent-sessions.md          # Multiple agents on one repo: worktrees + sharded state
 templates/
     ├── B-TEAM-REVIEW-PACKAGE.md   # Copy-paste template for B-Team reviews
     ├── CODE-REVIEW-PROMPT-QWEN.md # Forensic code review prompt for reasoning models (bounded pass)
@@ -254,6 +258,16 @@ As agentic implementation velocity increases, human line-by-line review becomes 
 - **Quill** operates as an embedded journalist across the entire lifecycle — recording decisions, failures, and organizational memory with structural independence from the builders.
 
 The objective is not to make humans review machine-speed output faster. It is to move repeatable assurance into CI/CD, automated testing, policy enforcement, independent verification, and continuous evidence — while preserving human judgment for consequential decisions.
+
+### Concurrent Sessions
+
+The harness was single-writer by default — good for one session at a time, messy when several ran against the same repository. `13-concurrent-sessions.md` adds a deliberately right-sized capability: not fleet-scale coordination machinery, just the two mechanisms that carry most of the benefit.
+
+- **Worktree-per-session** — each concurrent session gets its own git worktree (isolated working directory + branch, shared object store), plus per-session external state (ports, scratch DB, caches). Two sessions physically cannot clobber each other's files.
+- **Sharded session state** — each session writes its own `.kiro/steering/sessions/<id>.md` handoff instead of overwriting the shared `next-session-prompt.md`; an integrator consolidates on merge. Fixes the last-writer-wins clobber.
+- **Integration verification (conditional)** — if a test suite exists, one G-LOOP check runs it against the *merged* state of combined branches, not just each branch. Each branch passing alone does not prove they compose; this is what makes "no mess" verified rather than hoped.
+
+Deliberately deferred as fleet-scale overkill: proactive scope partitioning, merge queues with speculative testing/batching, and flaky-vs-regression test-health classification. Adopt those only when collisions recur despite worktrees. Everything here is invisible under single-session work.
 
 ---
 

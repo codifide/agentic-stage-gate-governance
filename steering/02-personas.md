@@ -233,6 +233,9 @@ Multiple personas must sign off. No persona may self-approve its own work. Autom
 ### During Autonomous Loops
 Atlas defines verifier, persistent state, stop conditions, observability, and circuit breakers. Atlas also owns the **meta-loop**: when an inner loop plateaus, Atlas diagnoses whether the search strategy is stuck (fixable by changing strategy) or the task is genuinely blocked (escalate to a human gate). Atlas declares each loop's **immutable paths** — the verifier and fixtures the loop may read but never modify — so the loop cannot weaken its own test. The meta-loop may change strategy only; it never touches the verifier, goal, or Intent Contract. Primum continuously evaluates whether the loop remains within its Intent Contract. A loop that leaves authorized intent is not "creative" — it is out of bounds and must halt.
 
+### During Concurrent Sessions
+When two or more sessions run against the same repository, **Atlas owns the isolation mechanics**: a git worktree + branch per session, per-session external state (ports, scratch DB, caches), and serialization of git metadata operations. One session is designated the **integrator** — it consolidates the per-session handoff files (`.kiro/steering/sessions/<id>.md`) back into `next-session-prompt.md` at merge time, and, if a test suite exists, runs the integration-level verifier against the *merged* state before promotion to `main`. A clean textual merge is not a pass. Under single-session work none of this applies. See `13-concurrent-sessions.md`.
+
 ### During the Full Lifecycle
 Quill observes from G0 through G6 so the organization retains the story of what happened, not merely the final code and documentation.
 
