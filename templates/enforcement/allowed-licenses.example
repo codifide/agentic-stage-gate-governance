@@ -1,0 +1,41 @@
+# .sgl/allowed-licenses — the dependency license allow-list for THIS repo.
+# One SPDX id or glob per line. Case-insensitive. Blank lines and # comments ignored.
+# A line starting with "!" is an explicit DENY that overrides any allow (and overrides
+# the fallback-allow mode). The allow-list file is governance (.sgl/*): editing it is R3.
+#
+# check-licenses.sh reads this file. Any dependency whose license is NOT allowed here
+# fails CI. An unknown/undeterminable license fails too (treated as disallowed).
+#
+# ---- Choose the posture for this repo (keep ONE block) ----
+#
+# POSTURE A — permissive open-source repo (e.g. the public harness, MIT):
+MIT
+Apache-2.0
+BSD-2-Clause
+BSD-3-Clause
+ISC
+0BSD
+Unlicense
+Python-2.0
+Zlib
+#
+# POSTURE B — proprietary / closed repo (the private swarm product):
+# use ONLY the allows below and keep the copyleft denies. Delete Posture A above.
+# MIT
+# Apache-2.0
+# BSD-2-Clause
+# BSD-3-Clause
+# ISC
+# 0BSD
+# !GPL-*
+# !LGPL-*
+# !AGPL-*
+# !MPL-*
+# !EPL-*
+# !CDDL-*
+# !SSPL-*
+# !BUSL-*
+#
+# A copyleft exception (proprietary repo) is a Human-Steward-recorded, lawyer-cleared
+# decision — add it as an explicit allow with a comment, e.g.:
+#   LGPL-2.1-only   # approved <name> <date>: dynamically linked, not distributed; see TICKET-123

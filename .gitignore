@@ -1,0 +1,8 @@
+# Local-only working notes and adversarial-review artifacts.
+# Kept out of this public repo because docs/adversarial-review/run-review.sh
+# references private cloud account details. The shipped harness lives in
+# steering/, templates/, README.md, WHITEPAPER.md, and LOOP-ENGINEERING-GUIDE.md.
+docs/
+
+# OS cruft
+.DS_Store

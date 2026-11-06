@@ -1,0 +1,35 @@
+# .sgl/immutable-paths — paths agents and loops may READ but never MODIFY.
+# Owned by the Human Steward. Changes to this file are human-approved governance events.
+# One entry per line. A trailing "/" protects a whole directory. Globs (*, ?) are allowed.
+# A line starting with "!" is an exception (an allowed path inside a protected one).
+# This file always protects itself; it cannot be excepted.
+
+# Verifiers and evaluation harness
+verifiers/
+eval/
+
+# Golden fixtures and baselines
+tests/golden/
+tests/fixtures/baselines/
+
+# Scoring rubric for auto-research
+auto-research/*/rubric.md
+
+# The harness itself: rules, hooks, enforcement, and CI. Agents may read these;
+# changing them is a Human Steward-approved change (R3).
+# The handoff file is excepted because the Stop hook writes it every session.
+.kiro/steering/
+!.kiro/steering/next-session-prompt.md
+.kiro/hooks/
+.sgl/
+.github/workflows/
+CODEOWNERS
+.github/CODEOWNERS
+
+# SGL templates, if you vendor them into the repo
+templates/B-TEAM-REVIEW-PACKAGE.md
+templates/CODE-REVIEW-PROMPT-*
+templates/GATE-EVIDENCE-CHECKLIST.md
+templates/HOOKS-SESSION-STATE.md
+templates/INTENT-CONTRACT.md
+templates/enforcement/
