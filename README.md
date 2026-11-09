@@ -51,6 +51,8 @@ The steering files are plain Markdown. They work with any AI coding assistant th
 
 > **Related work.** Other efforts address overlapping problems. Examples: the [Bilevel Autoresearch](https://arxiv.org/abs/2603.23420) paper (Qu and Lu, arXiv:2603.23420) describes an outer loop that improves an inner loop's search strategy, reported on one benchmark built on [karpathy/autoresearch](https://github.com/karpathy/autoresearch); that repository itself is a single-file experiment loop with a fixed time budget and a keep/discard ledger, and contains no meta-loop. The SGL Harness includes a comparable bounded meta-loop owned by Atlas (`08`). We do not claim these were derived independently or are equivalent, and similarity between projects is a signal, not proof; see "Scope and limits" and "Validation status" below. See [NOTICE.md](NOTICE.md) for sources and licences.
 
+> **Acknowledgements.** This work builds on Robert G. Cooper's Stage-Gate® model and learned from Karpathy's autoresearch, the BMAD Method, Bilevel Autoresearch (Qu and Lu), published research on parallel coding agents, Mergify's writing on merge queues, and Claude Code's worktree guidance. GitHub Spec Kit was reviewed for comparison only. Ideas only: no text or code was copied. The full list, with links, what each source contributed, and licences, is in [NOTICE.md](NOTICE.md) section 2.
+
 ---
 
 ## Setup
