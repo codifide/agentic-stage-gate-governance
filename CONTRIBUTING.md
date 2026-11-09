@@ -2,6 +2,15 @@
 
 This template is MIT licensed and accepts contributions. The goal is to keep it practical, opinionated, and directly usable — not a framework that requires configuration before it does anything.
 
+## Contribution terms
+
+- Issues and discussion are welcome.
+- The project is **not currently accepting code or documentation contributions by pull request.** A contributor licence agreement is not yet in place, and the copyright holder (Codifide Inc.) intends to keep ownership consolidated. Pull requests may be closed without review until that changes.
+- Do not submit code or text that you do not have the right to license, or that was copied from another project.
+- Sections below describe the kinds of changes the project is interested in, and how a pull request would work once contributions are open. They are kept for reference.
+
+> **[FLAG FOR COUNSEL]** Choice between a CLA and a DCO, and any relicensing options.
+
 ## What this project is
 
 A ready-to-use governance template for AI-assisted software development. The steering files drop into any AI coding assistant project and activate a 7-gate process with adversarial review built in. The whitepaper explains the methodology.

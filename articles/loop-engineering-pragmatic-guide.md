@@ -11,7 +11,7 @@
 
 I didn't know what he meant. I'd already integrated Karpathy's autoresearch concept into the system — autonomous iteration with adversarial review and convergence criteria. But "loop engineering" was a different frame. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research it. So I did.
 
-What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.
+What I found was both encouraging and humbling. Encouraging because the governance system I'd spent hundreds of hours building overlapped with much of what the research describes (an observation, not a validation). Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.
 
 This is the story of how we got here, what we learned, and where it goes next.
 
@@ -47,7 +47,7 @@ Three components. Miss one and you've built a money burner:
 
 **Stop condition** — "done" must be definable. Verifier passes, or you hit a retry limit. Open-ended goals without measurable completion are just prompting wearing a loop costume.
 
-In March 2026, Andrej Karpathy demonstrated this with `autoresearch` — 630 lines of code that ran 700 ML training experiments in two days, finding 20 improvements humans missed. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.
+In March 2026, Andrej Karpathy published [`autoresearch`](https://github.com/karpathy/autoresearch), a small single-file experiment loop: an agent edits one training file, runs it under a fixed time budget, keeps the change if a metric improves, and discards it otherwise. Press coverage (Fortune, in the references) reported figures of roughly 700 experiments over two days; we have not independently verified those numbers. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.
 
 ---
 
@@ -191,7 +191,7 @@ The teams that get this right won't just ship faster — they'll ship with confi
 
 1. Karpathy, A. (2026). *AutoResearch*. [github.com/karpathy/autoresearch](https://github.com/karpathy/autoresearch)
 2. Fortune (2026). "'The Karpathy Loop': 700 experiments, 2 days, and a glimpse of where AI is heading." [fortune.com](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/)
-3. Bilevel Autoresearch: Meta-Autoresearching Itself (2026). arXiv:2603.23420
+3. Qu, Y. and Lu, M. (2026). *Bilevel Autoresearch: Meta-Autoresearching Itself*. [arXiv:2603.23420](https://arxiv.org/abs/2603.23420). Third-party work building on the autoresearch benchmark; not part of the autoresearch repository.
 4. Cooper, R.G. (1986). *Winning at New Products: Accelerating the Process from Idea to Launch*. Stage-Gate® methodology.
 5. CMS MIPS Payment Adjustment. 42 CFR § 414.1405. Up to ±9% Medicare Part B adjustment based on composite performance score.
 6. AI Builder Club (2026). "Karpathy's LOOPS.md: The Rules and What's Verified." [aibuilderclub.com](https://www.aibuilderclub.com/blog/loops-md-karpathy)

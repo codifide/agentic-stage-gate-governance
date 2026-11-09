@@ -59,7 +59,7 @@ We've been doing loop engineering without the label:
 | `next-session-prompt.md` | Persistent state |
 | `REFRESH MATERIALIZED VIEW` after pipeline | Self-healing verification |
 | B-Team review → A-Team fix → re-review | Iteration with adversarial verifier |
-| Auto-Research Protocol (07-auto-research) | Full bilevel loop with convergence criteria |
+| Auto-Research Protocol (07-auto-research) | Iterative solution loop with convergence criteria |
 
 The gap isn't concept — it's **continuity**. Our loops pause at session boundaries and wait for human re-initiation. True loop engineering runs without a human triggering each iteration.
 

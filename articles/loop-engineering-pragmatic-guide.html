@@ -59,7 +59,7 @@
 
 <p><em>"If you are still prompting, we are dead."</em></p>
 <p>I didn't know what he meant. I'd already integrated Karpathy's autoresearch concept into the system — autonomous iteration with adversarial review and convergence criteria. But "loop engineering" was a different frame. A colleague said it like it was obvious — like I should have already moved past something fundamental. He said to research it. So I did.</p>
-<p>What I found was both validating and humbling. Validating because the governance system I'd spent hundreds of hours building already embodied most of what the research describes. Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.</p>
+<p>What I found was both encouraging and humbling. Encouraging because the governance system I'd spent hundreds of hours building overlapped with much of what the research describes (an observation, not a validation). Humbling because the gaps I'd been ignoring — the ones that kept biting me in demos and making me ask "why can't you get this right after three tries?" — were exactly the problems loop engineering solves.</p>
 <p>This is the story of how we got here, what we learned, and where it goes next.</p>
 <hr />
 <h2>The Evolution: How We Got Here</h2>
@@ -78,7 +78,7 @@
 <p><strong>Verifier</strong> — an automated gate that isn't the AI grading its own homework. Tests, metrics, schema checks. Something that says "no" without human intervention.</p>
 <p><strong>State</strong> — persistent record of what's been tried and what failed. Survives session boundaries. Tomorrow resumes instead of restarts.</p>
 <p><strong>Stop condition</strong> — "done" must be definable. Verifier passes, or you hit a retry limit. Open-ended goals without measurable completion are just prompting wearing a loop costume.</p>
-<p>In March 2026, Andrej Karpathy demonstrated this with <code>autoresearch</code> — 630 lines of code that ran 700 ML training experiments in two days, finding 20 improvements humans missed. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.</p>
+<p>In March 2026, Andrej Karpathy published <a href="https://github.com/karpathy/autoresearch"><code>autoresearch</code></a>, a small single-file experiment loop: an agent edits one training file, runs it under a fixed time budget, keeps the change if a metric improves, and discards it otherwise. Press coverage (Fortune, in the references) reported figures of roughly 700 experiments over two days; we have not independently verified those numbers. The key insight: with an objective metric, you shouldn't be the experiment runner. Remove yourself from the inner loop and let verification drive search.</p>
 <hr />
 <h2>The Real Pain Point</h2>
 <p>Let me be direct about where this comes from.</p>
@@ -87,7 +87,7 @@
 
 <h3>The Personas Are the Architecture</h3>
 
-<p>This is the part most people get wrong about AI personas. They treat them as role-play — "act like a senior engineer." That produces confident-sounding output with no actual depth. What works is what Brian Madison calls the <a href="https://github.com/bmadcode/BMAD-METHOD" target="_blank" rel="noopener noreferrer">BMAD method</a>: personas aren't characters, they're <em>skill compositions with documented authority boundaries</em>. Each persona knows what it's responsible for, what it's allowed to decide, and — critically — where it must escalate to a human.</p>
+<p>This is the part most people get wrong about AI personas. They treat them as role-play — "act like a senior engineer." That produces confident-sounding output with no actual depth. What works, in our experience, is treating personas as <em>skill compositions with documented authority boundaries</em> rather than characters. Agent-persona workflow frameworks such as the <a href="https://github.com/bmad-code-org/BMAD-METHOD" target="_blank" rel="noopener noreferrer">BMAD Method</a> (a project of BMad Code, LLC) take related approaches; we do not claim they define this framing. Each persona knows what it's responsible for, what it's allowed to decide, and — critically — where it must escalate to a human.</p>
 
 <p>The most valuable persona I built was a <strong>clinical quality domain expert</strong> — grounded in the terminology, decision patterns, and judgment of real specialists in the domain. Not a generic "healthcare AI." A persona that knows the difference between a numerator exclusion and a denominator exception, that catches when a measure engine applies screening criteria to the wrong encounter type, that says "the specification changed in the latest update — your logic references the old version."</p>
 
@@ -183,7 +183,7 @@
 <ol>
 <li>Karpathy, A. (2026). <em>AutoResearch</em>. <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a></li>
 <li>Fortune (2026). "'The Karpathy Loop': 700 experiments, 2 days, and a glimpse of where AI is heading." <a href="https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/">fortune.com</a></li>
-<li>Bilevel Autoresearch: Meta-Autoresearching Itself (2026). arXiv:2603.23420</li>
+<li>Qu, Y. and Lu, M. (2026). <em>Bilevel Autoresearch: Meta-Autoresearching Itself</em>. <a href="https://arxiv.org/abs/2603.23420">arXiv:2603.23420</a>. Third-party work building on the autoresearch benchmark; not part of the autoresearch repository.</li>
 <li>Cooper, R.G. (1986). <em>Winning at New Products: Accelerating the Process from Idea to Launch</em>. Stage-Gate® methodology.</li>
 <li>CMS MIPS Payment Adjustment. 42 CFR § 414.1405. Up to ±9% Medicare Part B adjustment based on composite performance score.</li>
 <li>AI Builder Club (2026). "Karpathy's LOOPS.md: The Rules and What's Verified." <a href="https://www.aibuilderclub.com/blog/loops-md-karpathy">aibuilderclub.com</a></li>

@@ -49,7 +49,7 @@ The steering files are plain Markdown. They work with any AI coding assistant th
 
 > **Scope of this (free, MIT) harness vs. the commercial product.** This open harness governs **one agent working one codebase** — gates, personas, review levels, the Intent Contract, HALT, and the enforcement layer. Codifide also builds a **commercial product on top of it** that governs a **coordinated swarm of agents** modernizing many entities in parallel (portfolio-scale decomposition, frozen seam contracts, per-lane verifiers, merged-state integration verification, connectors). If you need governed multi-agent delivery at portfolio scale — e.g. consolidating acquired entities onto one platform — reach out to Codifide. This repo stays free and MIT.
 
-> **Convergent ideas.** Other agentic-development efforts have arrived at similar patterns from different directions: unattended build → verify → retro loops, a dedicated test-architect role, and a *meta-loop* (a loop that watches the loop) to escape stuck search. The SGL Harness encodes the same patterns: Human/Gate/Loop separation, a verifier that must be harder than the task, generator/verifier isolation, and a meta-loop owned by Atlas. Convergence is a signal, not proof; see "Validation status" below.
+> **Related work.** Other efforts address overlapping problems. Examples: the [Bilevel Autoresearch](https://arxiv.org/abs/2603.23420) paper (Qu and Lu, arXiv:2603.23420) describes an outer loop that improves an inner loop's search strategy, reported on one benchmark built on [karpathy/autoresearch](https://github.com/karpathy/autoresearch); that repository itself is a single-file experiment loop with a fixed time budget and a keep/discard ledger, and contains no meta-loop. The SGL Harness includes a comparable bounded meta-loop owned by Atlas (`08`). We do not claim these were derived independently or are equivalent, and similarity between projects is a signal, not proof; see "Scope and limits" and "Validation status" below. See [NOTICE.md](NOTICE.md) for sources and licences.
 
 ---
 
@@ -204,7 +204,7 @@ Full JSON and install steps: `templates/HOOKS-SESSION-STATE.md` and `templates/e
 
 ## What's New in v3.0 (October 2026)
 
-v3.0 is a correctness and safety pass driven by two independent adversarial reviews of v2 (one same-vendor, one cross-vendor). The architecture is unchanged; the rules now say what the architecture meant.
+v3.0 is a correctness and safety pass driven by two adversarial reviews of v2 (one same-vendor, one cross-vendor). The architecture is unchanged; the rules now say what the architecture meant.
 
 - **Named human authority.** The Human Steward decides every gate, track, exception, verifier change, and HALT resumption. AI personas recommend; Aegis can block but never pass.
 - **One review vocabulary.** Review Levels R1–R3 for changes, a gate-review table by track, and a single classification procedure. Loop token budgets are now Cost Classes C1–C3, so "Tier" no longer means two things.
@@ -216,14 +216,23 @@ v3.0 is a correctness and safety pass driven by two independent adversarial revi
 - **Smaller context.** A ~2,200-word always-loaded core replaces ~21,000 words loaded every session.
 - **Concurrency fix.** Session handoffs live in the shared git directory, so every worktree can see them.
 
+### Scope and limits
+
+- This is a governance harness for AI coding agents. It is not a compliance certification, and it does not replace legal, security, regulatory, or clinical review.
+- Using it does not make a system HIPAA, SOC 2, or ISO compliant. Those determinations belong to qualified people and auditors.
+- It reduces specific risks through written rules and four tested scripts (`templates/enforcement/`: `guard-immutable-paths.sh`, `check-immutable-paths.sh`, `check-review-level.sh`, `check-licenses.sh`). Everything else is guidance an agent can still get wrong. See "Session Continuity and Enforcement (Agent Hooks)" for which hooks are advisory and which block, and `templates/enforcement/README.md` for what the scripts do not cover.
+- Host-runtime behaviours marked `[UNVERIFIED]` in the templates (for example how a tool loads `inclusion: auto` files, or whether a hook event fires) have not been verified and vary by tool.
+- The software and documents are provided as is, without warranty; see [LICENSE](LICENSE).
+- See also [NOTICE.md](NOTICE.md) (acknowledgements, trademarks, AI-assisted authorship) and [SECURITY.md](SECURITY.md) (reporting a vulnerability).
+
 ### Validation status
 
 What has been done:
 
 - **Structural validation** of every steering file, template, and hook definition (numbering, references, JSON).
-- **Two independent adversarial reviews of v2** (one same-vendor, one cross-vendor). Their findings drove v3.
+- **Two adversarial reviews of v2** (one same-vendor, one cross-vendor). Their findings drove v3.
 - **Two cross-vendor closure audits of v3**, each checking every prior finding against quoted v3 text. The first found gaps in the new enforcement scripts; the second confirmed those fixes and found that the harness's own files could be edited at R1, which is now R3.
-- **An automated test suite** for the enforcement scripts (`templates/enforcement/test-enforcement.sh`, 58 cases): allowed and blocked writes, `..` and symlink tricks, self-protection, renames, attempts to loosen the list, per-commit Review Level floors, merge commits, the size rule, provenance, and agent-written approval markers.
+- **An automated test suite** for the enforcement scripts (`templates/enforcement/test-enforcement.sh`, 70 cases as of this writing; the script prints the authoritative result): allowed and blocked writes, `..` and symlink tricks, self-protection, renames, attempts to loosen the list, per-commit Review Level floors, merge commits, the size rule, provenance, and agent-written approval markers.
 
 What has **not** been done: a controlled behavioral study measuring outcomes with and without the harness. The scripts enforce what they can compute; the rest is guidance an agent can still get wrong. Treat effectiveness claims accordingly.
 
@@ -263,7 +272,7 @@ The harness was single-writer by default — good for one session at a time, mes
 
 - **Worktree-per-session** — each concurrent session gets its own git worktree (isolated working directory + branch, shared object store), plus per-session external state (ports, scratch DB, caches). Two sessions physically cannot clobber each other's files.
 - **Sharded session state** — each session writes its own handoff to `<git-common-dir>/sgl-sessions/<id>.md` (shared by every worktree) instead of overwriting the shared `next-session-prompt.md`; a human-named integrator consolidates on merge. Fixes the last-writer-wins clobber.
-- **Integration verification (conditional)** — if a test suite exists, one G-LOOP check runs it against the *merged* state of combined branches, not just each branch. Each branch passing alone does not prove they compose; this is what makes "no mess" verified rather than hoped.
+- **Integration verification (conditional)** — if a test suite exists, one G-LOOP check runs it against the *merged* state of combined branches, not just each branch. Each branch passing alone does not prove they compose; this checks composition for the tests you have, which is stronger than hoping branches compose.
 
 Deliberately deferred as fleet-scale overkill: proactive scope partitioning, merge queues with speculative testing/batching, and flaky-vs-regression test-health classification. Adopt those only when collisions recur despite worktrees. `13` loads only when concurrency is in play.
 
