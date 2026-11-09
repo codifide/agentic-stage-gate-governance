@@ -8,7 +8,7 @@ This repository is licensed under the MIT License. Copyright (c) Codifide Inc. S
 
 The MIT License does not grant any right to use Codifide names or logos.
 
-> **[FLAG FOR COUNSEL]** The status of the Codifide marks is not asserted by this file. The README footer currently states that certain marks are registered; counsel should confirm that statement before it is relied on.
+Codifide®, Confidence in Code®, and the Codifide logo mark are registered trademarks of Codifide Inc. (registration documentation held by Codifide Inc.).
 
 ## 2. Acknowledgements
 
@@ -30,7 +30,7 @@ The projects and publications below influenced ideas in this harness. Licence in
 Names of other parties' products, projects, and companies are used to identify them (nominative use). No affiliation with, sponsorship by, or endorsement by those parties is implied. Marks belong to their respective owners.
 
 - "BMad" and "BMAD-METHOD" are identified by the BMAD project as trademarks of BMad Code, LLC. See https://github.com/bmad-code-org/BMAD-METHOD/blob/main/TRADEMARK.md.
-- "Stage-Gate" appears with the (R) symbol in sources cited by this repository. This repository's own name for its framework is "Stage-Gate-Loop".
+- Stage-Gate® is a registered trademark of Stage-Gate International (United States, Australia) and of R.G. Cooper & Associates (European Union, Canada), as stated in the cited literature. The Stage-Gate-Loop framework is based on Robert G. Cooper's Stage-Gate® model and extends it with automated verification loops and AI-specific controls. Codifide Inc. is not affiliated with, sponsored by, or endorsed by Stage-Gate International or R.G. Cooper & Associates.
 
 > **[FLAG FOR COUNSEL]** Whether the name "Stage-Gate-Loop" is acceptable alongside a third party's "Stage-Gate" mark is a question for an attorney. This file makes no conclusion.
 

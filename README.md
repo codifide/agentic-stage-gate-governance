@@ -298,7 +298,7 @@ Deliberately deferred as fleet-scale overkill: proactive scope partitioning, mer
 >
 > "AI loops for execution. Gates for judgment. Humans for decisions. Evidence proves all three."
 
-Based on Robert Cooper's Stage-Gate® (1986), extended with loop engineering for automated verification and intent-integrity controls for bounded autonomy. Adapted for a world where AI agents produce code faster than humans can review line by line. The goal is not less rigor — it is moving rigor into architecture: CI/CD, automated tests, independent verifiers, security tooling, policy enforcement, domain expertise, durable evidence, and selective human judgment.
+Based on Robert G. Cooper's Stage-Gate® model (Stage-Gate® is a registered trademark of Stage-Gate International and of R.G. Cooper & Associates; Codifide is not affiliated with or endorsed by them; see [NOTICE.md](NOTICE.md)), extended with loop engineering for automated verification and intent-integrity controls for bounded autonomy. Adapted for a world where AI agents produce code faster than humans can review line by line. The goal is not less rigor — it is moving rigor into architecture: CI/CD, automated tests, independent verifiers, security tooling, policy enforcement, domain expertise, durable evidence, and selective human judgment.
 
 ---
 
