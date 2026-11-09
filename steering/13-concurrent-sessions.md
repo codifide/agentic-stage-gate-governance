@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-concurrent-sessions
-description: Running two or more SGL agent sessions on one repository - git worktree per session, isolated external state, serialized git metadata, sharded session handoffs in the shared git directory, integrator role, and conditional integration verification. Load only when more than one agent session is active or a git worktree is in use.
+description: Running two or more Direttore agent sessions on one repository - git worktree per session, isolated external state, serialized git metadata, sharded session handoffs in the shared git directory, integrator role, and conditional integration verification. Load only when more than one agent session is active or a git worktree is in use.
 # For non-Kiro tools, load this file on demand under concurrency.
 ---
 
@@ -141,4 +141,4 @@ That is the whole capability. Worktrees make a mess structurally impossible; sha
 
 ---
 
-*Part of Agentic Stage-Gate-Loop Governance (the SGL Harness). Loaded on demand under concurrent sessions.*
+*Part of Codifide Direttore (the framework and its harness). Loaded on demand under concurrent sessions.*

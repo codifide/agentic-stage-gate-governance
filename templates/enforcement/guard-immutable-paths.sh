@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SGL Harness — immutable-path write guard (PreToolUse command hook).
+# Codifide Direttore — immutable-path write guard (PreToolUse command hook).
 #
 # Blocks agent file-write tools from touching any path listed in
 # .sgl/immutable-paths (verifiers, golden fixtures, baselines, eval harness).

@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-auto-research
-description: SGL auto-research protocol - multi-approach autonomous iteration (generate, build, evaluate, refine, converge) inside the gates, with human checkpoints, Intent Contract and Primum controls, verifier-anchored scoring, and safety limits. Load when the user says auto-research, iterate until optimal, research and develop, or find the best solution.
+description: Direttore auto-research protocol - multi-approach autonomous iteration (generate, build, evaluate, refine, converge) inside the gates, with human checkpoints, Intent Contract and Primum controls, verifier-anchored scoring, and safety limits. Load when the user says auto-research, iterate until optimal, research and develop, or find the best solution.
 # For non-Kiro tools, load this file on demand for auto-research requests.
 ---
 
@@ -170,4 +170,4 @@ The agent first checks the preconditions and asks for anything missing.
 
 ---
 
-*Auto-Research Protocol — SGL Harness v3.0 — October 2026*
+*Auto-Research Protocol — Codifide Direttore v3.0 — October 2026*

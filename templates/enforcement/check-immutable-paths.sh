@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SGL Harness — immutable-path CI check (backstop for the write guard). Fails closed.
+# Codifide Direttore — immutable-path CI check (backstop for the write guard). Fails closed.
 #
 # Fails if the branch's diff against BASE touches any path listed in
 # .sgl/immutable-paths (as of BASE, so a branch cannot loosen its own list).

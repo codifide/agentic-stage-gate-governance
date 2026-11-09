@@ -1,5 +1,7 @@
 # Security Policy
 
+This policy covers Codifide Direttore, the framework and free harness in this repository (formerly Stage-Gate-Loop and SGL Harness).
+
 ## Reporting a vulnerability
 
 Please report vulnerabilities privately using GitHub's private vulnerability reporting: open this repository's **Security** tab and choose **Report a vulnerability**.
