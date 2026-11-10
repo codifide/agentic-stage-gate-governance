@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Codifide Direttore — dependency license-policy check (CI). Fails closed.
+# Codifide Harness — dependency license-policy check (CI). Fails closed.
 #
 # A swarm installs dependencies fast; one copyleft package can create an obligation
 # to open-source a proprietary repo. This check enforces .sgl/allowed-licenses:

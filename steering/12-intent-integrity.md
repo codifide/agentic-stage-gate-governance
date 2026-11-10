@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-intent-integrity
-description: Direttore Intent Contract requirements, Primum intent-integrity checks (goal, scope, constraints, metric and verifier integrity, reversibility, human impact), and the single authoritative HALT procedure. Load when writing an Intent Contract, issuing or handling a HALT, or changing any verifier, baseline, or threshold.
+description: Harness Intent Contract requirements, Primum intent-integrity checks (goal, scope, constraints, metric and verifier integrity, reversibility, human impact), and the single authoritative HALT procedure. Load when writing an Intent Contract, issuing or handling a HALT, or changing any verifier, baseline, or threshold.
 # For non-Kiro tools, load this file on demand for intent or HALT work.
 ---
 

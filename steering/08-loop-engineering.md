@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-loop-engineering
-description: Direttore loop engineering - loop-or-gate decision, rules for production loops, verifier immutability and enforcement, baselines, meta-loop, state files, Cost Classes C1-C3, retry limits, circuit breakers, and verifier anti-patterns. Load before designing, running, or debugging any automated loop.
+description: Harness loop engineering - loop-or-gate decision, rules for production loops, verifier immutability and enforcement, baselines, meta-loop, state files, Cost Classes C1-C3, retry limits, circuit breakers, and verifier anti-patterns. Load before designing, running, or debugging any automated loop.
 # For non-Kiro tools, load this file on demand for loop work.
 ---
 
@@ -400,4 +400,4 @@ Before starting any multi-step implementation, classify each step LOOP / GATE / 
 
 ---
 
-*Loop Engineering — Codifide Direttore v3.0 — October 2026*
+*Loop Engineering — Codifide Harness v3.0 — October 2026*

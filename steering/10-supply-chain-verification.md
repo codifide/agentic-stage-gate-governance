@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-supply-chain-verification
-description: Direttore supply chain verification loop for every dependency, lockfile, base image, or AI SDK change - provenance, vulnerability, behavioral, license, and AI-specific checks, the AI-BOM, CI credential isolation, the dependency review gate, and compromise response. Load before adding, bumping, or removing any dependency.
+description: Harness supply chain verification loop for every dependency, lockfile, base image, or AI SDK change - provenance, vulnerability, behavioral, license, and AI-specific checks, the AI-BOM, CI credential isolation, the dependency review gate, and compromise response. Load before adding, bumping, or removing any dependency.
 # For non-Kiro tools, load this file on demand for dependency changes.
 ---
 
@@ -269,4 +269,4 @@ When a supply chain compromise is confirmed (vendor advisory, security researche
 
 ---
 
-*Supply Chain Verification — Codifide Direttore v3.0 — October 2026*
+*Supply Chain Verification — Codifide Harness v3.0 — October 2026*

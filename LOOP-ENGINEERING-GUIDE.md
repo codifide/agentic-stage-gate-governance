@@ -254,4 +254,4 @@ Our system is already 70% there. The missing 30% is automated verification that 
 
 *Written from real-world experience building and governing a regulated healthcare compliance platform under a demo deadline.*
 *Reviewed by: Aegis, Winston, Tessa, Forge, Sable, Ruth, Atlas (new), Iris (new), Quill, Ink*
-*Codifide Direttore guide v1.2 — July 2026 (formerly Agentic Stage-Gate Governance)*
+*Codifide Harness guide v1.2 — July 2026 (formerly Agentic Stage-Gate Governance)*

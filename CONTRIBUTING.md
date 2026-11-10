@@ -1,4 +1,4 @@
-# Contributing to Codifide Direttore
+# Contributing to Codifide Harness
 
 (Formerly Agentic Stage-Gate Governance.)
 

@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-nfr-kpi-mandate
-description: Direttore mandate for measurable NFRs, KPIs, and benchmarks - required formats, ownership, gate enforcement, and automated vs manual evidence. Load when defining requirements at G1 or collecting NFR/KPI evidence at G4-G6.
+description: Harness mandate for measurable NFRs, KPIs, and benchmarks - required formats, ownership, gate enforcement, and automated vs manual evidence. Load when defining requirements at G1 or collecting NFR/KPI evidence at G4-G6.
 # For non-Kiro tools, load this file on demand at G1 and for NFR evidence.
 ---
 

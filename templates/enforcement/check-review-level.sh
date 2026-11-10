@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Codifide Direttore — Review Level + provenance check (CI). Fails closed.
+# Codifide Harness — Review Level + provenance check (CI). Fails closed.
 #
 # For EVERY commit on the branch (BASE..HEAD):
 #   - requires a valid `Generated-By:` trailer (human | ai-agent | ai-assisted | ai-paired)

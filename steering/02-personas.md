@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-personas
-description: Definitions, authority boundaries, and gate responsibilities for Direttore A-Team, B-Team, Quill (embedded journalist), Primum (intent integrity), Atlas (loops and concurrency), and domain-expert personas. Load when invoking or reasoning about any persona.
+description: Definitions, authority boundaries, and gate responsibilities for Harness A-Team, B-Team, Quill (embedded journalist), Primum (intent integrity), Atlas (loops and concurrency), and domain-expert personas. Load when invoking or reasoning about any persona.
 # For non-Kiro tools, load this file on demand when personas are used.
 ---
 

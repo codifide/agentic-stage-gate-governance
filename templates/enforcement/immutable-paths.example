@@ -26,7 +26,7 @@ auto-research/*/rubric.md
 CODEOWNERS
 .github/CODEOWNERS
 
-# Direttore templates, if you vendor them into the repo
+# Harness templates, if you vendor them into the repo
 templates/B-TEAM-REVIEW-PACKAGE.md
 templates/CODE-REVIEW-PROMPT-*
 templates/GATE-EVIDENCE-CHECKLIST.md

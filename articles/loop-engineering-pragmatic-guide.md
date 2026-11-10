@@ -183,7 +183,7 @@ The teams that get this right won't just ship faster — they'll ship with confi
 
 *Douglas Jones is an engineering leader and founder of Codifide, focused on AI-native software development with stage-gate governance in regulated domains.*
 
-*The [Codifide Direttore](https://github.com/codifide/agentic-stage-gate-governance) framework (formerly Agentic Stage-Gate Governance) is open source.*
+*The [Codifide Harness](https://github.com/codifide/agentic-stage-gate-governance) framework (formerly Agentic Stage-Gate Governance) is open source.*
 
 ---
 

@@ -1,13 +1,13 @@
 ---
 inclusion: always
-# This is the Codifide Direttore CORE. It is the only steering file loaded every session.
+# This is the Codifide Harness CORE. It is the only steering file loaded every session.
 # Every other file in steering/ is loaded on demand (see "On-Demand Index" below).
 # For non-Kiro tools, place this file wherever your tool loads always-on context.
 ---
 
-# Codifide Direttore — Core Rules
+# Codifide Harness — Core Rules
 
-This project uses **Codifide Direttore** governance (based on Robert G. Cooper's Stage-Gate® model) for AI-assisted software development. Gates for judgment. Loops for execution. Humans decide what ships.
+This project uses **Codifide Harness** governance (based on Robert G. Cooper's Stage-Gate® model) for AI-assisted software development. Gates for judgment. Loops for execution. Humans decide what ships.
 
 This file is the operative core. It is short on purpose. When a rule here conflicts with any other file, **this file wins** and the conflict is a defect to report. Detail lives in on-demand files; load the one you need before acting on its topic.
 
@@ -183,4 +183,4 @@ Load the named file **before** acting on its topic. If you are unsure whether a 
 
 ---
 
-*Codifide Direttore Core v3.0 — October 2026. Background, references, and rationale: `README.md` and `WHITEPAPER.md`.*
+*Codifide Harness Core v3.0 — October 2026. Background, references, and rationale: `README.md` and `WHITEPAPER.md`.*

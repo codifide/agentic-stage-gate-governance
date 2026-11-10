@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-existing-project-assessment
-description: How to assess an existing codebase against the Direttore gates - evidence rules, what to look for per gate, common project patterns, and remediation ordering. Load when asked to assess a codebase, run a gap analysis, or determine what gate a project is at.
+description: How to assess an existing codebase against the Harness gates - evidence rules, what to look for per gate, common project patterns, and remediation ordering. Load when asked to assess a codebase, run a gap analysis, or determine what gate a project is at.
 # For non-Kiro tools, load this file on demand for assessments.
 ---
 

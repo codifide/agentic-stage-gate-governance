@@ -1,5 +1,5 @@
-# Codifide Direttore
-*Codifide Direttore ("dee-ret-TOH-reh"; Codifide is said "Code-i-fee-day"): agentic governance for AI-assisted software development. Formerly known as Agentic Stage-Gate-Loop Governance, with its harness called the SGL Harness.*
+# Codifide Harness
+*Codifide Harness: agentic governance for AI-assisted software development. The framework and harness were formerly called Stage-Gate-Loop and the SGL Harness (and briefly Codifide Direttore). Codifide Swarm, the private commercial product, was briefly called Codifide Gregario.*
 
 
 **Loop the mechanical. Gate the judgment. Ship with confidence.**
@@ -43,9 +43,9 @@ A ready-to-use governance system for AI-assisted software development that combi
 
 ## What This Is
 
-**Codifide Direttore** is both the framework and the free, MIT-licensed harness that implements it. The framework is the Human → Gate → Loop model. The harness is the installable part: the `steering/` files, hooks, and templates in this repo that you strap onto an AI coding agent to instrument and constrain it. Think framework vs. the thing you actually `git clone` — the model is the idea, the harness is the rigging. It is based on Robert G. Cooper's Stage-Gate® model (see the attribution at the end of this file and in [NOTICE.md](NOTICE.md)).
+**Codifide Harness** is both the framework and the free, MIT-licensed harness that implements it. The framework (the Codifide Harness framework) is the Human → Gate → Loop model. The harness (the harness files) is the installable part: the `steering/` files, hooks, and templates in this repo that you strap onto an AI coding agent to instrument and constrain it. Think framework vs. the thing you actually `git clone` — the model is the idea, the harness is the rigging. It is based on Robert G. Cooper's Stage-Gate® model (see the attribution at the end of this file and in [NOTICE.md](NOTICE.md)).
 
-The name comes from road cycling. The *direttore sportivo* steers the team by radio from the team car. In these docs the *capitano* is the Human Steward, the *gregari* are the agents and lanes who do the work, the *ammiraglia* is the lane-runner (team car), and a *time cut* is a gate: finish inside it or you are out. A commercial multi-agent product built on this harness, Codifide Gregario ("greh-GAH-ree-oh"), is separate and private. Codifide Direttore governs one agent; Codifide Gregario governs a swarm.
+Codifide Swarm, a commercial multi-agent product built on this harness, is separate, private, and in development. The Codifide Harness governs one agent; Codifide Swarm governs a swarm of agents.
 
 Copy the `steering/` folder from this repo into your project's AI context directory. One small core file (`00-welcome.md`, about 2,200 words) loads every session; the other files load on demand when their topic comes up. Add the hooks and the enforcement scripts in `templates/` to make the critical rules hold even when the agent forgets them.
 
@@ -53,7 +53,7 @@ The steering files are plain Markdown. They work with any AI coding assistant th
 
 > **Scope of this (free, MIT) harness vs. the commercial product.** This open harness governs **one agent working one codebase** — gates, personas, review levels, the Intent Contract, HALT, and the enforcement layer. Codifide also builds a **commercial product on top of it** that governs a **coordinated swarm of agents** modernizing many entities in parallel (portfolio-scale decomposition, frozen seam contracts, per-lane verifiers, merged-state integration verification, connectors). If you need governed multi-agent delivery at portfolio scale — e.g. consolidating acquired entities onto one platform — reach out to Codifide. This repo stays free and MIT.
 
-> **Related work.** Other efforts address overlapping problems. Examples: the [Bilevel Autoresearch](https://arxiv.org/abs/2603.23420) paper (Qu and Lu, arXiv:2603.23420) describes an outer loop that improves an inner loop's search strategy, reported on one benchmark built on [karpathy/autoresearch](https://github.com/karpathy/autoresearch); that repository itself is a single-file experiment loop with a fixed time budget and a keep/discard ledger, and contains no meta-loop. Codifide Direttore includes a comparable bounded meta-loop owned by Atlas (`08`). We do not claim these were derived independently or are equivalent, and similarity between projects is a signal, not proof; see "Scope and limits" and "Validation status" below. See [NOTICE.md](NOTICE.md) for sources and licences.
+> **Related work.** Other efforts address overlapping problems. Examples: the [Bilevel Autoresearch](https://arxiv.org/abs/2603.23420) paper (Qu and Lu, arXiv:2603.23420) describes an outer loop that improves an inner loop's search strategy, reported on one benchmark built on [karpathy/autoresearch](https://github.com/karpathy/autoresearch); that repository itself is a single-file experiment loop with a fixed time budget and a keep/discard ledger, and contains no meta-loop. Codifide Harness includes a comparable bounded meta-loop owned by Atlas (`08`). We do not claim these were derived independently or are equivalent, and similarity between projects is a signal, not proof; see "Scope and limits" and "Validation status" below. See [NOTICE.md](NOTICE.md) for sources and licences.
 
 > **Acknowledgements.** This work builds on Robert G. Cooper's Stage-Gate® model and learned from Karpathy's autoresearch, the BMAD Method, Bilevel Autoresearch (Qu and Lu), published research on parallel coding agents, Mergify's writing on merge queues, and Claude Code's worktree guidance. GitHub Spec Kit was reviewed for comparison only. Ideas only: no text or code was copied. The full list, with links, what each source contributed, and licences, is in [NOTICE.md](NOTICE.md) section 2.
 
@@ -210,7 +210,7 @@ Full JSON and install steps: `templates/HOOKS-SESSION-STATE.md` and `templates/e
 
 ## What's New in v3.0 (October 2026)
 
-> **Naming.** This release line was published under the names Stage-Gate-Loop (SGL) and SGL Harness. The framework and harness are now both called Codifide Direttore. File names, environment variables, and paths that contain `sgl` are unchanged.
+> **Naming.** File names, environment variables, and paths that contain `sgl` are unchanged from earlier releases.
 
 v3.0 is a correctness and safety pass driven by two adversarial reviews of v2 (one same-vendor, one cross-vendor). The architecture is unchanged; the rules now say what the architecture meant.
 

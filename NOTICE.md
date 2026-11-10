@@ -8,7 +8,7 @@ This repository is licensed under the MIT License. Copyright (c) Codifide Inc. S
 
 The MIT License does not grant any right to use Codifide names or logos.
 
-Codifide®, Confidence in Code®, and the Codifide logo mark are registered trademarks of Codifide Inc. (registration documentation held by Codifide Inc.). "Codifide Direttore" (this framework and harness, formerly Stage-Gate-Loop and SGL Harness) and "Codifide Gregario" (a separate private commercial product) are product names used by Codifide Inc.; no registration is claimed for "Direttore" or "Gregario".
+Codifide®, Confidence in Code®, and the Codifide logo mark are registered trademarks of Codifide Inc. (registration documentation held by Codifide Inc.). "Codifide Harness" (this framework and harness, formerly Stage-Gate-Loop and SGL Harness) and "Codifide Swarm" (a separate private commercial product) are product names in use by Codifide Inc., not registered trademarks; no registration is claimed for them.
 
 ## 2. Acknowledgements
 This framework, its harness and its site were shaped by the sources below. Where a source corroborated a design we had already reached, or was only compared, the table says so. Licence information was checked against primary sources on 2026-11-10. Licences listed here are those of the third-party works, not of this repository.
@@ -61,7 +61,7 @@ Stage-Gate® is a registered trademark of Stage-Gate International (United State
 Names of other parties' products, projects, and companies are used to identify them (nominative use). No affiliation with, sponsorship by, or endorsement by those parties is implied. Marks belong to their respective owners.
 
 - "BMad" and "BMAD-METHOD" are identified by the BMAD project as trademarks of BMad Code, LLC. See https://github.com/bmad-code-org/BMAD-METHOD/blob/main/TRADEMARK.md.
-- Stage-Gate® is a registered trademark of Stage-Gate International (United States, Australia) and of R.G. Cooper & Associates (European Union, Canada), as stated in the cited literature. The Codifide Direttore framework (formerly called Stage-Gate-Loop) is based on Robert G. Cooper's Stage-Gate® model and extends it with automated verification loops and AI-specific controls. Codifide Inc. is not affiliated with, sponsored by, or endorsed by Stage-Gate International or R.G. Cooper & Associates.
+- Stage-Gate® is a registered trademark of Stage-Gate International (United States, Australia) and of R.G. Cooper & Associates (European Union, Canada), as stated in the cited literature. The Codifide Harness framework (formerly called Stage-Gate-Loop) is based on Robert G. Cooper's Stage-Gate® model and extends it with automated verification loops and AI-specific controls. Codifide Inc. is not affiliated with, sponsored by, or endorsed by Stage-Gate International or R.G. Cooper & Associates.
 
 
 ## 4. AI-assisted authorship

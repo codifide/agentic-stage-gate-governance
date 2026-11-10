@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-governance-gates
-description: Full criteria for Direttore gates G0, G1, G2/G3, G4, G5, G6, the G-LOOP, scale-adaptive tracks (Express/Standard/Enterprise), and governance principles. Load when running, preparing, or assessing any gate, or when selecting a track.
+description: Full criteria for Harness gates G0, G1, G2/G3, G4, G5, G6, the G-LOOP, scale-adaptive tracks (Express/Standard/Enterprise), and governance principles. Load when running, preparing, or assessing any gate, or when selecting a track.
 # For non-Kiro tools, load this file on demand when gate work begins.
 ---
 

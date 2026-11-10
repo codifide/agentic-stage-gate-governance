@@ -1,7 +1,7 @@
 ---
 inclusion: auto
 name: sgl-review-levels
-description: Direttore Review Levels R1, R2, R3 for individual changes (PRs, loop output) - criteria, the single classification procedure, path-based floors computed by CI, dependency rules, override rules, and calibration metrics. Load when assigning or checking a Review Level on any change.
+description: Harness Review Levels R1, R2, R3 for individual changes (PRs, loop output) - criteria, the single classification procedure, path-based floors computed by CI, dependency rules, override rules, and calibration metrics. Load when assigning or checking a Review Level on any change.
 # For non-Kiro tools, load this file on demand when classifying a change.
 ---
 
@@ -111,7 +111,7 @@ Walk the rules in order. **The highest level any rule assigns is the floor.** St
 
 ```
 R3:  governance: */.kiro/*, */.sgl/*, */steering/*, */.github/workflows/*, */CODEOWNERS,
-     */templates/enforcement/*, and the Direttore review/checklist/hook/intent/NFR templates
+     */templates/enforcement/*, and the Harness review/checklist/hook/intent/NFR templates
      (except .kiro/steering/next-session-prompt.md)
 R3:  */crypto/*, */encryption/*, */keys/*, */certs/*, */certificates/*, */tls/*, */secrets/*,
      *.pem, *.key, *.crt, *.p12, */infrastructure/prod*, */terraform/*prod*,

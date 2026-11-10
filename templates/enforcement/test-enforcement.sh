@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Codifide Direttore — enforcement test suite.
+# Codifide Harness — enforcement test suite.
 # Runs every enforcement script against throwaway git repos in $TMPDIR.
 # Usage: bash templates/enforcement/test-enforcement.sh   (SH_UNDER_TEST=/path/to/bash to pick a shell)
 # Exit 0 = all pass.
