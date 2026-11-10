@@ -126,7 +126,15 @@ while IFS= read -r sha; do
 
   # Human-approval markers may only be added by human commits.
   if [[ "$GEN" != "human" ]]; then
-    ADDED="$(git show --format= --unified=0 "$sha" | grep -E '^\+' | grep -vE '^\+\+\+')" || true
+    # The enforcement tooling must name the markers to detect them, so its own files are
+    # excluded from this scan (exact paths only, no globs). Narrow on purpose: these files are
+    # on the immutable-paths list and are R3 governance files, so changing them needs the
+    # Steward's approval anyway. Every other file, including product code, is still scanned.
+    ADDED="$(git show --format= --unified=0 "$sha" -- . \
+      ':(top,exclude).sgl/check-review-level.sh' ':(top,exclude).sgl/test-enforcement.sh' ':(top,exclude).sgl/README.md' \
+      ':(top,exclude)templates/enforcement/check-review-level.sh' ':(top,exclude)templates/enforcement/test-enforcement.sh' \
+      ':(top,exclude)templates/enforcement/README.md' \
+      | grep -E '^\+' | grep -vE '^\+\+\+')" || true
     if printf '%s\n' "$ADDED" | grep -Eq 'SILENT-CATCH-APPROVED|COVERAGE-EXCEPTION.*[Aa]pproved'; then
       echo "  $short FAIL: non-human commit adds a human-approval marker"
       FAILS=$((FAILS+1))

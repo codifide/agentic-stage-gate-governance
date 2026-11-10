@@ -4,6 +4,9 @@
 # Usage: bash templates/enforcement/test-enforcement.sh   (SH_UNDER_TEST=/path/to/bash to pick a shell)
 # Exit 0 = all pass.
 set -u
+# Isolate from the caller: an inherited approval/waiver variable (e.g. SGL_VERIFIER_CHANGE_APPROVED_BY)
+# would silently flip the "must fail" cases. Tests set these per case where needed.
+unset SGL_WAIVE SGL_REQUIRE_IMMUTABLE_LIST SGL_STEWARD SGL_VERIFIER_CHANGE_APPROVED_BY SGL_SESSIONS SGL_LICENSE_POLICY SGL_BASE
 SH="${SH_UNDER_TEST:-bash}"
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FAIL=0
@@ -100,6 +103,12 @@ nb t12; echo 'x // SILENT-CATCH-APPROVED: Pat, 2026' >> src/lib/access.ts; cm mk
 Review-Level: R2"; rl "agent adds approval marker" 1
 nb t13; echo 'x // SILENT-CATCH-APPROVED: Pat, 2026' >> src/lib/access.ts; cm mk "Generated-By: human
 Review-Level: R2"; rl "human adds approval marker" 0
+nb t13b; mkdir -p .sgl && printf '%s\n' "grep -E 'SILENT-CATCH-APPROVED|COVERAGE-EXCEPTION.*[Aa]pproved'" > .sgl/check-review-level.sh; cm tool "Generated-By: ai-agent
+Review-Level: R3"; rl "agent installs enforcement script naming the markers" 0
+nb t13c; mkdir -p .sgl src/lib && printf '%s\n' "x" > .sgl/check-review-level.sh; echo 'x // SILENT-CATCH-APPROVED: Pat, 2026' >> src/lib/access.ts; cm tool "Generated-By: ai-agent
+Review-Level: R3"; rl "agent marker in product code beside enforcement script still fails" 1
+nb t13d; mkdir -p .sgl && echo 'x // SILENT-CATCH-APPROVED: Pat, 2026' > .sgl/other.sh; cm tool "Generated-By: ai-agent
+Review-Level: R3"; rl "agent marker in other .sgl file still fails" 1
 $SH "$S" nope >/dev/null 2>&1; pass "review-level: bad base fails closed" 2 $?
 nb t14; mkdir -p .kiro/steering && echo rule > .kiro/steering/00-welcome.md; cm gov "Generated-By: human
 Review-Level: R2"; rl "harness core edit at R2" 1
