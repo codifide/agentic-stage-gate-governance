@@ -112,14 +112,15 @@ pairs() {
     # CycloneDX: .components[].licenses[].license.id/.name ; SPDX: .packages[].licenseConcluded/Declared ;
     # license-checker --json: { "pkg@ver": { "licenses": "MIT" } }
     printf '%s' "$INPUT" | jq -r '
-      if .components then .components[] | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else join(" AND ") end) ] | @tsv
+      def comps: .[]? | ., (.components | comps);
+      if .components then (.components | comps) | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else join(" AND ") end) ] | @tsv
       elif .packages then .packages[] | [ (.name // "?"), (.licenseConcluded // .licenseDeclared // "UNKNOWN") ] | @tsv
       else to_entries[] | [ .key, ( (.value.licenses // .value.license // "UNKNOWN") | if type=="array" then join(" AND ") else . end ) ] | @tsv
-      end' 2>/dev/null
+      end'
   else
     # plain list: "name,license" or "name<TAB>license" or SPDX tag-value lines
     printf '%s' "$INPUT" | awk '
-      /^PackageName:/ { n=$0; sub(/^PackageName:[ \t]*/,"",n) }
+      /^PackageName:/ { if(n!="") print n"\tUNKNOWN"; n=$0; sub(/^PackageName:[ \t]*/,"",n) }
       /^PackageLicenseConcluded:|^PackageLicenseDeclared:/ { lic=$0; sub(/^[^:]*:[ \t]*/,"",lic); if(n!=""){ print n"\t"lic; n="" } ; next }
       /[,\t]/ && !/^PackageName:/ {
         line=$0; sub(/\r$/,"",line);
@@ -128,11 +129,13 @@ pairs() {
           gsub(/^[ \t"]+|[ \t"]+$/,"",nm); gsub(/^[ \t"]+|[ \t"]+$/,"",lic);
           low=tolower(lic); if(low=="license"||low=="licenses"||low=="license name") next;
           if(nm!="") print nm"\t"lic } }
+      END { if(n!="") print n"\tUNKNOWN" }
     '
   fi
 }
 
-STREAM="$(pairs)"
+STREAM="$(pairs)"; PAIRS_RC=$?
+(( PAIRS_RC == 0 )) || die "could not parse the license input completely (parser exit $PAIRS_RC); refusing to pass on partial output"
 [[ -n "${STREAM//[[:space:]]/}" ]] || die "could not parse any (package, license) pairs from input — unsupported format?"
 
 matches_list() { # $1 = lowercased license token, rest = patterns (globs ok)
@@ -178,7 +181,13 @@ lic_atom() {
   fi
   TI=$((TI+1))
   term_ok "$t"; r=$?
-  if [[ "${TOK[TI]:-}" == "with" ]]; then TI=$((TI+2)); fi
+  if [[ "${TOK[TI]:-}" == "with" ]]; then
+    local ex="${TOK[TI+1]:-}"
+    case "$ex" in
+      ""|or|and|with|"("|")") PARSE_ERR=1; note_bad "malformed WITH (no exception id)"; r=1 ;;
+    esac
+    TI=$((TI+2))
+  fi
   return $r
 }
 lic_and() {

@@ -25,7 +25,8 @@
 #   rule 2 outside conventional auth/crypto paths, 3 (new architecture),
 #   5 (compliance), 6 (AI-infrastructure dependencies), 7 (behavior outside an
 #   approved design), 14 (failed an automated check before passing).
-#   Merge commits are checked on their conflict resolutions (git diff-tree --cc).
+#   Merge commits are checked on their conflict resolutions (git diff-tree --cc); a root commit
+#   (an orphan history merged in) is checked against the empty tree (--root).
 #   If the PR as a whole trips the size rule, EVERY commit must declare the size floor.
 #
 # What this does NOT prove (documented limits, see templates/enforcement/README.md):
@@ -127,7 +128,7 @@ while IFS= read -r sha; do
   [[ -z "$LVL" ]] && { echo "  $short FAIL: missing Review-Level trailer"; FAILS=$((FAILS+1)); LVL=0; }
 
   # --cc: normal diff for ordinary commits; conflict resolutions / evil-merge content for merges.
-  git -c core.quotepath=off diff-tree --cc --no-commit-id --name-only -r --no-renames -z "$sha" > "$FILELIST" || die "git diff-tree failed for $sha"
+  git -c core.quotepath=off diff-tree --root --cc --no-commit-id --name-only -r --no-renames -z "$sha" > "$FILELIST" || die "git diff-tree failed for $sha"
   FLOOR=1; WHY="R1 allowlist only"
   while IFS= read -r -d '' f; do
     [[ -z "$f" ]] && continue

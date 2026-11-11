@@ -21,6 +21,10 @@ Security and distribution hardening of the enforcement layer. Driven by a read-o
 - CI check missed protected paths with non-ASCII or newline characters in the name (git quotes them), a file named like a protected directory, case variants, and symlinks added into protected paths.
 - License check: policy came from the PR's own tree; `*` in a license expression expanded to file names; a policy line of `*` allowed everything; `MIT License` and similar names were rejected; `A OR B` was treated as AND; SPDX tag-value expressions were truncated to the first word.
 - Review-level check: wrong file names for git-quoted paths; R1 allowlist accepted code under `docs/`.
+- Guard resolved `..` before symlinks (`src/link/../check.py`), judged the target of a symlink instead of its own name (deleting `verifiers/link.py`), ignored a hard link whose other name lives outside the repo, allowed a recursive delete of an ancestor of a protected directory, and dropped any string with an interior newline. Symlinks are now resolved component by component and every candidate is checked three ways; interior-newline and NUL-truncated strings and JSON object keys are checked too.
+- CI immutable check: a workflow or other enforcement-path edit was not reported unless the list named it; a symlink to another symlink (or through a directory symlink) escaped the one-hop check. The tree is now followed across any number of hops.
+- Review-level check: a root commit (orphan history merged in) was never checked (`git diff-tree --root`).
+- License check: nested CycloneDX components were skipped; partial parser output was accepted; an SPDX package with no license line was dropped; `MIT WITH` with no exception id was accepted.
 - Stale text: the case count, the gate count in CONTRIBUTING and the whitepaper, the old version footer, a counsel marker in CONTRIBUTING and NOTICE, unqualified coverage and timing claims in the whitepaper and an article.
 
 ### Added

@@ -78,6 +78,29 @@ if [[ -r .codifide/immutable-paths ]]; then echo "SKIP  guard: unreadable list (
 chmod 644 .codifide/immutable-paths
 printf '%s' '{"input":{"path":"src/app.py"}}' | $SH .codifide/guard-immutable-paths.sh 2>&1 >/dev/null | grep -q . ; pass "guard: silent when allowing with a list present" 1 $?
 g "documented limit: shell command text is not inspected" 0 '{"command":"printf x >> verifiers/check.py"}'
+# --- iteration 2 regressions (each fails on the previous scripts) ---
+mkdir -p verifiers/sub src/real; ln -s ../verifiers/sub src/link; ln -s real src/okdir
+g "block symlinked dir then .. (src/link/../check.py resolves to verifiers/check.py)" 2 '{"input":{"path":"src/link/../check.py"}}'
+g "allow symlinked dir then .. that stays outside protected paths" 0 '{"input":{"path":"src/okdir/../app.py"}}'
+rm -f src/link src/okdir; rmdir src/real verifiers/sub
+ln -s ../src/app.py verifiers/link.py
+g "block delete of a symlink that sits inside a protected dir (target is unprotected)" 2 '{"input":{"path":"verifiers/link.py","operation":"delete"}}'
+rm -f verifiers/link.py
+OUTD="$(mktemp -d)"; ln verifiers/check.py "$OUTD/alias.py"
+g "block hard link to a verifier that lives outside the repo" 2 "{\"input\":{\"path\":\"$OUTD/alias.py\"}}"
+rm -rf "$OUTD"
+g "block recursive delete of an ancestor of a protected dir (tests)" 2 '{"input":{"path":"tests","operation":"delete","recursive":true}}'
+g "block delete of the repo root (.)" 2 '{"input":{"path":".","operation":"delete","recursive":true}}'
+g "block delete of the directory that holds the list (.codifide)" 2 '{"input":{"path":".codifide","operation":"delete"}}'
+g "allow a directory that holds no protected path (src)" 0 '{"input":{"path":"src","operation":"list"}}'
+g "block path with an interior newline inside a protected dir" 2 '{"input":{"path":"verifiers/a\nb.py","operation":"write"}}'
+g "block path with a NUL byte that truncates to a verifier" 2 '{"input":{"path":"verifiers/check.py\u0000.txt"}}'
+g "block a protected path used as a JSON object key" 2 '{"files":{"verifiers/check.py":"x"}}'
+SHIM="$(mktemp -d)"; for t in bash git python3 base64 find readlink sed tr head cat dirname basename grep awk mktemp rm; do ln -s "$(command -v $t)" "$SHIM/$t" 2>/dev/null; done
+printf '%s' '{"input":{"path":"verifiers/a\nb.py"}}' | env PATH="$SHIM" bash .codifide/guard-immutable-paths.sh >/dev/null 2>&1; pass "guard: python3 fallback (no jq) blocks an interior-newline path" 2 $?
+printf '%s' '{"input":{"path":"Verifiers/check.py\n"}}' | env PATH="$SHIM" bash .codifide/guard-immutable-paths.sh >/dev/null 2>&1; pass "guard: python3 fallback (no jq) blocks case variant with trailing newline" 2 $?
+printf '%s' '{"input":{"path":"src/app.py"}}' | env PATH="$SHIM" bash .codifide/guard-immutable-paths.sh >/dev/null 2>&1; pass "guard: python3 fallback (no jq) allows src" 0 $?
+rm -rf "$SHIM"
 
 # ---------- immutable CI ----------
 ci(){ $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: $1" "$2" $?; }
@@ -110,6 +133,29 @@ $SH .codifide/check-immutable-paths.sh does-not-exist >/dev/null 2>&1; pass "imm
 git checkout -q --orphan nolist && git rm -rqf . && echo x > f && git add f && git commit -qm nolist && git checkout -qb nolist-feat && echo y >> f && git commit -qam y
 $SH "$SRC"/check-immutable-paths.sh nolist >/dev/null 2>&1; pass "immutable-ci: no list, not required, passes" 0 $?
 CODIFIDE_REQUIRE_IMMUTABLE_LIST=1 $SH "$SRC"/check-immutable-paths.sh nolist >/dev/null 2>&1; pass "immutable-ci: no list + required fails closed" 2 $?
+# --- iteration 2 regressions: CI check ---
+C2=$(mktemp -d); cd "$C2" && git init -q -b main && git config user.email t@t && git config user.name t
+mkdir -p .codifide verifiers src; printf 'verifiers/\n' > .codifide/immutable-paths; cp "$SRC"/check-immutable-paths.sh .codifide/
+echo v > verifiers/check.py; echo s > src/app.py; ln -s ../verifiers/check.py src/existing.py; ln -s ../verifiers src/vdir
+git add -A && git commit -qm base
+git checkout -qb feat/wf2 main; mkdir -p .github/workflows; echo w > .github/workflows/enforcement.yml; git add -A; git commit -qm wf
+ci "workflow edit is an enforcer violation even when the list does not name it" 1
+CODIFIDE_VERIFIER_CHANGE_APPROVED_BY="Pat" $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: verifier approval does not waive an unlisted workflow edit" 1 $?
+CODIFIDE_ENFORCER_CHANGE_APPROVED_BY="Pat" $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: enforcer approval passes an unlisted workflow edit" 0 $?
+git checkout -qb feat/chain main; sl=$(printf 'existing.py' | git hash-object -w --stdin)
+git update-index --add --cacheinfo 120000,$sl,src/new.py; git commit -qm chain
+ci "new symlink to an existing symlink that points into a verifier (two hops)" 1
+git checkout -qb feat/dirchain main; sl=$(printf 'vdir/check.py' | git hash-object -w --stdin)
+git update-index --add --cacheinfo 120000,$sl,src/n2.py; git commit -qm dirchain
+ci "new symlink through a directory symlink into a verifier" 1
+git checkout -qb feat/loop main; a=$(printf 'b2.py' | git hash-object -w --stdin); b=$(printf 'a2.py' | git hash-object -w --stdin)
+git update-index --add --cacheinfo 120000,$a,src/a2.py; git update-index --add --cacheinfo 120000,$b,src/b2.py; git commit -qm loop
+ci "symlink loop is reported (fail closed)" 1
+git checkout -qb feat/okchain main; sl=$(printf 'app.py' | git hash-object -w --stdin)
+git update-index --add --cacheinfo 120000,$sl,src/ok1.py; sl2=$(printf 'ok1.py' | git hash-object -w --stdin)
+git update-index --add --cacheinfo 120000,$sl2,src/ok2.py; git commit -qm okchain
+ci "chain of symlinks that ends at an unprotected file passes" 0
+cd /; rm -rf "$C2"; cd "$T"
 cd /; rm -rf "$T"
 
 # ---------- review level ----------
@@ -210,6 +256,11 @@ Review-Level: R3"; rl "documented limit: R3 is a declaration, no review artifact
 nb t34; mkdir -p ".kiro/steering" && echo r > ".kiro/steering/a
 b.md"; cm nlf "Generated-By: ai-agent
 Review-Level: R2"; rl "newline in a governance file name at R2 (R3 floor)" 1
+nb t40; git checkout -q --orphan t40orph; git rm -rqf . >/dev/null; mkdir -p src/crypto; echo k > src/crypto/key.ts; cm rootcrypto "Generated-By: ai-agent
+Review-Level: R1"
+git checkout -qb t40m main; git merge -q --allow-unrelated-histories --no-ff t40orph -m "merge orphan" -m "Generated-By: ai-agent
+Review-Level: R1"; rl "orphan root commit touching src/crypto at R1 (merged with --allow-unrelated-histories)" 1
+git checkout -q main
 cd /; rm -rf "$T"
 
 # ---------- license policy ----------
@@ -255,6 +306,13 @@ touch mit
 lic "wildcard license token does not glob to file names" '{"x@1":{"licenses":"*"}}' 1
 rm -f mit
 printf '*\n' > "$LT/wild-policy"; printf '{"a@1":{"licenses":"GPL-3.0-only"}}' | CODIFIDE_LICENSE_POLICY="$LT/wild-policy" $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: all-wildcard allow line is rejected" 2 $?
+lic "nested cyclonedx component with a denied license fails" '{"components":[{"name":"parent","licenses":[{"license":{"id":"MIT"}}],"components":[{"name":"copyleft","licenses":[{"license":{"id":"GPL-3.0-only"}}]}]}]}' 1
+lic "nested cyclonedx, allowed child passes" '{"components":[{"name":"parent","licenses":[{"license":{"id":"MIT"}}],"components":[{"name":"child","licenses":[{"license":{"id":"ISC"}}]}]}]}' 0
+lic "partial parser output (a license field of the wrong type) is an error, not a pass" '{"components":[{"name":"ok","licenses":[{"license":{"id":"MIT"}}]},{"name":"unscanned","licenses":"GPL-3.0-only"}]}' 2
+printf 'PackageName: unknown-dependency\nPackageVersion: 1\nPackageName: permitted\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx package with no license line is UNKNOWN, not dropped" 1 $?
+printf 'PackageName: only-name\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx trailing package with no license fails" 1 $?
+lic "malformed WITH (nothing after it) fails" 'dependency,MIT WITH' 1
+lic "malformed WITH (open paren after it) fails" 'dependency,MIT WITH (' 1
 # policy must come from the base branch
 LB=$(mktemp -d); cd "$LB" && git init -q -b main && git config user.email t@t && git config user.name t && mkdir .codifide && printf 'MIT\nApache-2.0\n!GPL-*\n' > .codifide/allowed-licenses && git add -A && git commit -qm base
 git checkout -qb feat/policy; printf 'GPL-3.0-only\n' >> .codifide/allowed-licenses; git commit -qam "allow GPL in the same change"

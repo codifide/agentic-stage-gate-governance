@@ -23,8 +23,11 @@
 #
 # Matching is case-insensitive (case-insensitive checkouts), directory patterns match
 # the directory entry itself, and a symlink added or changed in the diff whose target
-# resolves into a protected path is reported. File names are read NUL-delimited, so
-# newlines and spaces in names cannot hide a path.
+# resolves into a protected path is reported. The target is followed through the HEAD
+# tree across any number of symlink hops (a loop or more than 40 hops is a violation).
+# Any change under the enforcement paths listed above is reported even when the list does
+# not name it, so an enforcer edit can never ride on a verifier-only approval. File names
+# are read NUL-delimited, so newlines and spaces in names cannot hide a path.
 #
 # Set CODIFIDE_REQUIRE_IMMUTABLE_LIST=1 once the repo has adopted a list, so a missing
 # list on the base branch fails closed instead of passing.
@@ -78,21 +81,50 @@ is_enforcer() {
   return 1
 }
 
-# Lexical normalization of a repo-relative path. Prints nothing if it escapes the root.
-normrel() {
-  local IFS='/' part out=() parts
-  read -ra parts <<< "$1"
-  for part in "${parts[@]}"; do
-    case "$part" in
-      ''|'.') ;;
-      '..') (( ${#out[@]} == 0 )) && return 0; unset 'out[${#out[@]}-1]' ;;
-      *) out+=("$part") ;;
-    esac
-  done
-  (( ${#out[@]} == 0 )) && return 0
-  printf '%s' "${out[0]}"; local i; for ((i=1; i<${#out[@]}; i++)); do printf '/%s' "${out[i]}"; done
+# Split $1 on "/" into the array SP (newlines and spaces stay inside a component).
+SP=()
+split_path() {
+  local oldifs="$IFS"
+  IFS='/'; set -f
+  # shellcheck disable=SC2206
+  SP=( $1 )
+  set +f; IFS="$oldifs"
 }
-
+# Resolve a repo-relative path inside the HEAD tree, one component at a time, following
+# every symlink (any number of hops, directory symlinks included) and applying ".." to
+# the real parent. Prints the resolved path; prints nothing when the path leaves the
+# repository (absolute target or too many ".."). Returns 1 on a loop or more than 40
+# expansions, which the caller reports as a violation (fail closed).
+tree_resolve() {
+  local cur="" hops=0 i comp next line m rest sha t j
+  local q=() nq=()
+  split_path "$1"; q=( ${SP[@]+"${SP[@]}"} )
+  i=0
+  while (( i < ${#q[@]} )); do
+    comp="${q[i]}"
+    case "$comp" in
+      ''|'.') i=$((i+1)); continue ;;
+      '..') [[ -z "$cur" ]] && return 0
+            if [[ "$cur" == */* ]]; then cur="${cur%/*}"; else cur=""; fi
+            i=$((i+1)); continue ;;
+    esac
+    next="${cur:+$cur/}$comp"
+    line="$(git --literal-pathspecs ls-tree -z HEAD -- "$next" 2>/dev/null | tr '\0' '\n' | head -n 1)"
+    m="${line%% *}"
+    if [[ "$m" == "120000" ]]; then
+      hops=$((hops+1)); (( hops > 40 )) && return 1
+      rest="${line#* }"; rest="${rest#* }"; sha="${rest%%$'\t'*}"
+      t="$(git cat-file blob "$sha" 2>/dev/null; printf x)"; t="${t%x}"
+      [[ "$t" == /* ]] && return 0
+      split_path "$t"; nq=( ${SP[@]+"${SP[@]}"} )
+      for ((j=i+1; j<${#q[@]}; j++)); do nq+=("${q[j]}"); done
+      q=( ${nq[@]+"${nq[@]}"} ); i=0
+      continue
+    fi
+    cur="$next"; i=$((i+1))
+  done
+  printf '%s' "$cur"
+}
 pattern_for() { # $1 = repo-relative path; echoes the matching pattern (nothing if none or excepted)
   local f="$1" ex pat
   for ex in "${EXCEPTIONS[@]+"${EXCEPTIONS[@]}"}"; do
@@ -117,18 +149,23 @@ add_violation() { # $1 = path, $2 = pattern, $3 = note
 while IFS= read -r -d '' meta && IFS= read -r -d '' f; do
   [[ -z "$f" ]] && continue
   pat="$(pattern_for "$f")"
-  if [[ -n "$pat" ]]; then add_violation "$f" "$pat" ""; fi
-  # Symlink added or changed: does its target resolve into a protected path?
+  if [[ -n "$pat" ]]; then add_violation "$f" "$pat" ""
+  elif is_enforcer "$f"; then ENF+=("$f  (enforcement mechanism; not named in the list)"); fi
+  # Symlink added or changed: does its target, followed through the HEAD tree, land in a protected path?
   read -r _om nm _os ns _st <<< "${meta#:}"
   if [[ "$nm" == "120000" ]]; then
-    target="$(git cat-file blob "$ns" 2>/dev/null)" || target=""
+    target="$(git cat-file blob "$ns" 2>/dev/null; printf x)"; target="${target%x}"
     case "$target" in
-      /*) tn="" ;;
-      *)  d="$(dirname "$f")"; [[ "$d" == "." ]] && d=""; tn="$(normrel "${d:+$d/}$target")" ;;
+      /*) tn=""; rc=0 ;;
+      *)  d="$f"; if [[ "$d" == */* ]]; then d="${d%/*}"; else d=""; fi
+          tn="$(tree_resolve "${d:+$d/}$target")"; rc=$? ;;
     esac
-    if [[ -n "$tn" ]]; then
+    if (( rc != 0 )); then
+      add_violation "$f" "(symlink chain)" "[symlink loop or more than 40 hops; cannot prove it avoids protected paths]"
+    elif [[ -n "$tn" ]]; then
       tpat="$(pattern_for "$tn")"
-      [[ -n "$tpat" ]] && add_violation "$f" "$tpat" "[symlink into protected path '$tn']"
+      if [[ -n "$tpat" ]]; then add_violation "$f" "$tpat" "[symlink into protected path '$tn']"
+      elif is_enforcer "$tn"; then ENF+=("$f  [symlink into enforcement mechanism '$tn']"); fi
     fi
   fi
 done < "$RAW"
