@@ -4,6 +4,8 @@ Two harness rules matter too much to leave to prose: **a loop may never edit wha
 
 This page also says what the scripts do **not** do. Read "Documented limits" before relying on them.
 
+**What actually gates a change.** The local guard hook is a seatbelt: it catches accidental and simple agent file-tool writes, and it can be bypassed by a shell command, an unsupported host, or a hook that is not registered. The controls that gate a change are the three CI checks, **run from the base branch's copy**, plus GitHub branch protection (the `codifide-enforcement` check required), CODEOWNERS and restricted label permissions. Those are settings in your GitHub organization, not files in this repo; the scripts cannot see whether you set them (see "What you must configure"). Each fresh adversarial review of these scripts has found new edge cases (five rounds: 12, 10, 4, 8 and 8 bypasses, all fixed or documented, the latest fixes not yet re-reviewed). Treat them as defense in depth, not a proof.
+
 | File | What it does | Where it goes |
 |------|--------------|---------------|
 | `immutable-paths.example` | The human-owned list of protected paths | Copy to `<repo>/.codifide/immutable-paths` and edit |
@@ -101,6 +103,9 @@ These cannot be fixed inside a bash script or a file-write hook. Each has a comp
 | **Text-encoded approval markers** (for example UTF-16, or base64 in a data file) are not recognised by the marker scan; only the plain ASCII markers are | A scan sees bytes, not intent | CODEOWNERS and review on data files; the Steward reads agent diffs |
 | **`CODIFIDE_ROOT` is no longer an override.** Setting it to anything but the repository top level makes the guard block | A caller-chosen root would let a decoy list stand in for the real one | Unset it; run the hook from inside the repository |
 | **The workflow file can be edited by the PR it judges** (for `pull_request` events) | A property of how the CI host picks the workflow | CODEOWNERS on `.github/workflows/`, or an organization required workflow |
+| **Non-ASCII names need `python3`.** The CI check folds NFC/NFD spellings with `python3`; without it a non-ASCII changed path is reported and a non-ASCII symlink component fails closed, and the guard falls back to an inode comparison with literal list entries | Python is a one-time install; the fail-closed direction over-reports | Install `python3` in the CI image and on developer machines |
+| **The guard's directory and hard-link scans need to read the whole repository.** If `find` cannot (for example an unreadable directory), the guard blocks the write rather than guess; running the hook as `root` hides the permission problem, it does not remove the risk | A scan that could not finish has not shown that no protected name shares the inode | Fix the permissions; run agents as an unprivileged user |
+| **The CI scripts ignore every `GIT_*` variable** (`GIT_DIR`, `GIT_WORK_TREE`, ... so the environment cannot choose the repository) | An environment the workflow controls could otherwise point git at a decoy | If your CI needs `safe.directory`, set it in the global gitconfig, not through `GIT_CONFIG_*` |
 | **Host behaviour is untested here:** whether a host loads `inclusion: auto` files, and whether it honours exit 2 | We do not run those hosts in this repo's tests | Run the "Check that your hook blocks" test in your own environment |
 
 ## What the review-level check can and cannot compute

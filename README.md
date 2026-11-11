@@ -252,10 +252,25 @@ v3.0 is a correctness and safety pass driven by two adversarial reviews of v2 (o
 - **Concurrency fix.** Session handoffs live in the shared git directory, so every worktree can see them.
 
 ### Scope and limits
+- **The local write guard is a seatbelt, not a gate.** It catches accidental and simple agent file-tool writes. The controls that actually gate a change are the CI checks run from the **base** branch plus GitHub branch protection, CODEOWNERS and label permissions, which **you** must configure (see `templates/enforcement/README.md`, "What you must configure"). Without a required status check on the protected branch the CI scripts are advisory.
+- **Defense in depth, not a proof.** Each fresh adversarial review of these scripts has found new edge cases (five rounds: 12, 10, 4, 8 and 8 bypasses, all fixed or documented, each with a regression test). The latest fixes have not been re-reviewed. Expect that another review would find more, and treat the scripts as one layer.
 
 - This is a governance harness for AI coding agents. It is not a compliance certification, and it does not replace legal, security, regulatory, or clinical review.
 - Using it does not make a system HIPAA, SOC 2, or ISO compliant. Those determinations belong to qualified people and auditors.
-- It reduces specific risks through written rules and four tested scripts (`templates/enforcement/`: `guard-immutable-paths.sh`, `check-immutable-paths.sh`, `check-review-level.sh`, `check-licenses.sh`). Everything else is guidance an agent can still get wrong. Known limits that scripts cannot close: shell commands are not seen by the write guard, `Generated-By` is self-asserted, a declared `Review-Level: R3` is not evidence that a review happened, and the approval labels are only as strong as your GitHub permissions. They are listed with compensating controls under "Documented limits" in `templates/enforcement/README.md`. See "Session Continuity and Enforcement (Agent Hooks)" for which hooks are advisory and which block.
+- It reduces specific risks through written rules and four tested scripts (`templates/enforcement/`: `guard-immutable-paths.sh`, `check-immutable-paths.sh`, `check-review-level.sh`, `check-licenses.sh`). Everything else is guidance an agent can still get wrong. Known limits that scripts cannot close are in the table below and, in full, under "Documented limits" in `templates/enforcement/README.md`. See "Session Continuity and Enforcement (Agent Hooks)" for which hooks are advisory and which block.
+
+| Limit | Compensating control (yours to configure) |
+|---|---|
+| Shell commands are not seen by the write guard (`printf x >> verifiers/check.py`) | CI check as a required status check; deny shell writes to protected paths in the agent's permissions; sandbox the agent |
+| `Generated-By` is self-asserted; `Review-Level: R3` is a declaration, not evidence that a review happened | Signed commits, a separate bot identity for agents, CODEOWNERS review, the Steward reads the review package |
+| Path floors are a convention (`tests/` and `*.test.*` are trusted as tests) | CODEOWNERS on production directories; review |
+| Approval labels and variables are only as strong as who can set them; the workflow file can be edited by the PR it judges | Label permissions, CODEOWNERS, branch protection, an organization required workflow |
+| An absolute-target symlink is not followed by the CI check | Review absolute-target symlinks; keep protected data out of the agent's OS reach |
+| A non-ASCII file name needs `python3` for the Unicode-alias check; without it the CI check reports the path (fail closed) and the guard falls back to an inode comparison | Install `python3` |
+| Text-encoded approval markers (UTF-16, base64 in a data file) are not recognised | CODEOWNERS and review on data files |
+| The guard over-blocks some harmless strings (`.`, a directory holding a protected path) and blocks hard-link writes when part of the repo is unreadable | Choose other arguments; fix the permissions (fail-closed direction) |
+| How a host treats exit 2 and `inclusion: auto` is untested here | Run "Check that your hook blocks" in your environment |
+
 - Host-runtime behaviours marked `[UNVERIFIED]` in the templates (for example how a tool loads `inclusion: auto` files, or whether a hook event fires) have not been verified and vary by tool.
 - The software and documents are provided as is, without warranty; see [LICENSE](LICENSE).
 - See also [NOTICE.md](NOTICE.md) (acknowledgements, trademarks, AI-assisted authorship) and [SECURITY.md](SECURITY.md) (reporting a vulnerability).
@@ -267,7 +282,7 @@ What has been done:
 - **Structural validation** of every steering file, template, and hook definition (numbering, references, JSON).
 - **Two adversarial reviews of v2** (one same-vendor, one cross-vendor). Their findings drove v3.
 - **Two cross-vendor closure audits of v3**, each checking every prior finding against quoted v3 text. The first found gaps in the new enforcement scripts; the second confirmed those fixes and found that the harness's own files could be edited at R1, which is now R3.
-- **An automated test suite** for the enforcement scripts (`templates/enforcement/test-enforcement.sh`, 222 cases; the script prints the authoritative result and checks that this number matches): allowed and blocked writes, `..` and symlink and hard-link tricks, case variants, very long and newline paths, self-protection, renames, attempts to loosen the list, scoped approvals, per-commit Review Level floors, merge commits, the size rule (including binaries), provenance, agent-written approval markers, license expressions and base-branch policy, hook and converter files, and documentation consistency. Cases marked "documented limit" pin behaviour we know cannot be fixed in a script.
+- **An automated test suite** for the enforcement scripts (`templates/enforcement/test-enforcement.sh`, 245 cases; the script prints the authoritative result and checks that this number matches): allowed and blocked writes, `..` and symlink and hard-link tricks, case variants, very long and newline paths, self-protection, renames, attempts to loosen the list, scoped approvals, per-commit Review Level floors, merge commits, the size rule (including binaries), provenance, agent-written approval markers, license expressions and base-branch policy, hook and converter files, and documentation consistency. Cases marked "documented limit" pin behaviour we know cannot be fixed in a script.
 - **Two further cross-vendor reviews of the enforcement scripts** (a read-only assessment and a Grok 4.7 cold review). Their findings are what 3.1 fixes, or states as limits.
 
 What has **not** been done: a controlled behavioral study measuring outcomes with and without the harness. The scripts enforce what they can compute; the rest is guidance an agent can still get wrong. Treat effectiveness claims accordingly.
