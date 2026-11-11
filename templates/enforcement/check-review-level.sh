@@ -51,6 +51,12 @@
 
 set -uo pipefail
 
+# Git environment overrides (GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR, GIT_INDEX_FILE ...) would let the
+# calling environment point git at a decoy repository and so choose what is checked. Drop them all.
+# (If your CI needs safe.directory, set it in the global gitconfig, not through GIT_CONFIG_* variables.)
+for _v in $(compgen -e | grep -E '^GIT_'); do unset "$_v"; done
+unset _v
+
 die() { echo "Codifide review-level: ERROR: $*" >&2; exit 2; }
 
 BASE="${1:-${CODIFIDE_BASE:-origin/main}}"
@@ -65,7 +71,10 @@ fi
 
 # Handoff file is written every session; it is data, not rules (00-welcome.md section 7).
 HANDOFF_EXEMPT=('*/.kiro/steering/next-session-prompt.md')
-GOVERNANCE_GLOBS=('*/.kiro/*' '*/.claude/*' '*/.cursor/*' '*/.codex/*' '*/.codifide/*' '*/steering/*' '*/.github/workflows/*' '*/CODEOWNERS' '*/templates/enforcement/*'
+# The bare directory names are listed too: a symlink named `.codifide` (or `.kiro`, ...) is a single
+# tree entry whose path ends at the name, so `*/.codifide/*` alone would never see it.
+GOVERNANCE_GLOBS=('*/.kiro' '*/.claude' '*/.cursor' '*/.codex' '*/.codifide' '*/.github' '*/.github/workflows' '*/steering' '*/templates/enforcement'
+                  '*/.kiro/*' '*/.claude/*' '*/.cursor/*' '*/.codex/*' '*/.codifide/*' '*/steering/*' '*/.github/workflows/*' '*/CODEOWNERS' '*/templates/enforcement/*'
                   '*/templates/B-TEAM-REVIEW-PACKAGE.md' '*/templates/CODE-REVIEW-PROMPT-*' '*/templates/GATE-EVIDENCE-CHECKLIST.md'
                   '*/templates/HOOKS-SESSION-STATE.md' '*/templates/INTENT-CONTRACT.md' '*/templates/NFR-TEMPLATE.md'
                   '*/templates/EXISTING-PROJECT-ASSESSMENT.md')

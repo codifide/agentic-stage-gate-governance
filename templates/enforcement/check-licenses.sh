@@ -46,6 +46,12 @@
 set -uo pipefail
 set -f   # no pathname expansion: a license token like "*" must never expand to file names
 
+# Git environment overrides (GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR, GIT_INDEX_FILE ...) would let the
+# calling environment point git at a decoy repository and so choose what is checked. Drop them all.
+# (If your CI needs safe.directory, set it in the global gitconfig, not through GIT_CONFIG_* variables.)
+for _v in $(compgen -e | grep -E '^GIT_'); do unset "$_v"; done
+unset _v
+
 die() { echo "Codifide licenses: ERROR: $*" >&2; exit 2; }
 
 BASE_ARG=""; FILE_ARG=""
@@ -116,7 +122,7 @@ pairs() {
       def joined: if type=="array" then map(paren) | join(" AND ") else paren end;
       def spdx: (.licenseConcluded // "") as $c
         | if ($c | ascii_upcase) == "" or ($c | ascii_upcase) == "NOASSERTION" then (.licenseDeclared // "UNKNOWN") else $c end;
-      def comps: .[]? | ., (.components | comps);
+      def comps: if type == "array" then .[] | ., (if type == "object" and (.components // null) != null then (.components | comps) else empty end) else error("components is not an array") end;
       if (.components or .metadata.component.components) then ((.components // []), (.metadata.component.components // []) | comps) | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else joined end) ] | @tsv
       elif .packages then .packages[] | [ (.name // "?"), (spdx | paren) ] | @tsv
       else to_entries[] | [ .key, ( (.value.licenses // .value.license // "UNKNOWN") | joined ) ] | @tsv
@@ -131,10 +137,10 @@ pairs() {
     printf '%s' "$INPUT" | grep -q '^PackageName:' && tv=1
     printf '%s' "$INPUT" | awk -v tv="$tv" '
       function flush() { if (n != "") { lic = (c != "" && toupper(c) != "NOASSERTION") ? c : (d != "" ? d : "UNKNOWN"); print n "\t" lic } n=""; c=""; d="" }
+      tv && intext { if ($0 ~ /<\/text>/) intext=0; next }
       /^PackageName:/ { flush(); n=$0; sub(/^PackageName:[ \t]*/,"",n); next }
       /^PackageLicenseConcluded:/ { c=$0; sub(/^[^:]*:[ \t]*/,"",c); next }
       /^PackageLicenseDeclared:/ { d=$0; sub(/^[^:]*:[ \t]*/,"",d); next }
-      tv && intext { if ($0 ~ /<\/text>/) intext=0; next }
       tv && /^[ \t\r]*$/ { next }
       tv && /^[ \t]*#/ { next }
       tv && /<text>/ { if ($0 !~ /<\/text>/) intext=1; next }

@@ -38,6 +38,11 @@
 
 set -uo pipefail
 shopt -s nocasematch
+# Git environment overrides (GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR, GIT_INDEX_FILE ...) would let the
+# calling environment point git at a decoy repository and so choose what is checked. Drop them all.
+# (If your CI needs safe.directory, set it in the global gitconfig, not through GIT_CONFIG_* variables.)
+for _v in $(compgen -e | grep -E '^GIT_'); do unset "$_v"; done
+unset _v
 
 die() { echo "Codifide immutable-paths: ERROR: $*" >&2; exit 2; }
 
@@ -91,13 +96,29 @@ split_path() {
   SP=( $1 )
   set +f; IFS="$oldifs"
 }
+# Non-ASCII test and NFC helper for the component lookup. A name that differs only by Unicode
+# normalisation (NFC vs NFD) is ONE file on APFS/HFS+/Windows checkouts, so the lookup folds both.
+NFCV=""
+has_hi() { local LC_ALL=C; [[ "$1" == *[$'\200'-$'\377']* ]]; }
+uni_nfc() { # $1 = string; result in NFCV (a variable: $(...) would strip a trailing newline)
+  command -v python3 >/dev/null 2>&1 || return 1
+  NFCV="$(python3 -c '
+import sys, unicodedata
+s = sys.argv[1].encode("utf-8", "surrogateescape").decode("utf-8", "surrogateescape")
+sys.stdout.buffer.write(unicodedata.normalize("NFC", s).encode("utf-8", "surrogateescape"))
+' "$1"; printf x)" || return 1
+  NFCV="${NFCV%x}"
+}
 # Resolve a repo-relative path inside the HEAD tree, one component at a time, following
 # every symlink (any number of hops, directory symlinks included) and applying ".." to
-# the real parent. Prints the resolved path; prints nothing when the path leaves the
-# repository (absolute target or too many ".."). Returns 1 on a loop or more than 40
-# expansions, which the caller reports as a violation (fail closed).
+# the real parent. The result is left in TR (a variable: $(...) would strip a trailing newline
+# from a file name); it is empty when the path leaves the repository (absolute target or too
+# many ".."). Returns 1 on a loop or more than 40 expansions, or a non-ASCII name that cannot
+# be normalised (no python3); the caller reports that as a violation (fail closed).
+TR=""
 tree_resolve() {
-  local cur="" hops=0 i comp next line m rest sha t j spec real ent en
+  TR=""
+  local cur="" hops=0 i comp next line m rest sha t j spec real ent en cnfc enn eq
   local q=() nq=()
   split_path "$1"; q=( ${SP[@]+"${SP[@]}"} )
   i=0
@@ -105,7 +126,7 @@ tree_resolve() {
     comp="${q[i]}"
     case "$comp" in
       ''|'.') i=$((i+1)); continue ;;
-      '..') [[ -z "$cur" ]] && return 0
+      '..') [[ -z "$cur" ]] && { TR=""; return 0; }
             if [[ "$cur" == */* ]]; then cur="${cur%/*}"; else cur=""; fi
             i=$((i+1)); continue ;;
     esac
@@ -113,10 +134,18 @@ tree_resolve() {
     # case-insensitively: on a case-insensitive checkout "SRC/bridge" IS "src/bridge".
     # If both cases exist, a symlink wins (fail closed).
     if [[ -z "$cur" ]]; then spec="HEAD"; else spec="HEAD:$cur"; fi
-    line=""; real="$comp"
+    line=""; real="$comp"; cnfc=""
+    if has_hi "$comp"; then uni_nfc "$comp" || return 1; cnfc="$NFCV"; fi
     while IFS= read -r -d '' ent; do
       en="${ent#*$'\t'}"
-      if [[ "$en" == "$comp" ]]; then
+      eq=0
+      if [[ "$en" == "$comp" ]]; then eq=1
+      elif has_hi "$en"; then
+        if uni_nfc "$en"; then enn="$NFCV"; else enn="$en"; fi
+        [[ "$enn" == "${cnfc:-$comp}" ]] && eq=1
+      elif [[ -n "$cnfc" && "$en" == "$cnfc" ]]; then eq=1
+      fi
+      if (( eq )); then
         if [[ -z "$line" || "${ent%% *}" == "120000" ]]; then line="$ent"; real="$en"; fi
       fi
     done < <(git ls-tree -z "$spec" 2>/dev/null)
@@ -126,7 +155,7 @@ tree_resolve() {
       hops=$((hops+1)); (( hops > 40 )) && return 1
       rest="${line#* }"; rest="${rest#* }"; sha="${rest%%$'\t'*}"
       t="$(git cat-file blob "$sha" 2>/dev/null; printf x)"; t="${t%x}"
-      [[ "$t" == /* ]] && return 0
+      [[ "$t" == /* ]] && { TR=""; return 0; }
       split_path "$t"; nq=( ${SP[@]+"${SP[@]}"} )
       for ((j=i+1; j<${#q[@]}; j++)); do nq+=("${q[j]}"); done
       q=( ${nq[@]+"${nq[@]}"} ); i=0
@@ -134,7 +163,7 @@ tree_resolve() {
     fi
     cur="$next"; i=$((i+1))
   done
-  printf '%s' "$cur"
+  TR="$cur"
 }
 # Unicode aliases: APFS/HFS+ and Windows treat the NFC and NFD spellings of a name as one file,
 # and git on Linux stores whichever bytes it is given. A non-ASCII path is therefore also
@@ -195,7 +224,7 @@ while IFS= read -r -d '' meta && IFS= read -r -d '' f; do
     case "$target" in
       /*) tn=""; rc=0 ;;
       *)  d="$f"; if [[ "$d" == */* ]]; then d="${d%/*}"; else d=""; fi
-          tn="$(tree_resolve "${d:+$d/}$target")"; rc=$? ;;
+          tree_resolve "${d:+$d/}$target"; rc=$?; tn="$TR" ;;
     esac
     if (( rc != 0 )); then
       add_violation "$f" "(symlink chain)" "[symlink loop or more than 40 hops; cannot prove it avoids protected paths]"

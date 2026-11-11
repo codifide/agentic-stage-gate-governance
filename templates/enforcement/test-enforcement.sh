@@ -430,6 +430,125 @@ exit $FAIL )
 [[ $? -ne 0 ]] && FAIL=1
 rm -rf "$LT" "$LIC_OUT"
 
+# ---------- iteration 6 regressions (each fails on the 52b50be scripts; see docs ledger) ----------
+mkrepo(){ local d; d="$(mktemp -d)"; ( cd "$d" && git init -q -b main && git config user.email t@t && git config user.name t ) >/dev/null 2>&1; printf '%s' "$d"; }
+# I6-F01: GIT_DIR / GIT_WORK_TREE in the environment must not redirect the three CI scripts to a decoy repository.
+R6="$(mkrepo)"; D6="$(mkrepo)"
+( cd "$R6" && mkdir -p .codifide verifiers && printf 'verifiers/\n' > .codifide/immutable-paths && printf 'MIT\n' > .codifide/allowed-licenses && echo o > verifiers/check.py \
+  && git add -A && git commit -qm base && git checkout -qb attack && echo t >> verifiers/check.py && git commit -qam 'no trailers' ) >/dev/null 2>&1
+( cd "$D6" && mkdir -p .codifide && printf 'unrelated/\n' > .codifide/immutable-paths && printf 'GPL-3.0-only\n' > .codifide/allowed-licenses && git add -A && git commit -qm base ) >/dev/null 2>&1
+( cd "$R6" && GIT_DIR="$D6/.git" GIT_WORK_TREE="$D6" $SH "$SRC"/check-immutable-paths.sh main >/dev/null 2>&1 ); pass "immutable-ci: GIT_DIR/GIT_WORK_TREE decoy repo cannot hide a verifier edit" 1 $?
+( cd "$R6" && GIT_DIR="$D6/.git" GIT_WORK_TREE="$D6" $SH "$SRC"/check-review-level.sh main >/dev/null 2>&1 ); pass "review-level: GIT_DIR/GIT_WORK_TREE decoy repo cannot hide a commit without trailers" 1 $?
+( cd "$R6" && printf '{"evil":{"licenses":"GPL-3.0-only"}}' | GIT_DIR="$D6/.git" GIT_WORK_TREE="$D6" $SH "$SRC"/check-licenses.sh --base main >/dev/null 2>&1 ); pass "licenses: GIT_DIR/GIT_WORK_TREE decoy repo cannot supply a permissive policy" 1 $?
+( cd "$R6" && $SH "$SRC"/check-immutable-paths.sh main >/dev/null 2>&1 ); pass "immutable-ci: same repo without the decoy variables is blocked (control)" 1 $?
+rm -rf "$R6" "$D6"
+# I6-F02: a symlink target that ends in a newline is a different name; the newline must survive command substitution.
+R6="$(mkrepo)"
+( cd "$R6" && mkdir -p .codifide vault src && printf 'vault/*.pem?\n' > .codifide/immutable-paths && printf 's\n' > $'vault/key.pem\n' \
+  && ln -s $'../vault/key.pem\n' src/alias && git add -A && git commit -qm base && git checkout -qb attack \
+  && ln -s $'../vault/key.pem\n' src/alias2 && git add src/alias2 && git commit -qm alias ) >/dev/null 2>&1
+( cd "$R6" && printf '%s' '{"input":{"path":"src/alias"}}' | $SH "$SRC"/guard-immutable-paths.sh >/dev/null 2>&1 ); pass "guard: symlink whose target ends in a newline resolves to the newline-named protected file" 2 $?
+( cd "$R6" && $SH "$SRC"/check-immutable-paths.sh main >/dev/null 2>&1 ); pass "immutable-ci: new symlink whose target ends in a newline is a link into the protected file" 1 $?
+( cd "$R6" && printf '%s' '{"input":{"path":"src/other.txt"}}' | $SH "$SRC"/guard-immutable-paths.sh >/dev/null 2>&1 ); pass "guard: unrelated write in the same repository (allow control)" 0 $?
+rm -rf "$R6"
+# I6-F03: NFC/NFD alias in the CI symlink traversal (git does not precompose; the checkout filesystem may fold).
+R6="$(mkrepo)"
+( cd "$R6" && git config core.precomposeunicode false && mkdir -p .codifide && printf 'verifiers/\n' > .codifide/immutable-paths && git add -A && git commit -qm pol ) >/dev/null 2>&1
+( cd "$R6" && h=$(echo v | git hash-object -w --stdin) && git update-index --add --cacheinfo 100644,$h,verifiers/check.py \
+  && git update-index --add --cacheinfo 100644,$h,src2/other.py \
+  && l1=$(printf '../verifiers' | git hash-object -w --stdin) && git update-index --add --cacheinfo 120000,$l1,"$(printf 'src/caf\303\251')" \
+  && l2=$(printf '../src2' | git hash-object -w --stdin) && git update-index --add --cacheinfo 120000,$l2,"$(printf 'src/caf\303\251-ok')" \
+  && git commit -qm base && git checkout -qb attack \
+  && a=$(printf 'cafe\314\201/check.py' | git hash-object -w --stdin) && git update-index --add --cacheinfo 120000,$a,src/alias \
+  && git commit -qm alias ) >/dev/null 2>&1
+( cd "$R6" && $SH "$SRC"/check-immutable-paths.sh main >/dev/null 2>&1 ); pass "immutable-ci: NFD-spelled directory symlink component reaches the protected file" 1 $?
+( cd "$R6" && git checkout -q main && git checkout -qb ok && b=$(printf 'cafe\314\201-ok/other.py' | git hash-object -w --stdin) && git update-index --add --cacheinfo 120000,$b,src/alias \
+  && git commit -qm okalias ) >/dev/null 2>&1
+( cd "$R6" && $SH "$SRC"/check-immutable-paths.sh main >/dev/null 2>&1 ); pass "immutable-ci: NFD-spelled symlink component that ends outside protected paths passes (control)" 0 $?
+rm -rf "$R6"
+# I6-F04: the hard-link scan must fail closed when find cannot read part of the repository.
+R6="$(mkrepo)"
+( cd "$R6" && mkdir -p .codifide vault src && printf 'vault/*\n' > .codifide/immutable-paths && echo s > vault/key && ln vault/key src/alias && echo p > src/plain && ln src/plain src/plain2 ) >/dev/null 2>&1
+chmod 000 "$R6/vault"
+if [[ -r "$R6/vault/key" || -x "$R6/vault" ]]; then
+  echo "SKIP  guard: hard-link scan with an unreadable directory (running as a user that ignores modes)"
+else
+  ( cd "$R6" && printf '%s' '{"input":{"path":"src/alias"}}' | $SH "$SRC"/guard-immutable-paths.sh >/dev/null 2>&1 ); pass "guard: hard link to a protected file hidden behind an unreadable directory blocks (fail closed)" 2 $?
+  ( cd "$R6" && printf '%s' '{"input":{"path":"src/new.txt"}}' | $SH "$SRC"/guard-immutable-paths.sh >/dev/null 2>&1 ); pass "guard: a file with a single link is still allowed when a directory is unreadable (control)" 0 $?
+fi
+chmod 700 "$R6/vault"; rm -rf "$R6"
+# I6-F05 / F06: license parsing.
+LP6="$(mktemp)"; printf 'MIT\n!GPL-*\n' > "$LP6"
+lic6(){ printf '%s\n' "$3" | CODIFIDE_LICENSE_POLICY="$LP6" $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: $1" "$2" $?; }
+lic6 "spdx: a <text> comment cannot overwrite the concluded GPL license" 1 "$(printf 'SPDXVersion: SPDX-2.3\nPackageName: evil\nPackageLicenseConcluded: GPL-3.0-only\nPackageComment: <text>\nPackageLicenseConcluded: MIT\n</text>')"
+lic6 "spdx: a <text> comment cannot overwrite the declared GPL license" 1 "$(printf 'PackageName: evil\nPackageLicenseDeclared: GPL-3.0-only\nPackageComment: <text>\nPackageLicenseDeclared: MIT\n</text>')"
+lic6 "spdx: a <text> comment that quotes another license after a real MIT is ignored (control)" 0 "$(printf 'PackageName: ok\nPackageLicenseConcluded: MIT\nPackageComment: <text>\nPackageLicenseConcluded: GPL-3.0-only\n</text>')"
+printf '%s' '{"components":[{"name":"parent","licenses":[{"license":{"id":"MIT"}}],"components":"unscanned dependency collection"}]}' | CODIFIDE_LICENSE_POLICY="$LP6" $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: cyclonedx nested components that is not an array is a parse error, not a pass" 2 $?
+printf '%s' '{"components":[{"name":"parent","licenses":[{"license":{"id":"MIT"}}],"components":{"name":"c","licenses":[{"license":{"id":"GPL-3.0-only"}}]}}]}' | CODIFIDE_LICENSE_POLICY="$LP6" $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: cyclonedx nested components given as an object is a parse error" 2 $?
+printf '%s' '{"components":[{"name":"parent","licenses":[{"license":{"id":"MIT"}}],"components":null}]}' | CODIFIDE_LICENSE_POLICY="$LP6" $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: cyclonedx nested components null is accepted (control)" 0 $?
+rm -f "$LP6"
+# I6-F07: a symlink named like a governance directory is a single tree entry and must be R3.
+R6="$(mkrepo)"
+( cd "$R6" && echo base > README.md && git add -A && git commit -qm base && git checkout -qb a1 && ln -s attacker-rules .codifide && git add .codifide \
+  && git commit -qm 'redirect governance directory' -m 'Generated-By: ai-agent
+Review-Level: R2' && git checkout -q main && git checkout -qb a2 && ln -s attacker .claude && git add .claude \
+  && git commit -qm 'redirect agent settings' -m 'Generated-By: ai-agent
+Review-Level: R2' && git checkout -q main && git checkout -qb a3 && ln -s attacker-rules .codifide && git add .codifide \
+  && git commit -qm 'redirect governance directory' -m 'Generated-By: ai-agent
+Review-Level: R3' ) >/dev/null 2>&1
+( cd "$R6" && git checkout -q a1 && git branch -f cur a1 && $SH "$SRC"/check-review-level.sh main >/dev/null 2>&1 ); pass "review-level: symlink named .codifide at R2 is governance (R3 floor)" 1 $?
+( cd "$R6" && git checkout -q a2 && $SH "$SRC"/check-review-level.sh main >/dev/null 2>&1 ); pass "review-level: symlink named .claude at R2 is governance (R3 floor)" 1 $?
+( cd "$R6" && git checkout -q a3 && $SH "$SRC"/check-review-level.sh main >/dev/null 2>&1 ); pass "review-level: symlink named .codifide at R3 passes (control)" 0 $?
+rm -rf "$R6"
+# I6-F08: the workflow-example check must look for RUN steps, not for words anywhere in the file.
+wf_steps_ok(){ command -v python3 >/dev/null 2>&1 && python3 - "$1" <<'WFPY'
+import re, sys
+need = ["check-immutable-paths.sh", "check-review-level.sh", "check-licenses.sh"]
+lines = open(sys.argv[1], encoding="utf-8").read().split("\n")
+keys = {k: False for k in ("on:", "jobs:", "steps:")}
+text = []          # non-comment text that sits in a `run:` step (one-line value or block scalar)
+blk = None         # indent of the `run:` key while inside its block scalar
+for ln in lines:
+    if not ln.strip():
+        continue
+    ind = len(ln) - len(ln.lstrip())
+    st = ln.strip()
+    if blk is not None:
+        if ind > blk:
+            if not st.startswith("#"):
+                text.append(st)
+            continue
+        blk = None
+    if st.startswith("#"):
+        continue
+    for k in keys:
+        if re.match(r"^" + re.escape(k), ln):
+            keys[k] = True
+    if st == "steps:" or st.startswith("steps:"):
+        keys["steps:"] = True
+    m = re.match(r"^(\s*(?:-\s+)?)run:\s*(.*)$", ln)
+    if m:
+        val = m.group(2).strip()
+        if val in ("|", ">", "|-", ">-", "|+", ">+"):
+            blk = len(m.group(1))
+        elif val and not val.startswith("#"):
+            text.append(val)
+body = "\n".join(text)
+ok = all(keys.values()) and all(re.search(r"\bbash\b[^\n#]*" + re.escape(n), body) for n in need)
+sys.exit(0 if ok else 1)
+WFPY
+}
+VAC="$(mktemp)"; printf '%s\n' '# check-immutable-paths.sh' '# check-review-level.sh' '# check-licenses.sh' '# push:' '# BOOTSTRAP' '# codifide-enforcer-change-approved' '# CODIFIDE_LICENSE_REPORT_CMD' 'check-licenses.sh" --base' 'check-immutable-paths.sh' 'check-review-level.sh' > "$VAC"
+wf_steps_ok "$VAC"; pass "docs: a file of comments and bare script names is NOT a workflow that runs the checks" 1 $?
+rm -f "$VAC"
+if [[ -f "$HERE/workflow.example.yml" ]]; then
+  wf_steps_ok "$HERE/workflow.example.yml"; pass "docs: the workflow example has run steps that execute all three scripts" 0 $?
+  NOLIC="$(mktemp)"; sed 's/^\(.*\)check-licenses\.sh" --base/# \1check-licenses.sh" --base/' "$HERE/workflow.example.yml" > "$NOLIC"
+  wf_steps_ok "$NOLIC"; pass "docs: a workflow whose license step was commented out is rejected" 1 $?
+  rm -f "$NOLIC"
+fi
+cd /
+
 # ---------- distribution and documentation consistency (only when run from the full repo) ----------
 REPO="$(cd "$HERE/../.." && pwd)"
 if [[ -f "$REPO/README.md" && -d "$REPO/steering" && -d "$REPO/templates/hooks" ]]; then
@@ -443,7 +562,7 @@ if [[ -f "$REPO/README.md" && -d "$REPO/steering" && -d "$REPO/templates/hooks" 
     pat="${g}-gate|${sv}en gates|Version ${v}\\.0|FLAG FOR COUNSE[L]|(^|[^0-9])${g}0 cases|${g} Gates for"
     ! grep -rIn -E "$pat" --exclude-dir=.git --exclude-dir=docs --exclude-dir=.worktrees "$REPO"; }
   spdx_ok(){ local f; for f in "$HERE"/guard-immutable-paths.sh "$HERE"/check-*.sh "$REPO"/templates/cursor/to-mdc.sh; do head -3 "$f" | grep -q 'SPDX-License-Identifier: MIT' || { echo "no SPDX: $f"; return 1; }; done; }
-  workflow_ok(){ local w="$HERE/workflow.example.yml"; has 'check-immutable-paths.sh' "$w" && has 'check-review-level.sh' "$w" && has 'check-licenses.sh' "$w" && has 'push:' "$w" && has 'BOOTSTRAP' "$w" && has 'codifide-enforcer-change-approved' "$w" && has '^[^#]*check-licenses.sh" --base' "$w" && has 'CODIFIDE_LICENSE_REPORT_CMD' "$w" && has '^[^#]*check-immutable-paths.sh' "$w" && has '^[^#]*check-review-level.sh' "$w"; }
+  workflow_ok(){ local w="$HERE/workflow.example.yml"; has 'check-immutable-paths.sh' "$w" && has 'check-review-level.sh' "$w" && has 'check-licenses.sh' "$w" && has 'push:' "$w" && has 'BOOTSTRAP' "$w" && has 'codifide-enforcer-change-approved' "$w" && has '^[^#]*check-licenses.sh" --base' "$w" && has 'CODIFIDE_LICENSE_REPORT_CMD' "$w" && has '^[^#]*check-immutable-paths.sh' "$w" && has '^[^#]*check-review-level.sh' "$w" && wf_steps_ok "$w"; }
   cursor_ok(){ local d; d="$(mktemp -d)"; bash "$REPO/templates/cursor/to-mdc.sh" "$d" >/dev/null || return 1
     head -4 "$d/00-welcome.mdc" | grep -q 'alwaysApply: true' || return 1
     head -4 "$d/11-tiered-adversarial-review.mdc" | grep -q 'alwaysApply: false' || return 1

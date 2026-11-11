@@ -58,13 +58,16 @@ set -uo pipefail
 shopt -s nocasematch
 
 # Any exit other than 0 (allow) or 2 (block) is an internal failure: block.
-trap 'rc=$?; if [[ $rc -ne 0 && $rc -ne 2 ]]; then echo "Codifide guard: internal error (exit $rc); failing closed." >&2; exit 2; fi' EXIT
+# SCANF holds the output of the directory/hard-link scans (a file, so that a failing `find` is seen).
+SCANF=""
+trap 'rc=$?; [[ -n "$SCANF" ]] && rm -f "$SCANF"; if [[ $rc -ne 0 && $rc -ne 2 ]]; then echo "Codifide guard: internal error (exit $rc); failing closed." >&2; exit 2; fi' EXIT
 
 # Git environment overrides (GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR, GIT_CEILING_DIRECTORIES ...)
 # would let a caller point `git rev-parse` at a decoy work tree and so choose which list is read.
 # Every GIT_* variable is dropped before the root is derived.
 for _v in $(compgen -e | grep -E '^GIT_'); do unset "$_v"; done
 unset _v
+SCANF="$(mktemp)" || { echo "Codifide guard: cannot create a temporary file; failing closed." >&2; exit 2; }
 
 # The repository root is the git top level of the hook's own working directory. There is no
 # override: a CODIFIDE_ROOT that points anywhere else would let a caller aim the guard at a
@@ -189,7 +192,8 @@ split_path() {
   SP=( $1 )
   set +f; IFS="$oldifs"
 }
-# Lexically normalize an absolute path: collapse //, ".", and ".." segments.
+# Lexically normalize an absolute path: collapse //, ".", and ".." segments. Result in NP.
+NP=""
 normpath() {
   local part out=() joined
   split_path "$1"
@@ -202,13 +206,16 @@ normpath() {
   done
   joined="$(printf '/%s' ${out[@]+"${out[@]}"}; printf x)"
   joined="${joined%x}"
-  printf '%s' "${joined:-/}"
+  NP="${joined:-/}"   # result in a variable: $(...) would strip a trailing newline from a file name
 }
 # Physical resolution of an absolute path, one component at a time, left to right:
 # a symlink is expanded where it stands, and ".." then applies to the REAL parent.
 # $2 = 1 leaves the final name unresolved (the path of the link itself).
-# Returns 1 on a symlink loop or more than 40 expansions (the caller blocks).
+# Returns 1 on a symlink loop or more than 40 expansions (the caller blocks). Result in PR
+# (a variable, not stdout: $(...) would strip a trailing newline, which a file name may end in).
+PR=""
 physres() {
+  PR=""
   local cur="/" hops=0 nof="${2:-0}" i comp next t last=-1 n j
   local q=() nq=()
   split_path "$1"; q=( ${SP[@]+"${SP[@]}"} )
@@ -224,7 +231,8 @@ physres() {
     next="${cur%/}/$comp"
     if [[ -L "$next" ]] && ! { (( nof )) && (( i == last )); }; then
       hops=$((hops+1)); (( hops > 40 )) && return 1
-      t="$(readlink "$next"; printf x)"; t="${t%x}"; t="${t%$'\n'}"
+      # readlink -n: no trailing newline of its own (BSD readlink drops the target's final newline otherwise)
+      t="$(readlink -n "$next"; printf x)"; t="${t%x}"
       [[ "$t" == /* ]] && cur="/"
       split_path "$t"; nq=( ${SP[@]+"${SP[@]}"} )
       for ((j=i+1; j<${#q[@]}; j++)); do nq+=("${q[j]}"); done
@@ -236,11 +244,12 @@ physres() {
     fi
     cur="$next"; i=$((i+1))
   done
-  printf '%s' "$cur"
+  PR="$cur"
 }
-ROOT="$(physres "$ROOT" 0)" || { echo "Codifide guard: cannot resolve the repository root; failing closed." >&2; exit 2; }
+physres "$ROOT" 0 && ROOT="$PR" || { echo "Codifide guard: cannot resolve the repository root; failing closed." >&2; exit 2; }
 if [[ -n "${CODIFIDE_ROOT:-}" ]]; then
-  alt="$(physres "$(normpath "$CODIFIDE_ROOT")" 0)" || alt=""
+  normpath "$CODIFIDE_ROOT"
+  if physres "$NP" 0; then alt="$PR"; else alt=""; fi
   if [[ "$alt" != "$ROOT" ]]; then
     echo "Codifide guard: CODIFIDE_ROOT ('$CODIFIDE_ROOT') is not this repository's top level ('$ROOT'); refusing to use a different root. Blocking (fail closed)." >&2
     exit 2
@@ -254,7 +263,8 @@ add_base() { # $1 = absolute directory
   local b
   [[ "$1" == /* ]] || return 0
   # physres resolves symlinks BEFORE applying ".." (normpath first would apply ".." to the link text).
-  b="$(physres "$1" 0)" || { echo "Codifide guard: cannot resolve working directory '$1'; failing closed." >&2; exit 2; }
+  physres "$1" 0 || { echo "Codifide guard: cannot resolve working directory '$1'; failing closed." >&2; exit 2; }
+  b="$PR"
   [[ "$b" == "$ROOT" ]] && return 0
   local x; for x in "${BASES[@]}"; do [[ "$x" == "$b" ]] && return 0; done
   BASES+=("$b")
@@ -304,23 +314,28 @@ check_path() {
   done
   # Ancestor of a protected file matched by a glob: look inside an existing directory.
   if [[ -d "$x" ]]; then
+    # A find that cannot read part of the tree has not proved the directory is free of protected files.
+    find "$x" -path "$ROOT/.git" -prune -o \( -type f -o -type l \) -print0 > "$SCANF" 2>/dev/null \
+      || block "$rel" "${PATTERNS[0]}" "directory could not be fully scanned; failing closed"
     while IFS= read -r -d '' f; do
       count=$((count+1))
       if (( count > 20000 )); then block "$rel" "${PATTERNS[0]}" "directory too large to verify; failing closed"; fi
       pat="$(protected_pattern "${f#"$ROOT"/}")"
       [[ -n "$pat" ]] && block "$rel" "$pat" "directory containing protected '${f#"$ROOT"/}'"
-    done < <(find "$x" -path "$ROOT/.git" -prune -o \( -type f -o -type l \) -print0 2>/dev/null)
+    done < "$SCANF"
   fi
   return 0
 }
 while IFS= read -r b64; do
   [[ -z "$b64" ]] && continue
-  cand="$(b64d "$b64")" || { echo "Codifide guard: could not decode a tool-input value; failing closed." >&2; exit 2; }
+  # Sentinel x: keeps a trailing newline that $(...) would otherwise strip from the decoded value.
+  cand="$(b64d "$b64" && printf x)" || { echo "Codifide guard: could not decode a tool-input value; failing closed." >&2; exit 2; }
+  cand="${cand%x}"
   [[ -z "$cand" ]] && continue
   if [[ "$cand" == /* ]]; then INS=("$cand"); else INS=(); for b in "${BASES[@]}"; do INS+=("$b/$cand"); done; fi
   for in in "${INS[@]}"; do
-    lex="$(normpath "$in")"
-    nol="$(physres "$in" 1)" && full="$(physres "$in" 0)" || { echo "Codifide guard: symlink loop or too many links in a tool-input path; failing closed." >&2; exit 2; }
+    normpath "$in"; lex="$NP"
+    { physres "$in" 1 && nol="$PR" && physres "$in" 0 && full="$PR"; } || { echo "Codifide guard: symlink loop or too many links in a tool-input path; failing closed." >&2; exit 2; }
     check_path "$lex"; check_path "$nol"; check_path "$full"
     # Same inode as a literal list entry (covers filesystem-level aliases such as Unicode
     # normalisation that the text comparison cannot see).
@@ -332,12 +347,15 @@ while IFS= read -r b64; do
     fi
     # Hard links: a different name for the same inode as a protected file, anywhere.
     if [[ -f "$full" && -n "$(find "$full" -maxdepth 0 -links +1 2>/dev/null)" ]]; then
+      # If find cannot traverse part of the tree it cannot rule out a protected name for this inode: block.
+      find "$ROOT" -path "$ROOT/.git" -prune -o -samefile "$full" -print0 > "$SCANF" 2>/dev/null \
+        || block "${full#"$ROOT"/}" "${PATTERNS[0]}" "hard-link scan could not read the whole repository; failing closed"
       while IFS= read -r -d '' other; do
         [[ -z "$other" || "$other" == "$full" ]] && continue
         orel="${other#"$ROOT"/}"
         opat="$(protected_pattern "$orel")"
         [[ -n "$opat" ]] && block "${full#"$ROOT"/}" "$opat" "hard link to protected file '$orel'"
-      done < <(find "$ROOT" -path "$ROOT/.git" -prune -o -samefile "$full" -print0 2>/dev/null)
+      done < "$SCANF"
     fi
   done
 done <<< "$CANDIDATES"
