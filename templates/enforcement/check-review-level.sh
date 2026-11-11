@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Codifide Inc. https://github.com/codifide/codifide-harness
 # Codifide Harness — Review Level + provenance check (CI). Fails closed.
 #
 # For EVERY commit on the branch (BASE..HEAD):
@@ -25,6 +27,18 @@
 #   approved design), 14 (failed an automated check before passing).
 #   Merge commits are checked on their conflict resolutions (git diff-tree --cc).
 #   If the PR as a whole trips the size rule, EVERY commit must declare the size floor.
+#
+# What this does NOT prove (documented limits, see templates/enforcement/README.md):
+#   - Generated-By is SELF-ASSERTED. An agent can write "human". Compensating controls
+#     live outside this script: signed commits, a separate bot identity for agents,
+#     required CODEOWNERS review on sensitive paths.
+#   - A Review-Level of R3 is a declaration, not evidence that a review happened. No
+#     script reads a review artifact or checks reviewer independence.
+#   - Floors come from path globs, which are a convention. Files named *.test.* or
+#     under tests/ are treated as tests whatever they contain.
+#   Matching is case-insensitive. File names are read NUL-delimited (newlines in names
+#   cannot hide a path). Binary files cannot be line-counted, so each counts as 100
+#   changed lines toward the size rule.
 #
 # Waiver (the only one): rule 8's mechanical-refactor exception. With
 #   CODIFIDE_WAIVE=size  and  CODIFIDE_STEWARD="<name>"  (set by a human-controlled
@@ -54,20 +68,27 @@ GOVERNANCE_GLOBS=('*/.kiro/*' '*/.codifide/*' '*/steering/*' '*/.github/workflow
                   '*/templates/B-TEAM-REVIEW-PACKAGE.md' '*/templates/CODE-REVIEW-PROMPT-*' '*/templates/GATE-EVIDENCE-CHECKLIST.md'
                   '*/templates/HOOKS-SESSION-STATE.md' '*/templates/INTENT-CONTRACT.md' '*/templates/NFR-TEMPLATE.md'
                   '*/templates/EXISTING-PROJECT-ASSESSMENT.md')
-R1_ALLOW=('*/tests/*' '*/test/*' '*/__tests__/*' '*.test.*' '*.spec.*' '*.md' '*.css' '*.scss' '*/styles/*' '*/docs/*')
+# Docs are allowed at R1 only by DOCUMENT extension: docs/login.ts is code, not documentation.
+R1_ALLOW=('*/tests/*' '*/test/*' '*/__tests__/*' '*.test.*' '*.spec.*' '*.md' '*.css' '*.scss' '*/styles/*'
+          '*/docs/*.md' '*/docs/*.txt' '*/docs/*.rst' '*/docs/*.adoc' '*/docs/*.png' '*/docs/*.jpg' '*/docs/*.gif' '*/docs/*.svg')
 R3_GLOBS=('*/crypto/*' '*/encryption/*' '*/keys/*' '*/certs/*' '*/certificates/*' '*/tls/*' '*/secrets/*'
           '*.pem' '*.key' '*.crt' '*.p12' '*/infrastructure/prod*' '*/terraform/*prod*'
-          '*/migrations/*' '*/migrate/*' '*/db/migrate*' '*.iac.*' '*/docker-compose.prod.yml')
-SENSITIVE_GLOBS=('*/auth/*' '*/authz/*' '*/permissions/*' '*/crypto/*' '*/encryption/*' '*/keys/*')
+          '*/migrations/*' '*/migrate/*' '*/db/migrate*' '*.iac.*' '*/docker-compose.prod.yml'
+          '*/alembic/*' '*/prisma/*' '*/flyway/*' '*/liquibase/*' '*/db/schema*' '*/schema.sql' '*/terraform/*' '*.tf' '*.tfvars')
+SENSITIVE_GLOBS=('*/auth/*' '*/authz/*' '*/permissions/*' '*/crypto/*' '*/encryption/*' '*/keys/*'
+                 '*/middleware/*' '*/middleware.*' '*/session*' '*/oauth*' '*/jwt*' '*/password*' '*/login*'
+                 '*/rbac/*' '*/acl/*' '*/iam/*' '*/policies/*' '*/security/*')
 
 glob_any() { # $1 = path with leading slash; rest = globs
   local p="$1"; shift
-  local g
+  local g rc=1
+  shopt -s nocasematch   # case-insensitive checkouts: Src/Auth/x.ts is src/auth/x.ts
   for g in "$@"; do
     # shellcheck disable=SC2053
-    [[ "$p" == $g ]] && return 0
+    if [[ "$p" == $g ]]; then rc=0; break; fi
   done
-  return 1
+  shopt -u nocasematch
+  return $rc
 }
 
 COMMITS="$(git rev-list --reverse "$BASE"..HEAD)" || die "git rev-list failed"
@@ -76,7 +97,8 @@ COMMITS="$(git rev-list --reverse "$BASE"..HEAD)" || die "git rev-list failed"
 # Branch-level size rule, computed first so every commit can be held to it.
 NUMSTAT="$(git diff --numstat --no-renames "$BASE"...HEAD)" || die "git diff failed"
 NFILES=$(printf '%s\n' "$NUMSTAT" | grep -c .)
-LINES=$(printf '%s\n' "$NUMSTAT" | awk '$1 ~ /^[0-9]+$/ {a+=$1; d+=$2} END {print a+d+0}')
+# Binary files show "-" in numstat; count each as 100 lines so they cannot dodge the size rule.
+LINES=$(printf '%s\n' "$NUMSTAT" | awk '$1 ~ /^[0-9]+$/ {a+=$1; d+=$2} $1 == "-" {b+=100} END {print a+d+b+0}')
 SIZE_FLOOR=1
 if (( LINES > 500 && NFILES > 5 )); then
   SIZE_FLOOR=3
@@ -87,6 +109,8 @@ if (( LINES > 500 && NFILES > 5 )); then
   echo "  size: PR changes $LINES lines across $NFILES files; every commit must declare at least R$SIZE_FLOOR"
 fi
 
+FILELIST="$(mktemp)" || die "mktemp failed"
+trap 'rm -f "$FILELIST"' EXIT
 FAILS=0
 while IFS= read -r sha; do
   [[ -z "$sha" ]] && continue
@@ -103,9 +127,9 @@ while IFS= read -r sha; do
   [[ -z "$LVL" ]] && { echo "  $short FAIL: missing Review-Level trailer"; FAILS=$((FAILS+1)); LVL=0; }
 
   # --cc: normal diff for ordinary commits; conflict resolutions / evil-merge content for merges.
-  FILES="$(git diff-tree --cc --no-commit-id --name-only -r --no-renames "$sha")" || die "git diff-tree failed for $sha"
+  git -c core.quotepath=off diff-tree --cc --no-commit-id --name-only -r --no-renames -z "$sha" > "$FILELIST" || die "git diff-tree failed for $sha"
   FLOOR=1; WHY="R1 allowlist only"
-  while IFS= read -r f; do
+  while IFS= read -r -d '' f; do
     [[ -z "$f" ]] && continue
     p="/$f"
     if glob_any "$p" "${HANDOFF_EXEMPT[@]}"; then
@@ -121,7 +145,7 @@ while IFS= read -r sha; do
     elif ! glob_any "$p" "${R1_ALLOW[@]}"; then
       (( FLOOR < 2 )) && { FLOOR=2; WHY="$f is outside the R1 allowlist"; }
     fi
-  done <<< "$FILES"
+  done < "$FILELIST"
   if (( SIZE_FLOOR > FLOOR )); then FLOOR=$SIZE_FLOOR; WHY="PR size rule"; fi
 
   # Human-approval markers may only be added by human commits.
