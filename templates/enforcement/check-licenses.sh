@@ -2,7 +2,7 @@
 # Codifide Harness — dependency license-policy check (CI). Fails closed.
 #
 # A swarm installs dependencies fast; one copyleft package can create an obligation
-# to open-source a proprietary repo. This check enforces .sgl/allowed-licenses:
+# to open-source a proprietary repo. This check enforces .codifide/allowed-licenses:
 # any resolved dependency license that is not allowed (or cannot be determined)
 # FAILS the build.
 #
@@ -10,22 +10,22 @@
 # (auto-detected): CycloneDX JSON, SPDX JSON/tag-value, or a plain two-column
 # "name<TAB or ,>license" list (e.g. `pip-licenses`, `license-checker --csv`).
 # This script does NOT resolve the dependency tree itself — feed it your tool's output:
-#   npx license-checker --json        | bash .sgl/check-licenses.sh
-#   pip-licenses --format=csv         | bash .sgl/check-licenses.sh
-#   syft <img> -o spdx-json           | bash .sgl/check-licenses.sh
+#   npx license-checker --json        | bash .codifide/check-licenses.sh
+#   pip-licenses --format=csv         | bash .codifide/check-licenses.sh
+#   syft <img> -o spdx-json           | bash .codifide/check-licenses.sh
 #
-# Policy file: .sgl/allowed-licenses (allow list; "!" lines are explicit denies).
-#   SGL_LICENSE_POLICY=/path overrides the location.
+# Policy file: .codifide/allowed-licenses (allow list; "!" lines are explicit denies).
+#   CODIFIDE_LICENSE_POLICY=/path overrides the location.
 #
 # Exit 0 = every dependency license is allowed; 1 = a disallowed/unknown license; 2 = setup error.
 
 set -uo pipefail
 
-die() { echo "SGL licenses: ERROR: $*" >&2; exit 2; }
+die() { echo "Codifide licenses: ERROR: $*" >&2; exit 2; }
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-POLICY="${SGL_LICENSE_POLICY:-$ROOT/.sgl/allowed-licenses}"
-[[ -f "$POLICY" ]] || die "no license policy at $POLICY (copy allowed-licenses.example to .sgl/allowed-licenses)"
+POLICY="${CODIFIDE_LICENSE_POLICY:-$ROOT/.codifide/allowed-licenses}"
+[[ -f "$POLICY" ]] || die "no license policy at $POLICY (copy allowed-licenses.example to .codifide/allowed-licenses)"
 
 # ---- load policy ----
 ALLOWS=(); DENIES=()
@@ -100,12 +100,12 @@ done <<< "$STREAM"
 
 TOTAL=$(printf '%s\n' "$STREAM" | grep -c .)
 if (( ${#VIOLATIONS[@]} > 0 )); then
-  echo "SGL licenses: FAIL ($TOTAL deps scanned, ${#VIOLATIONS[@]} disallowed):"
+  echo "Codifide licenses: FAIL ($TOTAL deps scanned, ${#VIOLATIONS[@]} disallowed):"
   printf '  - %s\n' "${VIOLATIONS[@]}"
   echo "Allowed: ${ALLOWS[*]}"
   (( ${#DENIES[@]} > 0 )) && echo "Explicit denies: ${DENIES[*]}"
   echo "Fix: remove the dependency, or (proprietary repo) get a Human-Steward + legal exception recorded in $POLICY."
   exit 1
 fi
-echo "SGL licenses: PASS ($TOTAL dependencies, all licenses allowed)."
+echo "Codifide licenses: PASS ($TOTAL dependencies, all licenses allowed)."
 exit 0

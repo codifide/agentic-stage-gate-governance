@@ -1,6 +1,6 @@
 # Stage-Gate Rebooted: How We Govern AI-Powered Development in Healthcare
 
-*The Codifide Harness whitepaper. Codifide Harness was formerly called Stage-Gate-Loop (SGL), and its harness the SGL Harness. It is based on Robert G. Cooper's Stage-Gate® model; see [NOTICE.md](NOTICE.md).*
+*The Codifide Harness whitepaper. It is based on Robert G. Cooper's Stage-Gate® model; see [NOTICE.md](NOTICE.md).*
 
 **When your developer is an AI agent, who watches the gates?**
 

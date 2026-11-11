@@ -72,7 +72,7 @@ Map the reminder to your project's roles and files:
 | Domain expert | [your Domain Expert Persona] | `<steering-dir>/<project>-domain-expert.md` (see `DOMAIN-EXPERT-PERSONA.md`) |
 | Documentation / narrative | Quill, Paige | `specifications/{ID}/QUILL_LOG.md`, docs |
 | Gate status | Aegis (records evidence; does not decide) | `templates/GATE-EVIDENCE-CHECKLIST.md` copy |
-| Session state | Handoff per the Stop hook | `<steering-dir>/next-session-prompt.md` or `sgl-sessions/` (`13`) |
+| Session state | Handoff per the Stop hook | `<steering-dir>/next-session-prompt.md` or `codifide-sessions/` (`13`) |
 | Test quality | Tessa | Test files, CI results |
 
 ---

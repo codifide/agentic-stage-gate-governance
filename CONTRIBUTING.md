@@ -1,6 +1,5 @@
 # Contributing to Codifide Harness
 
-(Formerly Agentic Stage-Gate Governance.)
 
 This template is MIT licensed and accepts contributions. The goal is to keep it practical, opinionated, and directly usable — not a framework that requires configuration before it does anything.
 

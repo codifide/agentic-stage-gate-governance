@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-auto-research
+name: codifide-auto-research
 description: Harness auto-research protocol - multi-approach autonomous iteration (generate, build, evaluate, refine, converge) inside the gates, with human checkpoints, Intent Contract and Primum controls, verifier-anchored scoring, and safety limits. Load when the user says auto-research, iterate until optimal, research and develop, or find the best solution.
 # For non-Kiro tools, load this file on demand for auto-research requests.
 ---
@@ -15,7 +15,7 @@ Auto-research runs autonomous cycles that generate, build, evaluate, and refine 
 
 - **Intent Contract approved** (or, on Express, the inline Intent block), including authorized scope, harm boundaries, and the research directory.
 - **Success criteria are verifier-backed.** Each criterion has an automated check (test suite, benchmark, schema, security scan). LLM opinion alone is not a success criterion.
-- **Immutable paths approved** in `.sgl/immutable-paths`: test suites, benchmarks, fixtures, and the scoring rubric. The approaches may not edit what scores them.
+- **Immutable paths approved** in `.codifide/immutable-paths`: test suites, benchmarks, fixtures, and the scoring rubric. The approaches may not edit what scores them.
 - **Budget set**: max cycles, wall-clock per cycle, token budget (Cost Class C3 per `08`).
 - **Human checkpoint cadence agreed** (default: after cycle 1 and every 3 cycles).
 

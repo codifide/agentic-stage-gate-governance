@@ -19,7 +19,7 @@
 
 ## Abstract
 
-The AI security threat landscape underwent a structural transformation between May and July 2026. Three forces converged simultaneously: AI became a confirmed offensive weapon (first AI-assisted zero-day exploit), AI infrastructure became a high-value attack surface (supply chain compromises targeting packages with 95 million monthly downloads), and AI-generated code became a dominant source of production software (40%+ of enterprise code with only 10.5% meeting security standards). This paper examines each shift, evaluates why traditional gate-based SDLCs cannot absorb these changes at their current architecture, and proposes a three-layer governance model — Human, Gate, and Loop — that enables daily deployment cadence without sacrificing security posture. The model is grounded in the Codifide Harness framework (formerly Agentic Stage-Gate-Loop) and validated against the CISA/Five Eyes agentic AI guidance, the OWASP Agentic AI Top 10, and the EU AI Act high-risk obligations with Annex III obligations moved to December 2, 2027.
+The AI security threat landscape underwent a structural transformation between May and July 2026. Three forces converged simultaneously: AI became a confirmed offensive weapon (first AI-assisted zero-day exploit), AI infrastructure became a high-value attack surface (supply chain compromises targeting packages with 95 million monthly downloads), and AI-generated code became a dominant source of production software (40%+ of enterprise code with only 10.5% meeting security standards). This paper examines each shift, evaluates why traditional gate-based SDLCs cannot absorb these changes at their current architecture, and proposes a three-layer governance model — Human, Gate, and Loop — that enables daily deployment cadence without sacrificing security posture. The model is grounded in the Codifide Harness framework and validated against the CISA/Five Eyes agentic AI guidance, the OWASP Agentic AI Top 10, and the EU AI Act high-risk obligations with Annex III obligations moved to December 2, 2027.
 
 ---
 
@@ -200,7 +200,7 @@ The question is not "how do we make quarterly reviews better?" — it is "how do
 
 ### 5.1 Architecture Overview
 
-The Codifide Harness model (formerly Agentic Stage-Gate-Loop) [27] addresses the structural mismatch by separating work into three layers, each operating at a different speed and with different accountability:
+The Codifide Harness model [27] addresses the structural mismatch by separating work into three layers, each operating at a different speed and with different accountability:
 
 ```
                 ┌─────────────────────────────────────┐
@@ -444,7 +444,7 @@ The choice is not between speed and security. It is between architectural adapta
 
 [26] OWASP (2026). "Large Language Model Security Verification Standard v2.0." https://owasp.org/www-project-llm-verification-standard/LLMSVS-v2.0-en.html
 
-[27] Jones, D. (2026). "Stage-Gate Rebooted: How We Govern AI-Powered Development." Codifide Harness (formerly Agentic Stage-Gate-Loop Governance) v2.0. https://github.com/codifide/agentic-stage-gate-governance
+[27] Jones, D. (2026). "Stage-Gate Rebooted: How We Govern AI-Powered Development." Codifide Harness v2.0. https://github.com/codifide/codifide-harness
 
 [28] NxCode (2026). "AI-Native SDLC Security: A Practical Control Plan for Agent-Written Code." July 2026. https://www.nxcode.io/resources/news/ai-native-sdlc-security-controls-playbook-2026
 

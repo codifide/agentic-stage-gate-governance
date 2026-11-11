@@ -1,4 +1,4 @@
-# .sgl/immutable-paths — paths agents and loops may READ but never MODIFY.
+# .codifide/immutable-paths — paths agents and loops may READ but never MODIFY.
 # Owned by the Human Steward. Changes to this file are human-approved governance events.
 # One entry per line. A trailing "/" protects a whole directory. Globs (*, ?) are allowed.
 # A line starting with "!" is an exception (an allowed path inside a protected one).
@@ -21,7 +21,7 @@ auto-research/*/rubric.md
 .kiro/steering/
 !.kiro/steering/next-session-prompt.md
 .kiro/hooks/
-.sgl/
+.codifide/
 .github/workflows/
 CODEOWNERS
 .github/CODEOWNERS

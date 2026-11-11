@@ -113,7 +113,7 @@ What evidence proves the intended outcome, not merely proxy metrics?
 
 ## 11. Immutable Paths
 
-Loops in scope may read but never modify the paths in `.sgl/immutable-paths` (verifiers, fixtures, baselines, harness, rubrics).
+Loops in scope may read but never modify the paths in `.codifide/immutable-paths` (verifiers, fixtures, baselines, harness, rubrics).
 
 - **Additions for this initiative:**
 - **Approved by (Human Steward):**

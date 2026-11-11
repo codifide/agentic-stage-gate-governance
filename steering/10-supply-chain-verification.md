@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-supply-chain-verification
+name: codifide-supply-chain-verification
 description: Harness supply chain verification loop for every dependency, lockfile, base image, or AI SDK change - provenance, vulnerability, behavioral, license, and AI-specific checks, the AI-BOM, CI credential isolation, the dependency review gate, and compromise response. Load before adding, bumping, or removing any dependency.
 # For non-Kiro tools, load this file on demand for dependency changes.
 ---
@@ -215,7 +215,7 @@ Clearing a flag is accepting a risk, so it follows `00-welcome.md` §1: the Huma
 
 A swarm installs dependencies at machine speed. Left unchecked, one agent can pull a **copyleft** package (GPL / LGPL / AGPL / MPL / EPL) into a repo whose own license cannot satisfy it — in a **proprietary/closed** repo, copyleft can create an obligation to release source you intend to keep closed. This is a license-compatibility failure, and it must be caught mechanically, not by hoping a human reads the dependency tree.
 
-Each repo declares an allow-list at `.sgl/allowed-licenses` (one SPDX id or glob per line; `!` lines are explicit denies that override allows). A reference check, `templates/enforcement/check-licenses.sh`, scans the resolved dependency licenses and **fails CI** on anything not allowed. Run it on every PR alongside the immutable-path and review-level checks.
+Each repo declares an allow-list at `.codifide/allowed-licenses` (one SPDX id or glob per line; `!` lines are explicit denies that override allows). A reference check, `templates/enforcement/check-licenses.sh`, scans the resolved dependency licenses and **fails CI** on anything not allowed. Run it on every PR alongside the immutable-path and review-level checks.
 
 Starting posture:
 
@@ -226,8 +226,8 @@ Starting posture:
 
 Rules:
 - **Unknown license = FAIL.** "Could not determine license" is treated as disallowed, not waved through.
-- A copyleft dependency enters a proprietary repo **only** by a Human-Steward-recorded exception that a lawyer has cleared, added as an explicit allow in `.sgl/allowed-licenses` with a comment.
-- The allow-list file is governance (`.sgl/*`): editing it is R3 and immutable-path-guarded like the rest of the harness config.
+- A copyleft dependency enters a proprietary repo **only** by a Human-Steward-recorded exception that a lawyer has cleared, added as an explicit allow in `.codifide/allowed-licenses` with a comment.
+- The allow-list file is governance (`.codifide/*`): editing it is R3 and immutable-path-guarded like the rest of the harness config.
 
 ---
 

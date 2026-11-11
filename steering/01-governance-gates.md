@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-governance-gates
+name: codifide-governance-gates
 description: Full criteria for Harness gates G0, G1, G2/G3, G4, G5, G6, the G-LOOP, scale-adaptive tracks (Express/Standard/Enterprise), and governance principles. Load when running, preparing, or assessing any gate, or when selecting a track.
 # For non-Kiro tools, load this file on demand when gate work begins.
 ---
@@ -114,7 +114,7 @@ G2/G3 is **one gate**. The label is historical (design and architecture used to 
 - Decomposed tickets with acceptance criteria
 - 3 Amigos approval on each execution ticket (the product, development, and test owners for the ticket; humans where the organization has them, otherwise the Human Steward)
 - Gate review at the level required by `00` §3
-- Authority boundaries and irreversible-action controls for agents/loops, including `.sgl/immutable-paths`
+- Authority boundaries and irreversible-action controls for agents/loops, including `.codifide/immutable-paths`
 
 **Passes when:** The design is implementable, secure, and testable, and the team knows what to build.
 

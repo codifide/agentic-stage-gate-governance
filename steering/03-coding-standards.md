@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-coding-standards
+name: codifide-coding-standards
 description: Harness coding standards - the single test coverage table, security and accessibility standards, error handling (no silent catches), AI-code provenance commit trailers, and CI requirements. Load before writing, reviewing, or committing code.
 # For non-Kiro tools, load this file on demand before code work.
 ---

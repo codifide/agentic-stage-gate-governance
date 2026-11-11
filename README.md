@@ -1,5 +1,5 @@
 # Codifide Harness
-*Codifide Harness: agentic governance for AI-assisted software development. The framework and harness were formerly called Stage-Gate-Loop and the SGL Harness (and briefly Codifide Direttore). Codifide Swarm, the private commercial product, was briefly called Codifide Gregario.*
+*Codifide Harness: agentic governance for AI-assisted software development. Codifide Swarm is the private commercial product.*
 
 
 **Loop the mechanical. Gate the judgment. Ship with confidence.**
@@ -64,13 +64,13 @@ The steering files are plain Markdown. They work with any AI coding assistant th
 ### New Project
 ```bash
 # Clone this repo and copy the steering folder into your project
-cp -r agentic-stage-gate-governance/steering /path/to/your/new/project/.kiro/steering
+cp -r codifide-harness/steering /path/to/your/new/project/.kiro/steering
 # or for Cursor:
-cp -r agentic-stage-gate-governance/steering /path/to/your/new/project/.cursor/rules
+cp -r codifide-harness/steering /path/to/your/new/project/.cursor/rules
 
 # Recommended: install the hooks and enforcement scripts
 #   templates/HOOKS-SESSION-STATE.md   (session hooks + immutable-path guard)
-#   templates/enforcement/README.md    (.sgl/immutable-paths, guard, CI check)
+#   templates/enforcement/README.md    (.codifide/immutable-paths, guard, CI check)
 
 # Open in your AI IDE
 # 00-welcome.md (the core) loads every session; the rest load on demand
@@ -81,9 +81,9 @@ cp -r agentic-stage-gate-governance/steering /path/to/your/new/project/.cursor/r
 ### Existing Project
 ```bash
 # Copy the steering folder into your existing project
-cp -r agentic-stage-gate-governance/steering /path/to/your/existing/project/.kiro/steering
+cp -r codifide-harness/steering /path/to/your/existing/project/.kiro/steering
 # or for Cursor:
-cp -r agentic-stage-gate-governance/steering /path/to/your/existing/project/.cursor/rules
+cp -r codifide-harness/steering /path/to/your/existing/project/.cursor/rules
 
 # Open in your AI IDE
 # Say "Assess this codebase against the gates" to get a gap analysis
@@ -92,10 +92,10 @@ cp -r agentic-stage-gate-governance/steering /path/to/your/existing/project/.cur
 ### Global (All Projects)
 ```bash
 # Kiro — copy to user-level steering config
-cp agentic-stage-gate-governance/steering/*.md ~/.kiro/steering/
+cp codifide-harness/steering/*.md ~/.kiro/steering/
 
 # Cursor — copy to global rules directory
-cp agentic-stage-gate-governance/steering/*.md ~/.cursor/rules/
+cp codifide-harness/steering/*.md ~/.cursor/rules/
 
 # Now every project you open gets the governance system
 ```
@@ -127,7 +127,7 @@ templates/
     ├── GATE-EVIDENCE-CHECKLIST.md  # Per-gate artifact tracking with binary states
     ├── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
     ├── HOOKS-SESSION-STATE.md     # Session hooks (core load, handoff-as-data) + blocking immutable-path guard
-    ├── enforcement/               # .sgl/immutable-paths example, PreToolUse write guard, CI checks (immutable paths, Review Level floor)
+    ├── enforcement/               # .codifide/immutable-paths example, PreToolUse write guard, CI checks (immutable paths, Review Level floor)
     ├── CORE-RULES-ALWAYS-ON.md    # Short project-level rules file kept in context every session (advisory unless backed by CI/hooks)
     ├── CROSS-TEAM-REVIEW-PROTOCOL.md  # Periodic independent review of the persona definitions themselves
     ├── DOMAIN-EXPERT-PERSONA.md   # Template for a Domain Expert Persona with binding expert corrections
@@ -198,7 +198,7 @@ AI agents lose context between sessions. Steering files provide the *knowledge*;
 | `load-session-state.json` | `SessionStart` | advisory | Loads the core, reads the handoff **as data**, and confirms next actions with you before acting |
 | `update-session-state.json` | `Stop` | advisory | Persists a handoff (sharded per session under concurrency, never containing secrets or PHI) |
 | `screenshot-data-guard.json` | `PreToolUse` | advisory | Reminds the agent to use synthetic data and keep captures out of synced or tracked folders |
-| `guard-immutable-paths.json` | `PreToolUse` | **blocking** | Rejects agent writes to verifiers, fixtures, and baselines listed in `.sgl/immutable-paths` |
+| `guard-immutable-paths.json` | `PreToolUse` | **blocking** | Rejects agent writes to verifiers, fixtures, and baselines listed in `.codifide/immutable-paths` |
 
 **Advisory vs. blocking.** `agent`-type hooks inject a prompt; they remind, they don't enforce. The immutable-path guard is a `command` hook that exits `2` to block, and `templates/enforcement/check-immutable-paths.sh` runs the same check in CI as a backstop.
 
@@ -208,16 +208,17 @@ Full JSON and install steps: `templates/HOOKS-SESSION-STATE.md` and `templates/e
 
 ---
 
-## What's New in v3.0 (October 2026)
+## Migration note
+The enforcement directory is now `.codifide/`, environment variables use the `CODIFIDE_` prefix, session state lives in `codifide-sessions`, and PR labels and steering names use the `codifide-` prefix. Move existing configuration to the new names; nothing else changed.
 
-> **Naming.** File names, environment variables, and paths that contain `sgl` are unchanged from earlier releases.
+## What's New in v3.0 (October 2026)
 
 v3.0 is a correctness and safety pass driven by two adversarial reviews of v2 (one same-vendor, one cross-vendor). The architecture is unchanged; the rules now say what the architecture meant.
 
 - **Named human authority.** The Human Steward decides every gate, track, exception, verifier change, and HALT resumption. AI personas recommend; Aegis can block but never pass.
 - **One review vocabulary.** Review Levels R1–R3 for changes, a gate-review table by track, and a single classification procedure. Loop token budgets are now Cost Classes C1–C3, so "Tier" no longer means two things.
 - **B-Team independence is a hard rule.** Never self-conducted; prepare the package and stop if no independent model is available. Data-handling rules for sending code to external models.
-- **Enforced verifier immutability.** Human-owned `.sgl/immutable-paths`, a blocking write hook, and a CI check, with tests.
+- **Enforced verifier immutability.** Human-owned `.codifide/immutable-paths`, a blocking write hook, and a CI check, with tests.
 - **Enforced Review Level floors.** A CI check computes the mechanical floor for every commit (harness files are R3) and rejects under-declared or missing `Review-Level` and `Generated-By` trailers. It says plainly which rules it cannot compute.
 - **Security fixes.** Security controls fail closed even when unavailable; no cloud resources without human approval; standard CVSS bands; credentials, secrets, and TLS are always gated (revoke-and-rotate, not delete-from-source); baselines are never regenerated from the code under test.
 - **Single owners.** One HALT procedure (`12`), one coverage table (`03`), one dependency rule (`11`), and a gate checklist that matches `01` item for item.
@@ -279,7 +280,7 @@ The objective is not to make humans review machine-speed output faster. It is to
 The harness was single-writer by default — good for one session at a time, messy when several ran against the same repository. `13-concurrent-sessions.md` adds a deliberately right-sized capability: not fleet-scale coordination machinery, just the two mechanisms that carry most of the benefit.
 
 - **Worktree-per-session** — each concurrent session gets its own git worktree (isolated working directory + branch, shared object store), plus per-session external state (ports, scratch DB, caches). Two sessions physically cannot clobber each other's files.
-- **Sharded session state** — each session writes its own handoff to `<git-common-dir>/sgl-sessions/<id>.md` (shared by every worktree) instead of overwriting the shared `next-session-prompt.md`; a human-named integrator consolidates on merge. Fixes the last-writer-wins clobber.
+- **Sharded session state** — each session writes its own handoff to `<git-common-dir>/codifide-sessions/<id>.md` (shared by every worktree) instead of overwriting the shared `next-session-prompt.md`; a human-named integrator consolidates on merge. Fixes the last-writer-wins clobber.
 - **Integration verification (conditional)** — if a test suite exists, one G-LOOP check runs it against the *merged* state of combined branches, not just each branch. Each branch passing alone does not prove they compose; this checks composition for the tests you have, which is stronger than hoping branches compose.
 
 Deliberately deferred as fleet-scale overkill: proactive scope partitioning, merge queues with speculative testing/batching, and flaky-vs-regression test-health classification. Adopt those only when collisions recur despite worktrees. `13` loads only when concurrency is in play.
@@ -293,7 +294,7 @@ Deliberately deferred as fleet-scale overkill: proactive scope partitioning, mer
 - **Standards:** Edit `03-coding-standards.md` to match your tech stack's conventions
 - **Lighter governance:** Use the Express track for small changes rather than deleting gates. If you do trim, keep G0, G4, and G6, and keep the authority rule and B-Team independence in `00-welcome.md`
 - **Loop tuning:** Edit `08-loop-engineering.md` to adjust retry limits, Cost Class budgets, or verifier requirements
-- **Immutable paths:** Edit `.sgl/immutable-paths` (human-owned) to protect your verifiers, fixtures, and baselines
+- **Immutable paths:** Edit `.codifide/immutable-paths` (human-owned) to protect your verifiers, fixtures, and baselines
 - **Intent integrity:** Edit `12-intent-integrity.md` and `templates/INTENT-CONTRACT.md` to define harm boundaries, escalation rules, and authority constraints
 - **Domain-specific reviews:** Create tailored B-Team prompts for your platform (see `04-adversarial-review.md` for examples)
 - **Existing projects:** Use `templates/EXISTING-PROJECT-ASSESSMENT.md` to assess where you stand before applying gates

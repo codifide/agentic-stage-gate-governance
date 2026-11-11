@@ -2,7 +2,7 @@
 # Codifide Harness — immutable-path write guard (PreToolUse command hook).
 #
 # Blocks agent file-write tools from touching any path listed in
-# .sgl/immutable-paths (verifiers, golden fixtures, baselines, eval harness).
+# .codifide/immutable-paths (verifiers, golden fixtures, baselines, eval harness).
 #
 # Contract (Kiro command hooks): the tool call arrives as JSON on stdin.
 #   exit 0  -> allow
@@ -17,19 +17,19 @@
 # blocked too). The CI check (check-immutable-paths.sh) is the backstop for
 # writes made through a shell.
 #
-# Install: copy to <repo>/.sgl/guard-immutable-paths.sh, chmod +x, and register
+# Install: copy to <repo>/.codifide/guard-immutable-paths.sh, chmod +x, and register
 # it as a PreToolUse hook matching your agent's write tools (see
 # templates/HOOKS-SESSION-STATE.md, Hook 4).
 
 set -uo pipefail
 
-ROOT="${SGL_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
-LIST="$ROOT/.sgl/immutable-paths"
+ROOT="${CODIFIDE_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+LIST="$ROOT/.codifide/immutable-paths"
 
 # Nothing declared -> nothing to protect, unless the repo requires a list.
 if [[ ! -f "$LIST" ]]; then
-  if [[ "${SGL_REQUIRE_IMMUTABLE_LIST:-0}" == "1" ]]; then
-    echo "SGL guard: $LIST is missing but SGL_REQUIRE_IMMUTABLE_LIST=1. Blocking writes until the Human Steward restores it." >&2
+  if [[ "${CODIFIDE_REQUIRE_IMMUTABLE_LIST:-0}" == "1" ]]; then
+    echo "Codifide guard: $LIST is missing but CODIFIDE_REQUIRE_IMMUTABLE_LIST=1. Blocking writes until the Human Steward restores it." >&2
     exit 2
   fi
   exit 0
@@ -57,18 +57,18 @@ except Exception:
 ')"
 else
   # Security controls fail closed (00-welcome.md section 6).
-  echo "SGL guard: cannot inspect tool input (install jq or python3). Blocking write while $LIST exists." >&2
+  echo "Codifide guard: cannot inspect tool input (install jq or python3). Blocking write while $LIST exists." >&2
   exit 2
 fi
 
 # Unparseable input also fails closed.
 if [[ $? -ne 0 ]]; then
-  echo "SGL guard: tool input was not valid JSON. Blocking write while $LIST exists." >&2
+  echo "Codifide guard: tool input was not valid JSON. Blocking write while $LIST exists." >&2
   exit 2
 fi
 
 # Load patterns (ignore blanks and comments). The list always protects itself.
-PATTERNS=(".sgl/immutable-paths")
+PATTERNS=(".codifide/immutable-paths")
 EXCEPTIONS=()
 while IFS= read -r line || [[ -n "$line" ]]; do
   line="${line%%#*}"
@@ -139,13 +139,13 @@ while IFS= read -r cand; do
   rel="${rel#"$ROOT"/}"
   excepted=0
   for ex in "${EXCEPTIONS[@]+"${EXCEPTIONS[@]}"}"; do
-    if [[ "$rel" != ".sgl/immutable-paths" ]] && matches "$rel" "$ex"; then excepted=1; break; fi
+    if [[ "$rel" != ".codifide/immutable-paths" ]] && matches "$rel" "$ex"; then excepted=1; break; fi
   done
   (( excepted )) && continue
   for pat in "${PATTERNS[@]}"; do
     if matches "$rel" "$pat"; then
       {
-        echo "SGL guard: BLOCKED write to immutable path '$rel' (pattern '$pat' in .sgl/immutable-paths)."
+        echo "Codifide guard: BLOCKED write to immutable path '$rel' (pattern '$pat' in .codifide/immutable-paths)."
         echo "Verifiers, fixtures, and baselines may be read but never modified by the agent."
         echo "If this change is genuinely needed, stop and ask the Human Steward; it must be made as its own human-approved change."
       } >&2

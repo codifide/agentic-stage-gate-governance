@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-loop-engineering
+name: codifide-loop-engineering
 description: Harness loop engineering - loop-or-gate decision, rules for production loops, verifier immutability and enforcement, baselines, meta-loop, state files, Cost Classes C1-C3, retry limits, circuit breakers, and verifier anti-patterns. Load before designing, running, or debugging any automated loop.
 # For non-Kiro tools, load this file on demand for loop work.
 ---
@@ -68,9 +68,9 @@ This is the loop-level equivalent of A-Team/B-Team separation.
 
 **The boundary must be enforced, not advised.** A loop that can edit its own verifier will eventually make the test easier instead of making the work correct. This is the central failure mode of autonomous loops (verifier hacking).
 
-- **Declared by a human, outside the loop.** Immutable paths (verifier code, golden fixtures, baselines, evaluation harness, scoring rubrics, the existing test files the loop is trying to satisfy) are listed in `.sgl/immutable-paths`, one glob per line. Atlas proposes the list; the Human Steward approves it. The loop's state file may *copy* the list for reference, but the state file is not the source of truth.
+- **Declared by a human, outside the loop.** Immutable paths (verifier code, golden fixtures, baselines, evaluation harness, scoring rubrics, the existing test files the loop is trying to satisfy) are listed in `.codifide/immutable-paths`, one glob per line. Atlas proposes the list; the Human Steward approves it. The loop's state file may *copy* the list for reference, but the state file is not the source of truth.
 - **Enforced in two places.** A blocking PreToolUse hook rejects agent writes to those paths (`templates/enforcement/guard-immutable-paths.sh`). A CI check on **every PR** fails any diff that touches them, unless the Human Steward approved that change (`templates/enforcement/check-immutable-paths.sh`). The hook stops the attempt; CI is the backstop for anything the hook can't see (e.g., shell commands).
-- **The generator may read those paths but is forbidden to modify them.** `.sgl/immutable-paths` protects itself.
+- **The generator may read those paths but is forbidden to modify them.** `.codifide/immutable-paths` protects itself.
 - Changing a verifier is a human-approved change made on its own branch, outside the loop.
 
 This is the same discipline as an autoresearch setup where the agent may edit the training code but never the evaluator.
@@ -122,7 +122,7 @@ An inner loop reasons about the *task*; the meta-loop reasons about the *loop's 
 
 ### Boundaries (non-negotiable)
 
-- The meta-loop changes **strategy only** — never the verifier, the goal, the paths in `.sgl/immutable-paths`, or the Intent Contract.
+- The meta-loop changes **strategy only** — never the verifier, the goal, the paths in `.codifide/immutable-paths`, or the Intent Contract.
 - The meta-loop gets **one** intervention per plateau. If the second stall occurs, escalate. No infinite meta-recursion.
 - Every meta-loop intervention is logged to the loop's history as a distinct event, with its diagnosis. Atlas owns this; Quill records it.
 
@@ -145,7 +145,7 @@ An inner loop reasons about the *task*; the meta-loop reasons about the *loop's 
   "status": "running|passed|failed|escalated",
   "iteration": 4,
   "max_iterations": 10,
-  "immutable_paths_source": ".sgl/immutable-paths",
+  "immutable_paths_source": ".codifide/immutable-paths",
   "last_result": {
     "timestamp": "2026-07-15T08:12:00Z",
     "verifier_passed": false,
@@ -254,7 +254,7 @@ Before activating a loop, confirm:
 
 - [ ] **Verifier defined** — What automated check proves success?
 - [ ] **Verifier tested** — Does it reject known-bad input?
-- [ ] **Immutable paths approved** — Verifier, fixtures, baselines, and harness listed in `.sgl/immutable-paths` by the Human Steward; guard hook and CI check active
+- [ ] **Immutable paths approved** — Verifier, fixtures, baselines, and harness listed in `.codifide/immutable-paths` by the Human Steward; guard hook and CI check active
 - [ ] **State file location** — Where does iteration state persist?
 - [ ] **Max retries set** — What's the hard stop?
 - [ ] **Meta-loop eligibility** — On plateau, is one strategy-change pass allowed, or does this escalate immediately (consequential/irreversible work)?

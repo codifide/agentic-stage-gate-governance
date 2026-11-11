@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-adversarial-review
+name: codifide-adversarial-review
 description: How to prepare, run, and respond to an independent Harness B-Team adversarial review - review packages, reviewer model selection, data handling before sending code to an external model, A-Team response protocol, verdicts, and findings tracking. Load when a B-Team review is requested or required.
 # For non-Kiro tools, load this file on demand when a review is needed.
 ---

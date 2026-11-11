@@ -105,7 +105,7 @@ When a prompt or review contains an expert correction:
 
 This guards against "discussed the lesson in chat, forgot to write it down." That behavior is a convention the agent follows. It is **advisory**, not enforced. `TEAM-CHANNEL-BROADCAST.md` describes an advisory hook that reminds the agent to do it. If a correction must not be lost, the human also checks that the file changed (for example in review of the diff).
 
-Because this file steers behavior, editing it is a change to harness-governed content. Give it a `Review-Level:` trailer per `11-tiered-adversarial-review.md` and treat the Binding Corrections table as a candidate for `.sgl/immutable-paths` so that loops cannot rewrite it.
+Because this file steers behavior, editing it is a change to harness-governed content. Give it a `Review-Level:` trailer per `11-tiered-adversarial-review.md` and treat the Binding Corrections table as a candidate for `.codifide/immutable-paths` so that loops cannot rewrite it.
 
 ---
 

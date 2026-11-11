@@ -1,6 +1,6 @@
 # Security Policy
 
-This policy covers Codifide Harness, the framework and free harness in this repository (formerly Stage-Gate-Loop and SGL Harness).
+This policy covers Codifide Harness, the framework and free harness in this repository.
 
 ## Reporting a vulnerability
 

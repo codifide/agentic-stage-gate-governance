@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-security-remediation-sla
+name: codifide-security-remediation-sla
 description: Harness security remediation SLA - CVSS-aligned severity classification, the single remediation clock per severity, extension classes, loop-vs-gate routing for fixes (credentials and security config are always gated), breach escalation, and metrics. Load when triaging, fixing, or reporting on any vulnerability.
 # For non-Kiro tools, load this file on demand for vulnerability work.
 ---

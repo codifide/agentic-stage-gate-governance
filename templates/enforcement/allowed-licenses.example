@@ -1,7 +1,7 @@
-# .sgl/allowed-licenses — the dependency license allow-list for THIS repo.
+# .codifide/allowed-licenses — the dependency license allow-list for THIS repo.
 # One SPDX id or glob per line. Case-insensitive. Blank lines and # comments ignored.
 # A line starting with "!" is an explicit DENY that overrides any allow (and overrides
-# the fallback-allow mode). The allow-list file is governance (.sgl/*): editing it is R3.
+# the fallback-allow mode). The allow-list file is governance (.codifide/*): editing it is R3.
 #
 # check-licenses.sh reads this file. Any dependency whose license is NOT allowed here
 # fails CI. An unknown/undeterminable license fails too (treated as disallowed).

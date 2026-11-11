@@ -61,7 +61,7 @@ full files listed in the On-Demand Index of 00-welcome.md.
 
 ## Test Integrity
 - Changes ship with test coverage per 03-coding-standards.md.
-- Golden fixtures and verifiers are immutable paths (.sgl/immutable-paths); changing one needs Human Steward approval.
+- Golden fixtures and verifiers are immutable paths (.codifide/immutable-paths); changing one needs Human Steward approval.
 - Tests assert correct behavior, not just that code ran.
 - Tests pass in a clean environment with no leaked state.
 

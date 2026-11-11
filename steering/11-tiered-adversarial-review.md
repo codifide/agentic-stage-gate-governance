@@ -1,6 +1,6 @@
 ---
 inclusion: auto
-name: sgl-review-levels
+name: codifide-review-levels
 description: Harness Review Levels R1, R2, R3 for individual changes (PRs, loop output) - criteria, the single classification procedure, path-based floors computed by CI, dependency rules, override rules, and calibration metrics. Load when assigning or checking a Review Level on any change.
 # For non-Kiro tools, load this file on demand when classifying a change.
 ---
@@ -89,7 +89,7 @@ Walk the rules in order. **The highest level any rule assigns is the floor.** St
 
 | # | If the change... | Floor |
 |---|------------------|-------|
-| 0 | Edits the harness itself: steering files, hooks, `.sgl/`, CI workflows, CODEOWNERS (the handoff file `next-session-prompt.md` excepted) | R3 |
+| 0 | Edits the harness itself: steering files, hooks, `.codifide/`, CI workflows, CODEOWNERS (the handoff file `next-session-prompt.md` excepted) | R3 |
 | 1 | Touches encryption, key management, certificates, or secrets handling | R3 |
 | 2 | Has any non-`human` provenance (`ai-agent`, `ai-paired`, or `ai-assisted`) **and** touches auth, authz, permissions, or crypto | R3 |
 | 3 | Introduces a new architectural pattern, service, data store, or external integration | R3 |
@@ -110,7 +110,7 @@ Walk the rules in order. **The highest level any rule assigns is the floor.** St
 ### Path-based floors (enforced per commit by `templates/enforcement/check-review-level.sh`)
 
 ```
-R3:  governance: */.kiro/*, */.sgl/*, */steering/*, */.github/workflows/*, */CODEOWNERS,
+R3:  governance: */.kiro/*, */.codifide/*, */steering/*, */.github/workflows/*, */CODEOWNERS,
      */templates/enforcement/*, and the Harness review/checklist/hook/intent/NFR templates
      (except .kiro/steering/next-session-prompt.md)
 R3:  */crypto/*, */encryption/*, */keys/*, */certs/*, */certificates/*, */tls/*, */secrets/*,

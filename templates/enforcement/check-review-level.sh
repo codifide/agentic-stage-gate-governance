@@ -13,7 +13,7 @@
 #     the highest level declared on the branch (the PR is reviewed as a unit)
 #
 # Floors (steering/11-tiered-adversarial-review.md):
-#   Governance files (the harness itself, hooks, .sgl/, CI workflows, CODEOWNERS)
+#   Governance files (the harness itself, hooks, .codifide/, CI workflows, CODEOWNERS)
 #   are R3: editing the rules is the highest-risk change there is.
 #   R1 is allowed ONLY for files on the R1 allowlist (tests, docs, styles).
 #   Any other file is at least R2 ("anything not clearly covered -> R2"), which
@@ -27,7 +27,7 @@
 #   If the PR as a whole trips the size rule, EVERY commit must declare the size floor.
 #
 # Waiver (the only one): rule 8's mechanical-refactor exception. With
-#   SGL_WAIVE=size  and  SGL_STEWARD="<name>"  (set by a human-controlled
+#   CODIFIDE_WAIVE=size  and  CODIFIDE_STEWARD="<name>"  (set by a human-controlled
 #   workflow, e.g. a label only the Human Steward can apply), the size rule
 #   contributes R2 instead of R3. All other floors cannot be lowered here.
 #
@@ -36,21 +36,21 @@
 
 set -uo pipefail
 
-die() { echo "SGL review-level: ERROR: $*" >&2; exit 2; }
+die() { echo "Codifide review-level: ERROR: $*" >&2; exit 2; }
 
-BASE="${1:-${SGL_BASE:-origin/main}}"
+BASE="${1:-${CODIFIDE_BASE:-origin/main}}"
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || die "not a git repo"
 cd "$ROOT" || die "cannot cd to repo root"
 git rev-parse --verify --quiet "$BASE" >/dev/null || die "base ref '$BASE' not found"
 
-if [[ -n "${SGL_WAIVE:-}" ]]; then
-  [[ "$SGL_WAIVE" == "size" ]] || die "SGL_WAIVE supports only 'size' (rule 8 mechanical refactor)"
-  [[ -n "${SGL_STEWARD:-}" ]] || die "SGL_WAIVE requires SGL_STEWARD (the approving human)"
+if [[ -n "${CODIFIDE_WAIVE:-}" ]]; then
+  [[ "$CODIFIDE_WAIVE" == "size" ]] || die "CODIFIDE_WAIVE supports only 'size' (rule 8 mechanical refactor)"
+  [[ -n "${CODIFIDE_STEWARD:-}" ]] || die "CODIFIDE_WAIVE requires CODIFIDE_STEWARD (the approving human)"
 fi
 
 # Handoff file is written every session; it is data, not rules (00-welcome.md section 7).
 HANDOFF_EXEMPT=('*/.kiro/steering/next-session-prompt.md')
-GOVERNANCE_GLOBS=('*/.kiro/*' '*/.sgl/*' '*/steering/*' '*/.github/workflows/*' '*/CODEOWNERS' '*/templates/enforcement/*'
+GOVERNANCE_GLOBS=('*/.kiro/*' '*/.codifide/*' '*/steering/*' '*/.github/workflows/*' '*/CODEOWNERS' '*/templates/enforcement/*'
                   '*/templates/B-TEAM-REVIEW-PACKAGE.md' '*/templates/CODE-REVIEW-PROMPT-*' '*/templates/GATE-EVIDENCE-CHECKLIST.md'
                   '*/templates/HOOKS-SESSION-STATE.md' '*/templates/INTENT-CONTRACT.md' '*/templates/NFR-TEMPLATE.md'
                   '*/templates/EXISTING-PROJECT-ASSESSMENT.md')
@@ -71,7 +71,7 @@ glob_any() { # $1 = path with leading slash; rest = globs
 }
 
 COMMITS="$(git rev-list --reverse "$BASE"..HEAD)" || die "git rev-list failed"
-[[ -z "$COMMITS" ]] && { echo "SGL review-level: no commits on branch."; exit 0; }
+[[ -z "$COMMITS" ]] && { echo "Codifide review-level: no commits on branch."; exit 0; }
 
 # Branch-level size rule, computed first so every commit can be held to it.
 NUMSTAT="$(git diff --numstat --no-renames "$BASE"...HEAD)" || die "git diff failed"
@@ -80,9 +80,9 @@ LINES=$(printf '%s\n' "$NUMSTAT" | awk '$1 ~ /^[0-9]+$/ {a+=$1; d+=$2} END {prin
 SIZE_FLOOR=1
 if (( LINES > 500 && NFILES > 5 )); then
   SIZE_FLOOR=3
-  if [[ "${SGL_WAIVE:-}" == "size" ]]; then
+  if [[ "${CODIFIDE_WAIVE:-}" == "size" ]]; then
     SIZE_FLOOR=2
-    echo "  size: mechanical-refactor waiver recorded for Human Steward '${SGL_STEWARD}' (size floor R2)"
+    echo "  size: mechanical-refactor waiver recorded for Human Steward '${CODIFIDE_STEWARD}' (size floor R2)"
   fi
   echo "  size: PR changes $LINES lines across $NFILES files; every commit must declare at least R$SIZE_FLOOR"
 fi
@@ -131,7 +131,7 @@ while IFS= read -r sha; do
     # on the immutable-paths list and are R3 governance files, so changing them needs the
     # Steward's approval anyway. Every other file, including product code, is still scanned.
     ADDED="$(git show --format= --unified=0 "$sha" -- . \
-      ':(top,exclude).sgl/check-review-level.sh' ':(top,exclude).sgl/test-enforcement.sh' ':(top,exclude).sgl/README.md' \
+      ':(top,exclude).codifide/check-review-level.sh' ':(top,exclude).codifide/test-enforcement.sh' ':(top,exclude).codifide/README.md' \
       ':(top,exclude)templates/enforcement/check-review-level.sh' ':(top,exclude)templates/enforcement/test-enforcement.sh' \
       ':(top,exclude)templates/enforcement/README.md' \
       | grep -E '^\+' | grep -vE '^\+\+\+')" || true
@@ -152,8 +152,8 @@ while IFS= read -r sha; do
 done <<< "$COMMITS"
 
 if (( FAILS > 0 )); then
-  echo "SGL review-level: FAIL ($FAILS problem(s)). Raise the declared level and run that review, or ask the Human Steward."
+  echo "Codifide review-level: FAIL ($FAILS problem(s)). Raise the declared level and run that review, or ask the Human Steward."
   exit 1
 fi
-echo "SGL review-level: PASS."
+echo "Codifide review-level: PASS."
 exit 0

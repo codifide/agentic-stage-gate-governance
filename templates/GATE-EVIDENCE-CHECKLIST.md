@@ -76,7 +76,7 @@ Review levels referenced below: R1 verifier-only, R2 focused B-Team, R3 full B-T
 - [ ] Decomposed tickets with acceptance criteria
 - [ ] 3 Amigos approval on each execution ticket
 - [ ] Agent/loop authority boundaries and irreversible-action controls defined
-- [ ] `.sgl/immutable-paths` approved for any loops in scope
+- [ ] `.codifide/immutable-paths` approved for any loops in scope
 - [ ] Gate review: R3, findings dispositioned
 - **Decision (Human Steward; + Architecture/Security Lead on Enterprise):** ☐ Go ☐ Kill ☐ Hold — names, date: ______
 

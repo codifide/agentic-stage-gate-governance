@@ -59,4 +59,4 @@ Same problem. Same documents. Different outcome. The difference was timing.
 
 *[Douglas Jones](https://www.codifide.com/douglas-jones) · [Codifide](https://www.codifide.com)*
 
-*The [Codifide Harness](https://github.com/codifide/agentic-stage-gate-governance) framework (formerly Agentic Stage-Gate Governance) is open source.*
+*The [Codifide Harness](https://github.com/codifide/codifide-harness) framework is open source.*
