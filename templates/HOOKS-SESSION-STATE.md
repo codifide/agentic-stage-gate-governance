@@ -1,6 +1,6 @@
 # Agent Hooks — Session State and Enforcement
 
-These hook templates load the harness core at session start, persist a handoff at session end, and enforce verifier immutability. They use Kiro's hook file format (`.kiro/hooks/<id>.json`, `"version": "v1"`). Other tools with lifecycle hooks can adapt the same prompts and scripts.
+These hook templates load the harness core at session start, persist a handoff at session end, and enforce verifier immutability. They use Kiro's hook file format (`.kiro/hooks/<id>.json`, `"version": "v1"`). **Ready-to-copy files are in `templates/hooks/`** (Kiro, and a Claude Code example for the guard); the JSON below is the same content, shown for explanation. Other tools with lifecycle hooks can adapt the same prompts and scripts, but we have not tested them.
 
 ---
 
@@ -118,19 +118,19 @@ Blocks agent file-write tools from modifying anything listed in `.codifide/immut
     {
       "name": "Guard immutable paths",
       "trigger": "PreToolUse",
-      "matcher": "fs_write|str_replace|fs_append|delete_file|smart_relocate|semantic_rename",
+      "matcher": "write|fs_write|str_replace|fs_append|delete_file|smart_relocate|semantic_rename",
       "action": {
         "type": "command",
-        "command": "bash .codifide/guard-immutable-paths.sh"
+        "command": "bash .codifide/guard-immutable-paths.sh || exit 2"
       }
     }
   ]
 }
 ```
 
-- The matcher lists Kiro's file-write tool names. Adjust it to your tool's write-tool names.
-- The script reads the tool call JSON on stdin and exits `2` to block. It fails closed if it cannot parse the input.
-- Shell commands are not inspected by this hook; the CI check is the backstop.
+- The matcher lists Kiro's file-write tool names and the `write` category. `[UNVERIFIED]` by us: adjust it to your Kiro version's names, and test that a write to a protected path is refused (`templates/enforcement/README.md`, "Check that your hook blocks").
+- The script reads the tool call JSON on stdin and exits `2` to block. It fails closed if it cannot parse the input, if the input is empty, if the list is unreadable, or if it crashes. `|| exit 2` makes a missing `bash` block too.
+- Shell commands are not inspected by this hook; the CI check is the backstop, and only if it is a required status check.
 - If a blocked write was a legitimate verifier change, the agent stops and asks the Human Steward. It never edits `.codifide/immutable-paths` to get around the block (the guard protects that file too).
 
 ---
@@ -139,7 +139,7 @@ Blocks agent file-write tools from modifying anything listed in `.codifide/immut
 
 ```bash
 mkdir -p .kiro/hooks .codifide
-# Copy the JSON blocks above into .kiro/hooks/<file>.json
+# Copy the files from templates/hooks/kiro/ into .kiro/hooks/ (or the JSON blocks above)
 # Install the enforcement scripts per templates/enforcement/README.md
 # Start a new session to activate SessionStart hooks.
 ```
@@ -166,4 +166,4 @@ mkdir -p .kiro/hooks .codifide
 
 ---
 
-*Codifide Harness hooks v3.0 — October 2026*
+*Codifide Harness hooks 3.1.0 — November 2026*

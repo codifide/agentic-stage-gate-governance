@@ -10,11 +10,10 @@ This template is MIT licensed and accepts contributions. The goal is to keep it 
 - Do not submit code or text that you do not have the right to license, or that was copied from another project.
 - Sections below describe the kinds of changes the project is interested in, and how a pull request would work once contributions are open. They are kept for reference.
 
-> **[FLAG FOR COUNSEL]** Choice between a CLA and a DCO, and any relicensing options.
 
 ## What this project is
 
-A ready-to-use governance template for AI-assisted software development. The steering files drop into any AI coding assistant project and activate a 7-gate process with adversarial review built in. The whitepaper explains the methodology.
+A ready-to-use governance template for AI-assisted software development. The steering files drop into any AI coding assistant project and activate a six-gate process (G0, G1, G2/G3, G4, G5, G6) with adversarial review built in. The whitepaper explains the methodology.
 
 ## Types of contributions
 
@@ -26,8 +25,8 @@ A ready-to-use governance template for AI-assisted software development. The ste
 - Translations of the steering files
 
 ### Requires discussion first (open an issue)
-- Changes to the core 7-gate structure (G0–G6)
-- Changes to the three-model review architecture (A-Team, B-Team, Zero-Context)
+- Changes to the core six-gate structure (G0, G1, G2/G3, G4, G5, G6)
+- Changes to the review architecture (the builder never reviews itself; an independent B-Team reviews; a Zero-Context read applies on high-risk work)
 - Changes to the core philosophy ("AI builds. Humans decide. Evidence proves.")
 
 The gate structure and review architecture are the product. Changes to them need a clear rationale and discussion before a PR.

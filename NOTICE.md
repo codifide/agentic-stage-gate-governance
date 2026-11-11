@@ -68,4 +68,3 @@ Names of other parties' products, projects, and companies are used to identify t
 
 Some content in this repository was drafted with AI assistance and reviewed by a human. Generated text can be wrong, can resemble existing works, and needs review before reuse. Contributors and users should treat it that way. This file makes no statement about whether any part of the content is or is not protected by copyright.
 
-> **[FLAG FOR COUNSEL]** Copyrightability and ownership of AI-assisted content.

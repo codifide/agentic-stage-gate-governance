@@ -147,7 +147,7 @@ Articles 8–17, 26, 27, and 73 of the EU AI Act become enforceable on August 2,
 
 Penalties reach up to 35 million euros or 7% of global annual turnover for the most serious violations [25]. Most enterprises building AI agents are not ready — the gap between current practice and compliance requirements is substantial, particularly for organizations that have adopted agentic AI without formal governance frameworks.
 
-### 3.4 OWASP LLM Security Verification Standard (LLMSVS v2.0)
+### 3.4 OWASP LLM Security Verification Standard (LLMSVS 2.0)
 
 A testable verification standard providing specific security requirements that can be used by architects, developers, and testers to define, build, test, and verify secure LLM-driven applications [26]. Unlike the Top 10 lists (which identify risks), the LLMSVS provides actionable test criteria — making it suitable for integration into automated verification loops.
 
@@ -442,9 +442,9 @@ The choice is not between speed and security. It is between architectural adapta
 
 [25] SecurePrivacy (2026). "EU AI Act vs NIST AI RMF vs ISO 42001: Building a Unified AI Governance Program." https://secureprivacy.ai/blog/eu-ai-act-vs-nist-ai-rmf-vs-iso-42001-ai-governance-framework-alignment
 
-[26] OWASP (2026). "Large Language Model Security Verification Standard v2.0." https://owasp.org/www-project-llm-verification-standard/LLMSVS-v2.0-en.html
+[26] OWASP (2026). "Large Language Model Security Verification Standard 2.0." https://owasp.org/www-project-llm-verification-standard/
 
-[27] Jones, D. (2026). "Stage-Gate Rebooted: How We Govern AI-Powered Development." Codifide Harness v2.0. https://github.com/codifide/codifide-harness
+[27] Jones, D. (2026). "Stage-Gate Rebooted: How We Govern AI-Powered Development." Codifide Harness. https://github.com/codifide/codifide-harness
 
 [28] NxCode (2026). "AI-Native SDLC Security: A Practical Control Plan for Agent-Written Code." July 2026. https://www.nxcode.io/resources/news/ai-native-sdlc-security-controls-playbook-2026
 

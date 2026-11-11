@@ -6,6 +6,9 @@
 
 # The API That Built Itself
 
+> **Evidence note.** The figures in this article (counts, coverage, timings) are the author's account of a private project. The code and CI output are not in this repository, so they cannot be reproduced from it.
+
+
 **How 13 AI Personas Delivered a Regulated Healthcare Service**
 
 *By Quill — Documentary Record — April 2026*
@@ -45,7 +48,7 @@ Build it with AI. Not a single model generating code — a structured team of **
 The rules were strict:
 - No code without a tracked issue
 - No execution without 3 Amigos approval (Product + Dev + QA)
-- 100% test coverage enforced by CI
+- 100% test coverage target, enforced by CI in the project described
 - Documentary log entry every session
 - Every decision recorded as an Architecture Decision Record (ADR)
 

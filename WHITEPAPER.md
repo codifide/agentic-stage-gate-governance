@@ -52,7 +52,7 @@ Cooper's insight: **don't let bad projects consume resources.** Kill early, kill
 
 ---
 
-## Our Reboot: 7 Gates for AI-Assisted Healthcare Development
+## Our Reboot: Six Gates for AI-Assisted Healthcare Development
 
 ```
 ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐
@@ -77,9 +77,9 @@ We don't let the builder review their own work. A separate B-Team AI (different 
 
 At G4, "it works" means: test coverage report, security review sign-off, accessibility audit, integration test against real backend. Not a demo. Not a deck. Artifacts.
 
-**3. 100% test coverage is a gate requirement, not a goal**
+**3. Test coverage is a gate requirement, not a goal**
 
-When AI writes the code, AI can write the tests. There's no excuse for untested code when your developer never gets tired.
+When AI writes the code, AI can write the tests. There's no excuse for untested code when your developer never gets tired. The targets are in `steering/03-coding-standards.md`: 100% of new logic, and 80% of lines for view-layer layout (plus 100% of any logic it contains).
 
 **4. Security is every-gate, not a phase**
 
@@ -102,7 +102,7 @@ AI builds. AI tests. AI reviews. But the gate decision — go, kill, hold — is
 | **G2/G3** | 4 iterations of B-Team and Zero-Context adversarial review. 7 ADRs. 18-threat model. Zero findings rejected. | Day 1 |
 | **G4** | 53+ tests. Security review: PASS. Accessibility audit: PASS. Integration tests against real API. Zero-Context catches missing error handling documentation. | Day 3 |
 
-Three days from "should we build this?" to a verified, secure, accessible working application — with full audit trail.
+The author reports three days from "should we build this?" to a working application with an audit trail. That is one project's account; the code and CI output are not in this repository, so treat it as an illustration, not evidence.
 
 **Without governance, that same AI could have produced the same volume of code in 3 hours.** But it would have shipped with a race condition in the submit guard, a missing file upload parameter, and assumptions baked into the code that no regulator could verify.
 
@@ -216,7 +216,7 @@ In healthcare, this is the regulatory auditor asking "why is this the way it is?
 │   5. AI builds. Humans decide.                             │
 │      The gate decision is never automated.                  │
 │                                                             │
-│   6. 100% test coverage on new code.                       │
+│   6. Coverage targets per steering/03.                     │
 │      If AI writes it, AI tests it. No excuses.             │
 │                                                             │
 │   7. Security is every-gate, not a phase.                  │
@@ -271,7 +271,7 @@ All found before any patient was affected. All found because the gate required e
 
 ---
 
-## The Loop Evolution (v2.0 — July 2026)
+## The Loop Evolution (added July 2026)
 
 ### How Loop Engineering Extends the Stage-Gate Model
 
@@ -279,7 +279,7 @@ Stage-Gate governance answers: "Should this ship?" Loop engineering answers: "Ca
 
 The original model (v1.x) applied human judgment at every decision point. This worked — but it created a bottleneck. Mechanical tasks (running tests, verifying data consistency, checking build status) don't need human judgment. They need a verifier.
 
-v2.0 introduces the **loop layer** — automated execution with automated verification that runs between gates, continuously, without human intervention. Gates still govern judgment. Loops handle execution.
+The **loop layer** introduces — automated execution with automated verification that runs between gates, continuously, without human intervention. Gates still govern judgment. Loops handle execution.
 
 ### The Three-Layer Architecture
 
@@ -353,4 +353,4 @@ Between every gate, G-LOOP runs: automated verification that catches drift, main
 ---
 
 **Author:** Douglas Jones | Codifide
-**Date:** May 2026 (v1.0), July 2026 (v2.0 — Loop Evolution), October 2026 (v3.0 harness — authority, review levels, enforcement)
+**Date:** May 2026 (v1.0), July 2026 (loop evolution), October 2026 (v3.0 harness — authority, review levels, enforcement)

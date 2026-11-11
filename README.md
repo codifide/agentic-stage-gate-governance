@@ -49,7 +49,9 @@ Codifide Swarm, a commercial multi-agent product built on this harness, is separ
 
 Copy the `steering/` folder from this repo into your project's AI context directory. One small core file (`00-welcome.md`, about 2,200 words) loads every session; the other files load on demand when their topic comes up. Add the hooks and the enforcement scripts in `templates/` to make the critical rules hold even when the agent forgets them.
 
-The steering files are plain Markdown. They work with any AI coding assistant that supports custom instructions or context files, including Kiro, Cursor, Windsurf, GitHub Copilot, and others.
+The steering files are plain Markdown, so the rules text works with any AI coding assistant that reads custom instructions or context files. **Blocking enforcement is a separate layer** and is host-specific: a guard hook for Kiro and Claude Code (`templates/hooks/`), and CI checks for any host (`templates/enforcement/`). Where a tool has neither, the harness is guidance only. See the table under "IDE-Specific Context Loading" and "Documented limits" in `templates/enforcement/README.md`.
+
+Version: see `VERSION` and `CHANGELOG.md`. Pin to a tagged release rather than copying from the default branch.
 
 > **Scope of this (free, MIT) harness vs. the commercial product.** This open harness governs **one agent working one codebase** — gates, personas, review levels, the Intent Contract, HALT, and the enforcement layer. Codifide also builds a **commercial product on top of it** that governs a **coordinated swarm of agents** modernizing many entities in parallel (portfolio-scale decomposition, frozen seam contracts, per-lane verifiers, merged-state integration verification, connectors). If you need governed multi-agent delivery at portfolio scale — e.g. consolidating acquired entities onto one platform — reach out to Codifide. This repo stays free and MIT.
 
@@ -65,12 +67,13 @@ The steering files are plain Markdown. They work with any AI coding assistant th
 ```bash
 # Clone this repo and copy the steering folder into your project
 cp -r codifide-harness/steering /path/to/your/new/project/.kiro/steering
-# or for Cursor:
-cp -r codifide-harness/steering /path/to/your/new/project/.cursor/rules
+# or for Cursor (Cursor ignores plain .md rules; convert to .mdc first, see the table below):
+bash codifide-harness/templates/cursor/to-mdc.sh /path/to/your/new/project/.cursor/rules
 
 # Recommended: install the hooks and enforcement scripts
-#   templates/HOOKS-SESSION-STATE.md   (session hooks + immutable-path guard)
-#   templates/enforcement/README.md    (.codifide/immutable-paths, guard, CI check)
+#   templates/hooks/                   (real hook files: Kiro, Claude Code)
+#   templates/HOOKS-SESSION-STATE.md   (what each hook does)
+#   templates/enforcement/README.md    (.codifide/immutable-paths, guard, CI checks, documented limits)
 
 # Open in your AI IDE
 # 00-welcome.md (the core) loads every session; the rest load on demand
@@ -83,7 +86,7 @@ cp -r codifide-harness/steering /path/to/your/new/project/.cursor/rules
 # Copy the steering folder into your existing project
 cp -r codifide-harness/steering /path/to/your/existing/project/.kiro/steering
 # or for Cursor:
-cp -r codifide-harness/steering /path/to/your/existing/project/.cursor/rules
+bash codifide-harness/templates/cursor/to-mdc.sh /path/to/your/existing/project/.cursor/rules
 
 # Open in your AI IDE
 # Say "Assess this codebase against the gates" to get a gap analysis
@@ -94,8 +97,7 @@ cp -r codifide-harness/steering /path/to/your/existing/project/.cursor/rules
 # Kiro — copy to user-level steering config
 cp codifide-harness/steering/*.md ~/.kiro/steering/
 
-# Cursor — copy to global rules directory
-cp codifide-harness/steering/*.md ~/.cursor/rules/
+# Cursor — global rules are set in Cursor's settings, not a folder; use the per-project .mdc files above
 
 # Now every project you open gets the governance system
 ```
@@ -127,7 +129,9 @@ templates/
     ├── GATE-EVIDENCE-CHECKLIST.md  # Per-gate artifact tracking with binary states
     ├── EXISTING-PROJECT-ASSESSMENT.md  # Full assessment document structure
     ├── HOOKS-SESSION-STATE.md     # Session hooks (core load, handoff-as-data) + blocking immutable-path guard
-    ├── enforcement/               # .codifide/immutable-paths example, PreToolUse write guard, CI checks (immutable paths, Review Level floor)
+    ├── enforcement/               # .codifide/immutable-paths example, write guard, CI checks (immutable paths, Review Level floor, licenses), example workflow, test suite
+    ├── hooks/                     # Real hook files: kiro/ (4) and claude-code/ (guard)
+    ├── cursor/to-mdc.sh           # Converts steering/*.md to Cursor .mdc rules (alwaysApply for the core)
     ├── CORE-RULES-ALWAYS-ON.md    # Short project-level rules file kept in context every session (advisory unless backed by CI/hooks)
     ├── CROSS-TEAM-REVIEW-PROTOCOL.md  # Periodic independent review of the persona definitions themselves
     ├── DOMAIN-EXPERT-PERSONA.md   # Template for a Domain Expert Persona with binding expert corrections
@@ -136,6 +140,8 @@ templates/
     └── INTENT-CONTRACT.md         # Persistent human-authorized goal, constraints, harm boundaries
 WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
 LOOP-ENGINEERING-GUIDE.md          # Deep-dive: loop engineering rationale and patterns
+VERSION, CHANGELOG.md              # Release version and change history
+.gitattributes                     # Forces LF endings on scripts and hook files
 ```
 
 **Reviewer independence:** adversarial review always runs in a separate context, on a different model family from the builder when one is available, and is never role-played by the builder. If no independent model is reachable, the agent prepares the review package and stops. No model family is the designated "final gate"; pick any capable reasoning model from a different family than the one that wrote the code.
@@ -180,10 +186,17 @@ Example: `"Define a loop: Run the full regression suite and verify report output
 | IDE | Where to put the files | How they load |
 |-----|------------------------|---------------|
 | **Kiro** | `.kiro/steering/` or `~/.kiro/steering/` | `00-welcome.md` is `inclusion: always` (every session). The rest are `inclusion: auto` with a `name` and `description`, which Kiro loads on demand when the request matches the description. If you want them only on explicit request, change them to `inclusion: manual` |
-| **Cursor** | `.cursor/rules/` | Auto-included per project |
-| **Windsurf** | `.windsurf/rules/` | Auto-included per project |
-| **GitHub Copilot** | `.github/copilot-instructions.md` (combine files) | Auto-included in Copilot Chat |
+| **Cursor** | `.cursor/rules/*.mdc`, made by `templates/cursor/to-mdc.sh` (plain `.md` files are ignored by Cursor) | The core becomes `alwaysApply: true`. The rest become agent-requested rules (`alwaysApply: false` with a description). Based on Cursor's rules documentation; we have not run Cursor against it |
+| **Claude Code** | Put `00-welcome.md` where your project CLAUDE.md can import it (for example `@.claude/steering/00-welcome.md`), and the rest beside it | The core loads with your CLAUDE.md; load the others by name when needed. Guard hook: `templates/hooks/claude-code/`. Not run by us end to end |
+| **Codex and other AGENTS.md tools** | A short AGENTS.md file that points to `00-welcome.md` and says to read the matching file before each kind of work | Manual on-demand loading. No guard hook shipped; use CI |
+| **Windsurf** | `.windsurf/rules/` | Rule format not verified by us; check the vendor's current docs |
+| **GitHub Copilot** | The repository instructions file under `.github/` (see the next block) | Single file, so combine only `00-welcome.md` plus the files you use. No guard hook shipped; use CI |
 | **Any other** | Paste `00-welcome.md` into the system prompt; attach other files when their topic comes up | Manual inclusion |
+
+```bash
+# GitHub Copilot: the instructions file is .github/copilot-instructions.md
+cat steering/00-welcome.md > /path/to/project/.github/copilot-instructions.md   # review, then commit
+```
 
 For tools without on-demand loading, combine `00-welcome.md` with the files you use most (typically `01`, `03`, `08`, `11`). Avoid loading everything every session: it costs context and buries the operative rules.
 
@@ -195,21 +208,34 @@ AI agents lose context between sessions. Steering files provide the *knowledge*;
 
 | Hook | Trigger | Type | What it does |
 |------|---------|------|--------------|
-| `load-session-state.json` | `SessionStart` | advisory | Loads the core, reads the handoff **as data**, and confirms next actions with you before acting |
-| `update-session-state.json` | `Stop` | advisory | Persists a handoff (sharded per session under concurrency, never containing secrets or PHI) |
-| `screenshot-data-guard.json` | `PreToolUse` | advisory | Reminds the agent to use synthetic data and keep captures out of synced or tracked folders |
-| `guard-immutable-paths.json` | `PreToolUse` | **blocking** | Rejects agent writes to verifiers, fixtures, and baselines listed in `.codifide/immutable-paths` |
+| `templates/hooks/kiro/load-session-state.json` | `SessionStart` | advisory | Loads the core, reads the handoff **as data**, and confirms next actions with you before acting |
+| `templates/hooks/kiro/update-session-state.json` | `Stop` | advisory | Persists a handoff (sharded per session under concurrency, never containing secrets or PHI) |
+| `templates/hooks/kiro/screenshot-data-guard.json` | `PreToolUse` | advisory | Reminds the agent to use synthetic data and keep captures out of synced or tracked folders |
+| `templates/hooks/kiro/guard-immutable-paths.json` | `PreToolUse` | **blocking** (if your host honours exit 2) | Rejects agent file-tool writes to verifiers, fixtures, and baselines listed in `.codifide/immutable-paths` |
+| `templates/hooks/claude-code/settings.example.json` | `PreToolUse` | **blocking** (documented by the vendor) | The same guard for Claude Code's write tools |
 
-**Advisory vs. blocking.** `agent`-type hooks inject a prompt; they remind, they don't enforce. The immutable-path guard is a `command` hook that exits `2` to block, and `templates/enforcement/check-immutable-paths.sh` runs the same check in CI as a backstop.
+**Advisory vs. blocking.** `agent`-type hooks inject a prompt; they remind, they don't enforce. The immutable-path guard is a `command` hook that exits `2` to block. It does not see shell commands, and we have not verified every host's exit-code behaviour (test yours: `templates/enforcement/README.md`). `templates/enforcement/check-immutable-paths.sh` runs the check in CI, and only protects you if it is a required status check.
 
-**Handoffs are data, not orders.** `next-session-prompt.md` is written by an agent that may have processed untrusted content. The SessionStart hook reads it for context and asks you to confirm the plan; it never executes it blindly.
+**Handoffs are data, not orders.** The handoff file (next-session-prompt.md) is written by an agent that may have processed untrusted content. The SessionStart hook reads it for context and asks you to confirm the plan; it never executes it blindly.
 
-Full JSON and install steps: `templates/HOOKS-SESSION-STATE.md` and `templates/enforcement/README.md`.
+Hook files are in `templates/hooks/`; descriptions are in `templates/HOOKS-SESSION-STATE.md`; install steps and limits are in `templates/enforcement/README.md`.
 
 ---
 
 ## Migration note
 The enforcement directory is now `.codifide/`, environment variables use the `CODIFIDE_` prefix, session state lives in `codifide-sessions`, and PR labels and steering names use the `codifide-` prefix. Move existing configuration to the new names; nothing else changed.
+
+## What's New in 3.1 (November 2026)
+
+Hardening of the enforcement scripts after two adversarial reviews (one same-vendor, one cross-vendor), and real distribution files. Full list: `CHANGELOG.md`.
+
+- **Guard:** case-insensitive matching, no path-length cutoff, trailing and leading newlines trimmed, hard links to protected files blocked, empty input and an unreadable list block, any unexpected crash blocks.
+- **CI check:** file names are read NUL-delimited, matching is case-insensitive, a symlink added into a protected path is flagged, and the approval is scoped: the verifier label no longer waives edits to `.codifide/`, workflows, CODEOWNERS or hooks (a second label does).
+- **Review levels:** `docs/` is R1 only for document files, binaries count toward the size rule, more migration and auth-style paths raise the floor.
+- **Licenses:** the policy is read from the base branch, SPDX `OR`/`AND`/`WITH` and common names are handled, wildcard-only allow lines are rejected.
+- **Distribution:** real hook files (`templates/hooks/`), a Cursor `.mdc` converter, a complete workflow example with first-run bootstrap, `VERSION`, `CHANGELOG.md`, SPDX headers, and a statement of limits.
+
+Breaking changes for existing installs: new approval variable `CODIFIDE_ENFORCER_CHANGE_APPROVED_BY` for edits to the checks themselves; `check-licenses.sh` now needs `--base` (or an `origin/main` ref) to read the policy; CycloneDX entries with several licenses are read as AND.
 
 ## What's New in v3.0 (October 2026)
 
@@ -218,8 +244,8 @@ v3.0 is a correctness and safety pass driven by two adversarial reviews of v2 (o
 - **Named human authority.** The Human Steward decides every gate, track, exception, verifier change, and HALT resumption. AI personas recommend; Aegis can block but never pass.
 - **One review vocabulary.** Review Levels R1–R3 for changes, a gate-review table by track, and a single classification procedure. Loop token budgets are now Cost Classes C1–C3, so "Tier" no longer means two things.
 - **B-Team independence is a hard rule.** Never self-conducted; prepare the package and stop if no independent model is available. Data-handling rules for sending code to external models.
-- **Enforced verifier immutability.** Human-owned `.codifide/immutable-paths`, a blocking write hook, and a CI check, with tests.
-- **Enforced Review Level floors.** A CI check computes the mechanical floor for every commit (harness files are R3) and rejects under-declared or missing `Review-Level` and `Generated-By` trailers. It says plainly which rules it cannot compute.
+- **Verifier immutability, enforced for file-tool writes and in CI.** Human-owned `.codifide/immutable-paths`, a blocking write hook (not applicable to shell commands), and a CI check, with tests.
+- **Review Level floors computed from paths.** A CI check computes the mechanical floor for every commit (harness files are R3) and rejects under-declared or missing `Review-Level` and `Generated-By` trailers. It cannot tell whether those trailers are true, and it says plainly which rules it cannot compute.
 - **Security fixes.** Security controls fail closed even when unavailable; no cloud resources without human approval; standard CVSS bands; credentials, secrets, and TLS are always gated (revoke-and-rotate, not delete-from-source); baselines are never regenerated from the code under test.
 - **Single owners.** One HALT procedure (`12`), one coverage table (`03`), one dependency rule (`11`), and a gate checklist that matches `01` item for item.
 - **Smaller context.** A ~2,200-word always-loaded core replaces ~21,000 words loaded every session.
@@ -229,7 +255,7 @@ v3.0 is a correctness and safety pass driven by two adversarial reviews of v2 (o
 
 - This is a governance harness for AI coding agents. It is not a compliance certification, and it does not replace legal, security, regulatory, or clinical review.
 - Using it does not make a system HIPAA, SOC 2, or ISO compliant. Those determinations belong to qualified people and auditors.
-- It reduces specific risks through written rules and four tested scripts (`templates/enforcement/`: `guard-immutable-paths.sh`, `check-immutable-paths.sh`, `check-review-level.sh`, `check-licenses.sh`). Everything else is guidance an agent can still get wrong. See "Session Continuity and Enforcement (Agent Hooks)" for which hooks are advisory and which block, and `templates/enforcement/README.md` for what the scripts do not cover.
+- It reduces specific risks through written rules and four tested scripts (`templates/enforcement/`: `guard-immutable-paths.sh`, `check-immutable-paths.sh`, `check-review-level.sh`, `check-licenses.sh`). Everything else is guidance an agent can still get wrong. Known limits that scripts cannot close: shell commands are not seen by the write guard, `Generated-By` is self-asserted, a declared `Review-Level: R3` is not evidence that a review happened, and the approval labels are only as strong as your GitHub permissions. They are listed with compensating controls under "Documented limits" in `templates/enforcement/README.md`. See "Session Continuity and Enforcement (Agent Hooks)" for which hooks are advisory and which block.
 - Host-runtime behaviours marked `[UNVERIFIED]` in the templates (for example how a tool loads `inclusion: auto` files, or whether a hook event fires) have not been verified and vary by tool.
 - The software and documents are provided as is, without warranty; see [LICENSE](LICENSE).
 - See also [NOTICE.md](NOTICE.md) (acknowledgements, trademarks, AI-assisted authorship) and [SECURITY.md](SECURITY.md) (reporting a vulnerability).
@@ -241,17 +267,16 @@ What has been done:
 - **Structural validation** of every steering file, template, and hook definition (numbering, references, JSON).
 - **Two adversarial reviews of v2** (one same-vendor, one cross-vendor). Their findings drove v3.
 - **Two cross-vendor closure audits of v3**, each checking every prior finding against quoted v3 text. The first found gaps in the new enforcement scripts; the second confirmed those fixes and found that the harness's own files could be edited at R1, which is now R3.
-- **An automated test suite** for the enforcement scripts (`templates/enforcement/test-enforcement.sh`, 70 cases as of this writing; the script prints the authoritative result): allowed and blocked writes, `..` and symlink tricks, self-protection, renames, attempts to loosen the list, per-commit Review Level floors, merge commits, the size rule, provenance, and agent-written approval markers.
+- **An automated test suite** for the enforcement scripts (`templates/enforcement/test-enforcement.sh`, 151 cases; the script prints the authoritative result and checks that this number matches): allowed and blocked writes, `..` and symlink and hard-link tricks, case variants, very long and newline paths, self-protection, renames, attempts to loosen the list, scoped approvals, per-commit Review Level floors, merge commits, the size rule (including binaries), provenance, agent-written approval markers, license expressions and base-branch policy, hook and converter files, and documentation consistency. Cases marked "documented limit" pin behaviour we know cannot be fixed in a script.
+- **Two further cross-vendor reviews of the enforcement scripts** (a read-only assessment and a Grok 4.7 cold review). Their findings are what 3.1 fixes, or states as limits.
 
 What has **not** been done: a controlled behavioral study measuring outcomes with and without the harness. The scripts enforce what they can compute; the rest is guidance an agent can still get wrong. Treat effectiveness claims accordingly.
 
 ---
 
-## What's New in v2.0
+## Loop Engineering Integration (July 2026)
 
-**Loop Engineering Integration (July 2026)**
-
-v1.x was pure stage-gate: structured judgment at every decision point. v2.0 adds the loop layer — automated verification that runs between gates without human intervention.
+The first release was pure stage-gate: structured judgment at every decision point. The second added the loop layer — automated verification that runs between gates without human intervention.
 
 What changed:
 - **New steering file** (`08-loop-engineering.md`) — practical instructions for when to loop, how to design verifiers, and cost control
@@ -280,7 +305,7 @@ The objective is not to make humans review machine-speed output faster. It is to
 The harness was single-writer by default — good for one session at a time, messy when several ran against the same repository. `13-concurrent-sessions.md` adds a deliberately right-sized capability: not fleet-scale coordination machinery, just the two mechanisms that carry most of the benefit.
 
 - **Worktree-per-session** — each concurrent session gets its own git worktree (isolated working directory + branch, shared object store), plus per-session external state (ports, scratch DB, caches). Two sessions physically cannot clobber each other's files.
-- **Sharded session state** — each session writes its own handoff to `<git-common-dir>/codifide-sessions/<id>.md` (shared by every worktree) instead of overwriting the shared `next-session-prompt.md`; a human-named integrator consolidates on merge. Fixes the last-writer-wins clobber.
+- **Sharded session state** — each session writes its own handoff to `<git-common-dir>/codifide-sessions/<id>.md` (shared by every worktree) instead of overwriting the shared handoff file (next-session-prompt.md); a human-named integrator consolidates on merge. Fixes the last-writer-wins clobber.
 - **Integration verification (conditional)** — if a test suite exists, one G-LOOP check runs it against the *merged* state of combined branches, not just each branch. Each branch passing alone does not prove they compose; this checks composition for the tests you have, which is stronger than hoping branches compose.
 
 Deliberately deferred as fleet-scale overkill: proactive scope partitioning, merge queues with speculative testing/batching, and flaky-vs-regression test-health classification. Adopt those only when collisions recur despite worktrees. `13` loads only when concurrency is in play.
@@ -311,7 +336,7 @@ Based on Robert G. Cooper's Stage-Gate® model (Stage-Gate® is a registered tra
 
 ---
 
-*Version 2.0 — July 2026*
+*Codifide Harness 3.1.0 — November 2026. See `CHANGELOG.md`.*
 
 
 ---
