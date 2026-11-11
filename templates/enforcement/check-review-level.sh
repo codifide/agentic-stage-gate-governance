@@ -65,7 +65,7 @@ fi
 
 # Handoff file is written every session; it is data, not rules (00-welcome.md section 7).
 HANDOFF_EXEMPT=('*/.kiro/steering/next-session-prompt.md')
-GOVERNANCE_GLOBS=('*/.kiro/*' '*/.codifide/*' '*/steering/*' '*/.github/workflows/*' '*/CODEOWNERS' '*/templates/enforcement/*'
+GOVERNANCE_GLOBS=('*/.kiro/*' '*/.claude/*' '*/.cursor/*' '*/.codex/*' '*/.codifide/*' '*/steering/*' '*/.github/workflows/*' '*/CODEOWNERS' '*/templates/enforcement/*'
                   '*/templates/B-TEAM-REVIEW-PACKAGE.md' '*/templates/CODE-REVIEW-PROMPT-*' '*/templates/GATE-EVIDENCE-CHECKLIST.md'
                   '*/templates/HOOKS-SESSION-STATE.md' '*/templates/INTENT-CONTRACT.md' '*/templates/NFR-TEMPLATE.md'
                   '*/templates/EXISTING-PROJECT-ASSESSMENT.md')

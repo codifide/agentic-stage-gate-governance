@@ -60,6 +60,12 @@ shopt -s nocasematch
 # Any exit other than 0 (allow) or 2 (block) is an internal failure: block.
 trap 'rc=$?; if [[ $rc -ne 0 && $rc -ne 2 ]]; then echo "Codifide guard: internal error (exit $rc); failing closed." >&2; exit 2; fi' EXIT
 
+# Git environment overrides (GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR, GIT_CEILING_DIRECTORIES ...)
+# would let a caller point `git rev-parse` at a decoy work tree and so choose which list is read.
+# Every GIT_* variable is dropped before the root is derived.
+for _v in $(compgen -e | grep -E '^GIT_'); do unset "$_v"; done
+unset _v
+
 # The repository root is the git top level of the hook's own working directory. There is no
 # override: a CODIFIDE_ROOT that points anywhere else would let a caller aim the guard at a
 # decoy list, so a CODIFIDE_ROOT that differs from the real top level BLOCKS (checked below).
@@ -247,7 +253,8 @@ BASES=("$ROOT")
 add_base() { # $1 = absolute directory
   local b
   [[ "$1" == /* ]] || return 0
-  b="$(physres "$(normpath "$1")" 0)" || return 0
+  # physres resolves symlinks BEFORE applying ".." (normpath first would apply ".." to the link text).
+  b="$(physres "$1" 0)" || { echo "Codifide guard: cannot resolve working directory '$1'; failing closed." >&2; exit 2; }
   [[ "$b" == "$ROOT" ]] && return 0
   local x; for x in "${BASES[@]}"; do [[ "$x" == "$b" ]] && return 0; done
   BASES+=("$b")
@@ -282,7 +289,7 @@ check_path() {
     rel="${x#"$ROOT"/}"
   else
     # Outside the repo: only an ancestor of the repo root matters (a recursive delete of it).
-    if [[ "$x" != "/" && "$ROOT" == "$x"/* ]]; then block "$x" "${PATTERNS[0]}" "contains the repository"; fi
+    if [[ "$ROOT" == "$x"/* || "$x" == "/" ]]; then block "$x" "${PATTERNS[0]}" "contains the repository"; fi
     return 0
   fi
   pat="$(protected_pattern "$rel")"

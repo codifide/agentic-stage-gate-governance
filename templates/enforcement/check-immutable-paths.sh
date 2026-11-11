@@ -75,7 +75,7 @@ matches() {
 }
 
 # The enforcement mechanism itself. Changes here need the separate ENFORCER approval.
-ENFORCER_PATHS=(".codifide/" ".github/workflows/" "CODEOWNERS" ".github/CODEOWNERS" ".kiro/hooks/" ".claude/settings.json")
+ENFORCER_PATHS=(".codifide/" ".github/workflows/" "CODEOWNERS" ".github/CODEOWNERS" "docs/CODEOWNERS" ".kiro/hooks/" ".claude/settings.json")
 is_enforcer() {
   local rel="$1" e
   for e in "${ENFORCER_PATHS[@]}"; do matches "$rel" "$e" && return 0; done

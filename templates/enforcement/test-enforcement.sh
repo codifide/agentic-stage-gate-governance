@@ -10,7 +10,7 @@ SRC="${CODIFIDE_TEST_SCRIPTS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Isolate from the caller: an inherited approval/waiver variable (e.g. CODIFIDE_VERIFIER_CHANGE_APPROVED_BY)
 # would silently flip the "must fail" cases. Tests set these per case where needed.
-unset GITHUB_ACTIONS CODIFIDE_WAIVE CODIFIDE_REQUIRE_IMMUTABLE_LIST CODIFIDE_STEWARD CODIFIDE_VERIFIER_CHANGE_APPROVED_BY CODIFIDE_SESSIONS CODIFIDE_LICENSE_POLICY CODIFIDE_BASE
+unset GITHUB_ACTIONS CODIFIDE_WAIVE CODIFIDE_REQUIRE_IMMUTABLE_LIST CODIFIDE_STEWARD CODIFIDE_VERIFIER_CHANGE_APPROVED_BY CODIFIDE_SESSIONS CODIFIDE_LICENSE_POLICY CODIFIDE_BASE CODIFIDE_ENFORCER_CHANGE_APPROVED_BY CODIFIDE_ROOT CODIFIDE_BOOTSTRAP CODIFIDE_REQUIRE_BASE_POLICY
 SH="${SH_UNDER_TEST:-bash}"
 COUNTF="$(mktemp)"
 FAIL=0
@@ -132,6 +132,17 @@ g4 "CODIFIDE_ROOT pointing at a decoy directory blocks (REQUIRE=1)" 2 . "{\"inpu
 g4 "CODIFIDE_ROOT pointing at a decoy directory blocks even an unrelated write" 2 . '{"input":{"path":"src/app.py"}}' "CODIFIDE_ROOT=$G4/decoy"
 g4 "CODIFIDE_ROOT equal to the real top level is accepted (allow control)" 0 . '{"input":{"path":"src/app.py"}}' "CODIFIDE_ROOT=$G4"
 cd /; rm -rf "$G4"; cd "$T"
+# --- iteration 5 regressions: guard (GIT_* decoy root, delete of /, symlink inside the payload cwd) ---
+G5=$(mktemp -d); cd "$G5" && git init -q -b main && git config user.email t@t && git config user.name t
+mkdir -p .codifide verifiers/sub src decoy/.codifide; cp "$SRC"/guard-immutable-paths.sh .codifide/
+printf 'verifiers/\n' > .codifide/immutable-paths; printf 'unrelated/\n' > decoy/.codifide/immutable-paths
+echo v > verifiers/check.py; ln -s ../verifiers/sub src/link
+G5S="$G5/.codifide/guard-immutable-paths.sh"
+( cd "$G5" && printf '{"input":{"path":"%s/verifiers/check.py"}}' "$G5" | GIT_DIR="$G5/.git" GIT_WORK_TREE="$G5/decoy" $SH "$G5S" >/dev/null 2>&1 ); pass "guard: GIT_DIR/GIT_WORK_TREE decoy work tree cannot redirect the list" 2 $?
+( cd "$G5" && printf '{"input":{"path":"/","operation":"delete","recursive":true}}' | $SH "$G5S" >/dev/null 2>&1 ); pass "guard: delete of / (an ancestor of the repository) is blocked" 2 $?
+( cd "$G5" && printf '{"cwd":"%s/src/link/..","tool_input":{"file_path":"check.py"}}' "$G5" | $SH "$G5S" >/dev/null 2>&1 ); pass "guard: payload cwd src/link/.. is resolved through the symlink before .. applies" 2 $?
+( cd "$G5" && printf '{"cwd":"%s/src","tool_input":{"file_path":"new.py"}}' "$G5" | $SH "$G5S" >/dev/null 2>&1 ); pass "guard: payload cwd inside src, unprotected file (allow control)" 0 $?
+cd /; rm -rf "$G5"; cd "$T"
 # ---------- immutable CI ----------
 ci(){ $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: $1" "$2" $?; }
 git checkout -qb feat/a; echo y >> src/app.py; git commit -qam ok; ci "clean feature branch" 0
@@ -208,6 +219,12 @@ ci "NFD alias of a protected NFC file name" 1
 git checkout -qb feat/nfd-ok main; git update-index --add --cacheinfo 100644,$h4,"$(printf 'caf\303\251-notes.md')"; git commit -qm other
 ci "unrelated non-ASCII file name passes (control)" 0
 cd /; rm -rf "$C4"
+cd "$T"
+# --- iteration 5 regressions: CI check (docs/CODEOWNERS is an enforcer path) ---
+git checkout -qb feat/own main; mkdir -p docs; echo '* @human' > docs/CODEOWNERS; git add -A; git commit -qm own; git checkout -qb feat/own2; echo '* @attacker' > docs/CODEOWNERS; git commit -qam own2
+CODIFIDE_VERIFIER_CHANGE_APPROVED_BY="Pat" $SH .codifide/check-immutable-paths.sh feat/own >/dev/null 2>&1; pass "immutable-ci: docs/CODEOWNERS edit is blocked (verifier approval does not waive it)" 1 $?
+CODIFIDE_ENFORCER_CHANGE_APPROVED_BY="Pat Steward" $SH .codifide/check-immutable-paths.sh feat/own >/dev/null 2>&1; pass "immutable-ci: docs/CODEOWNERS edit passes with enforcer approval" 0 $?
+git checkout -q main
 cd /; rm -rf "$T"
 
 # ---------- review level ----------
@@ -256,6 +273,10 @@ nb t13c; mkdir -p .codifide src/lib && printf '%s\n' "x" > .codifide/check-revie
 Review-Level: R3"; rl "agent marker in product code beside enforcement script still fails" 1
 nb t13d; mkdir -p .codifide && echo 'x // SILENT-CATCH-APPROVED: Pat, 2026' > .codifide/other.sh; cm tool "Generated-By: ai-agent
 Review-Level: R3"; rl "agent marker in other .codifide file still fails" 1
+nb ts15; mkdir -p .claude; echo '{"permissions":{"allow":["Write(verifiers/**)"]}}' > .claude/settings.json; cm cl "Generated-By: ai-agent
+Review-Level: R2"; rl "agent settings (.claude/) at R2 is governance, needs R3" 1
+nb ts16; mkdir -p .claude; echo '{}' > .claude/settings.json; cm cl "Generated-By: ai-agent
+Review-Level: R3"; rl "agent settings (.claude/) at R3 passes (control)" 0
 $SH "$S" nope >/dev/null 2>&1; pass "review-level: bad base fails closed" 2 $?
 nb t14; mkdir -p .kiro/steering && echo rule > .kiro/steering/00-welcome.md; cm gov "Generated-By: human
 Review-Level: R2"; rl "harness core edit at R2" 1
@@ -386,6 +407,11 @@ printf 'name,license\npermitted,MIT\n\n\nother,ISC\n' | $SH "$SRC"/check-license
 printf 'SPDXVersion: SPDX-2.3\nPackageName: a\nPackageSupplier: Organization: Foo, Inc\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx tag-value lines with commas are not read as list rows (control)" 0 $?
 lic "malformed WITH (nothing after it) fails" 'dependency,MIT WITH' 1
 lic "malformed WITH (open paren after it) fails" 'dependency,MIT WITH (' 1
+lic "cyclonedx: GPL only under metadata.component.components is still scanned" '{"metadata":{"component":{"name":"app","components":[{"name":"c","licenses":[{"license":{"id":"GPL-3.0-only"}}]}]}},"components":[{"name":"p","licenses":[{"license":{"id":"MIT"}}]}]}' 1
+lic "cyclonedx: permissive metadata.component.components passes (control)" '{"metadata":{"component":{"name":"app","components":[{"name":"c","licenses":[{"license":{"id":"MIT"}}]}]}},"components":[{"name":"p","licenses":[{"license":{"id":"MIT"}}]}]}' 0
+printf 'permitted,MIT\n,GPL-3.0-only\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: plain-list row with an empty package name is a malformed report" 2 $?
+printf 'permitted,MIT\ncopyleft,GPL-3.0-only\nPackageName: cover\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: plain rows mixed with SPDX tag-value lines are rejected" 2 $?
+printf 'SPDXVersion: SPDX-2.3\nPackageName: a\nPackageComment: <text>x, y\nz,w</text>\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: multi-line <text> in SPDX tag-value is not read as rows (control)" 0 $?
 # policy must come from the base branch
 LB=$(mktemp -d); cd "$LB" && git init -q -b main && git config user.email t@t && git config user.name t && mkdir .codifide && printf 'MIT\nApache-2.0\n!GPL-*\n' > .codifide/allowed-licenses && git add -A && git commit -qm base
 git checkout -qb feat/policy; printf 'GPL-3.0-only\n' >> .codifide/allowed-licenses; git commit -qam "allow GPL in the same change"

@@ -53,7 +53,7 @@ Use `workflow.example.yml`. It differs from a naive setup in five ways that matt
 2. **First-run bootstrap.** If the base branch has none of the scripts yet (the adoption PR), the job runs the PR's own copies once and prints a warning. That PR needs the Human Steward's review: on first adoption the PR is the only source of the rules. If the base has some of the scripts but not all, the job fails.
 3. **License policy comes from the base branch** (`--base`; under GitHub Actions a missing base fails closed). A change that adds `GPL-3.0-only` to `allowed-licenses` cannot approve its own dependency.
 4. **It also runs on pushes to `main`**, as a tripwire for anything that reached `main` without a passing PR check.
-5. **Two labels, two decisions.** `codifide-verifier-change-approved` sets `CODIFIDE_VERIFIER_CHANGE_APPROVED_BY` and waives edits to verifiers, fixtures and baselines. It does **not** waive edits to `.codifide/`, `.github/workflows/`, `CODEOWNERS`, `.kiro/hooks/` or `.claude/settings.json`. Those need `codifide-enforcer-change-approved`, which sets `CODIFIDE_ENFORCER_CHANGE_APPROVED_BY`. A PR that changes both kinds needs both labels.
+5. **Two labels, two decisions.** `codifide-verifier-change-approved` sets `CODIFIDE_VERIFIER_CHANGE_APPROVED_BY` and waives edits to verifiers, fixtures and baselines. It does **not** waive edits to `.codifide/`, `.github/workflows/`, `CODEOWNERS` (including `docs/CODEOWNERS`), `.kiro/hooks/` or `.claude/settings.json`. Those need `codifide-enforcer-change-approved`, which sets `CODIFIDE_ENFORCER_CHANGE_APPROVED_BY`. A PR that changes both kinds needs both labels.
 
 ### What you must configure (the repo cannot check this for you)
 

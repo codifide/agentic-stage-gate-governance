@@ -117,7 +117,7 @@ pairs() {
       def spdx: (.licenseConcluded // "") as $c
         | if ($c | ascii_upcase) == "" or ($c | ascii_upcase) == "NOASSERTION" then (.licenseDeclared // "UNKNOWN") else $c end;
       def comps: .[]? | ., (.components | comps);
-      if .components then (.components | comps) | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else joined end) ] | @tsv
+      if (.components or .metadata.component.components) then ((.components // []), (.metadata.component.components // []) | comps) | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else joined end) ] | @tsv
       elif .packages then .packages[] | [ (.name // "?"), (spdx | paren) ] | @tsv
       else to_entries[] | [ .key, ( (.value.licenses // .value.license // "UNKNOWN") | joined ) ] | @tsv
       end'
@@ -134,7 +134,12 @@ pairs() {
       /^PackageName:/ { flush(); n=$0; sub(/^PackageName:[ \t]*/,"",n); next }
       /^PackageLicenseConcluded:/ { c=$0; sub(/^[^:]*:[ \t]*/,"",c); next }
       /^PackageLicenseDeclared:/ { d=$0; sub(/^[^:]*:[ \t]*/,"",d); next }
-      tv { next }
+      tv && intext { if ($0 ~ /<\/text>/) intext=0; next }
+      tv && /^[ \t\r]*$/ { next }
+      tv && /^[ \t]*#/ { next }
+      tv && /<text>/ { if ($0 !~ /<\/text>/) intext=1; next }
+      tv && /^[A-Za-z][A-Za-z0-9_]*:/ { next }
+      tv { bad=1; print "Codifide licenses: mixed formats (a non-tag row in an SPDX tag-value report): " $0 > "/dev/stderr"; next }
       /^[ \t\r]*$/ { next }
       !/[,\t]/ { bad=1; print "Codifide licenses: malformed row (no separator, license missing?): " $0 > "/dev/stderr"; next }
       /[,\t]/ {
@@ -143,7 +148,8 @@ pairs() {
         p=index(line,sep); if(p>0){ nm=substr(line,1,p-1); lic=substr(line,p+1);
           gsub(/^[ \t"]+|[ \t"]+$/,"",nm); gsub(/^[ \t"]+|[ \t"]+$/,"",lic);
           low=tolower(lic); if(NR==1 && (low=="license"||low=="licenses"||low=="license name")) next;
-          if(nm!="") print nm"\t"lic } }
+          if(nm=="") { bad=1; print "Codifide licenses: row with an empty package name: " $0 > "/dev/stderr"; next }
+          print nm"\t"lic } }
       END { flush(); if (bad) exit 3 }
     '
   fi
