@@ -129,6 +129,19 @@ while IFS= read -r sha; do
 
   # --cc: normal diff for ordinary commits; conflict resolutions / evil-merge content for merges.
   git -c core.quotepath=off diff-tree --root --cc --no-commit-id --name-only -r --no-renames -z "$sha" > "$FILELIST" || die "git diff-tree failed for $sha"
+  # A merge is also held to every file it differs from ANY parent on AND that the branch
+  # changes relative to the base: resolving a conflict by taking one side ("--ours") shows
+  # an empty --cc list but still decided that file. Files that only came in from an
+  # advanced base (not in BASE...sha) are not counted, so "merge main into feature" is not penalised.
+  if (( $(git rev-list --parents -n 1 "$sha" | wc -w) > 2 )); then
+    MFILES="$(mktemp)" || die "mktemp failed"
+    git -c core.quotepath=off diff-tree -m --no-commit-id --name-only -r --no-renames -z "$sha" > "$MFILES" || die "git diff-tree -m failed for $sha"
+    while IFS= read -r -d '' mf; do
+      [[ -z "$mf" ]] && continue
+      if ! git diff --quiet "$BASE"..."$sha" -- ":(literal)$mf" 2>/dev/null; then printf '%s\0' "$mf" >> "$FILELIST"; fi
+    done < "$MFILES"
+    rm -f "$MFILES"
+  fi
   FLOOR=1; WHY="R1 allowlist only"
   while IFS= read -r -d '' f; do
     [[ -z "$f" ]] && continue
@@ -155,12 +168,12 @@ while IFS= read -r sha; do
     # excluded from this scan (exact paths only, no globs). Narrow on purpose: these files are
     # on the immutable-paths list and are R3 governance files, so changing them needs the
     # Steward's approval anyway. Every other file, including product code, is still scanned.
-    ADDED="$(git show --format= --unified=0 "$sha" -- . \
+    ADDED="$(git show --text --format= --unified=0 "$sha" -- . \
       ':(top,exclude).codifide/check-review-level.sh' ':(top,exclude).codifide/test-enforcement.sh' ':(top,exclude).codifide/README.md' \
       ':(top,exclude)templates/enforcement/check-review-level.sh' ':(top,exclude)templates/enforcement/test-enforcement.sh' \
       ':(top,exclude)templates/enforcement/README.md' \
-      | grep -E '^\+' | grep -vE '^\+\+\+')" || true
-    if printf '%s\n' "$ADDED" | grep -Eq 'SILENT-CATCH-APPROVED|COVERAGE-EXCEPTION.*[Aa]pproved'; then
+      | grep -aE '^\+' | grep -avE '^\+\+\+')" || true
+    if printf '%s\n' "$ADDED" | grep -aEq 'SILENT-CATCH-APPROVED|COVERAGE-EXCEPTION.*[Aa]pproved'; then
       echo "  $short FAIL: non-human commit adds a human-approval marker"
       FAILS=$((FAILS+1))
     fi

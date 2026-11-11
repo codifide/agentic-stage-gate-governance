@@ -102,6 +102,17 @@ printf '%s' '{"input":{"path":"Verifiers/check.py\n"}}' | env PATH="$SHIM" bash 
 printf '%s' '{"input":{"path":"src/app.py"}}' | env PATH="$SHIM" bash .codifide/guard-immutable-paths.sh >/dev/null 2>&1; pass "guard: python3 fallback (no jq) allows src" 0 $?
 rm -rf "$SHIM"
 
+# --- iteration 3 regressions: guard ---
+G3=$(mktemp -d); cd "$G3" && git init -q -b main && git config user.email t@t && git config user.name t
+mkdir -p .codifide src vault; cp "$SRC"/guard-immutable-paths.sh .codifide/
+printf 'vault/*.pem\ncaf\303\251.py\n' > .codifide/immutable-paths
+printf 'p\n' > "$(printf 'caf\303\251.py')"
+g "block NFD spelling of a protected NFC file name (Unicode alias)" 2 "$(printf '{"input":{"path":"cafe\314\201.py"}}')"
+g "allow an unrelated non-ASCII file name" 0 "$(printf '{"input":{"path":"caf\303\251-notes.md"}}')"
+nlp="$(printf 'vault/a\nb.pem')"; printf 'p\n' > "$nlp"; ln "$nlp" src/alias
+g "block hard link to a protected file whose name contains a newline" 2 '{"input":{"path":"src/alias"}}'
+rm -f src/alias
+cd /; rm -rf "$G3"; cd "$T"
 # ---------- immutable CI ----------
 ci(){ $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: $1" "$2" $?; }
 git checkout -qb feat/a; echo y >> src/app.py; git commit -qam ok; ci "clean feature branch" 0
@@ -156,6 +167,18 @@ git update-index --add --cacheinfo 120000,$sl,src/ok1.py; sl2=$(printf 'ok1.py' 
 git update-index --add --cacheinfo 120000,$sl2,src/ok2.py; git commit -qm okchain
 ci "chain of symlinks that ends at an unprotected file passes" 0
 cd /; rm -rf "$C2"; cd "$T"
+# --- iteration 3 regressions: CI check ---
+C3=$(mktemp -d); cd "$C3" && git init -q -b main && git config user.email t@t && git config user.name t
+mkdir -p .codifide verifiers src; printf 'verifiers/\n' > .codifide/immutable-paths; cp "$SRC"/check-immutable-paths.sh .codifide/
+echo v > verifiers/check.py; ln -s ../verifiers src/bridge
+git add -A && git commit -qm base
+git checkout -qb feat/f01 main; ln -s ../.codifide/immutable-paths src/policy; git add -A; git commit -qm alias
+CODIFIDE_VERIFIER_CHANGE_APPROVED_BY="Pat" $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: symlink into the enforcement mechanism is NOT waived by the verifier approval" 1 $?
+CODIFIDE_ENFORCER_CHANGE_APPROVED_BY="Pat" $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: symlink into the enforcement mechanism passes with the enforcer approval" 0 $?
+git checkout -qb feat/f02 main; sl=$(printf '../SRC/bridge/check.py' | git hash-object -w --stdin)
+git update-index --add --cacheinfo 120000,$sl,src/alias; git commit -qm casesl
+ci "symlink whose target uses a different case for a directory symlink into a verifier" 1
+cd /; rm -rf "$C3"
 cd /; rm -rf "$T"
 
 # ---------- review level ----------
@@ -261,6 +284,17 @@ Review-Level: R1"
 git checkout -qb t40m main; git merge -q --allow-unrelated-histories --no-ff t40orph -m "merge orphan" -m "Generated-By: ai-agent
 Review-Level: R1"; rl "orphan root commit touching src/crypto at R1 (merged with --allow-unrelated-histories)" 1
 git checkout -q main
+nb t41l; echo left >> src/crypto/k.ts; cm l "Generated-By: human
+Review-Level: R3"
+git checkout -q main; git checkout -qb t41r; echo right >> src/crypto/k.ts; cm r "Generated-By: human
+Review-Level: R3"
+git checkout -q t41l; git merge --no-commit t41r >/dev/null 2>&1; git checkout --ours src/crypto/k.ts; git add -A; git commit -qm res -m "Generated-By: human
+Review-Level: R1"
+rl "merge resolving a crypto conflict with --ours declares R1 (each parent diff counts)" 1
+git checkout -q main
+nb t42; printf '\000SILENT-CATCH-APPROVED: Steward\n' > src/approval.bin; cm bm "Generated-By: ai-agent
+Review-Level: R2"; rl "agent adds an approval marker inside a NUL-containing file" 1
+git checkout -q main
 cd /; rm -rf "$T"
 
 # ---------- license policy ----------
@@ -311,6 +345,13 @@ lic "nested cyclonedx, allowed child passes" '{"components":[{"name":"parent","l
 lic "partial parser output (a license field of the wrong type) is an error, not a pass" '{"components":[{"name":"ok","licenses":[{"license":{"id":"MIT"}}]},{"name":"unscanned","licenses":"GPL-3.0-only"}]}' 2
 printf 'PackageName: unknown-dependency\nPackageVersion: 1\nPackageName: permitted\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx package with no license line is UNKNOWN, not dropped" 1 $?
 printf 'PackageName: only-name\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx trailing package with no license fails" 1 $?
+lic "cyclonedx: an OR expression entry joined with a denied entry is AND" '{"components":[{"name":"restricted","licenses":[{"expression":"MIT OR GPL-3.0-only"},{"license":{"id":"GPL-3.0-only"}}]}]}' 1
+lic "license-checker array: (MIT OR GPL) AND GPL fails" '{"r@1":{"licenses":["MIT OR GPL-3.0-only","GPL-3.0-only"]}}' 1
+printf 'permitted,MIT\nunresolved,License\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: a 'License' value on a later csv row is a license, not a header" 1 $?
+printf 'PackageName: restricted\nPackageLicenseDeclared: MIT\nPackageLicenseConcluded: GPL-3.0-only\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx tag-value Concluded GPL overrides Declared MIT" 1 $?
+printf 'PackageName: ok\nPackageLicenseDeclared: GPL-3.0-only\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx tag-value Concluded MIT is the stated conclusion" 0 $?
+printf 'PackageName: x\nPackageLicenseDeclared: GPL-3.0-only\nPackageLicenseConcluded: NOASSERTION\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx Concluded NOASSERTION falls back to Declared (GPL fails)" 1 $?
+lic "spdx json: Concluded NOASSERTION falls back to Declared GPL (fails)" '{"packages":[{"name":"x","licenseConcluded":"NOASSERTION","licenseDeclared":"GPL-3.0-only"}]}' 1
 lic "malformed WITH (nothing after it) fails" 'dependency,MIT WITH' 1
 lic "malformed WITH (open paren after it) fails" 'dependency,MIT WITH (' 1
 # policy must come from the base branch
@@ -344,7 +385,7 @@ if [[ -f "$REPO/README.md" && -d "$REPO/steering" && -d "$REPO/templates/hooks" 
     pat="${g}-gate|${sv}en gates|Version ${v}\\.0|FLAG FOR COUNSE[L]|(^|[^0-9])${g}0 cases|${g} Gates for"
     ! grep -rIn -E "$pat" --exclude-dir=.git --exclude-dir=docs --exclude-dir=.worktrees "$REPO"; }
   spdx_ok(){ local f; for f in "$HERE"/guard-immutable-paths.sh "$HERE"/check-*.sh "$REPO"/templates/cursor/to-mdc.sh; do head -3 "$f" | grep -q 'SPDX-License-Identifier: MIT' || { echo "no SPDX: $f"; return 1; }; done; }
-  workflow_ok(){ local w="$HERE/workflow.example.yml"; has 'check-immutable-paths.sh' "$w" && has 'check-review-level.sh' "$w" && has 'check-licenses.sh' "$w" && has 'push:' "$w" && has 'BOOTSTRAP' "$w" && has 'codifide-enforcer-change-approved' "$w"; }
+  workflow_ok(){ local w="$HERE/workflow.example.yml"; has 'check-immutable-paths.sh' "$w" && has 'check-review-level.sh' "$w" && has 'check-licenses.sh' "$w" && has 'push:' "$w" && has 'BOOTSTRAP' "$w" && has 'codifide-enforcer-change-approved' "$w" && has '^[^#]*check-licenses.sh" --base' "$w" && has 'CODIFIDE_LICENSE_REPORT_CMD' "$w" && has '^[^#]*check-immutable-paths.sh' "$w" && has '^[^#]*check-review-level.sh' "$w"; }
   cursor_ok(){ local d; d="$(mktemp -d)"; bash "$REPO/templates/cursor/to-mdc.sh" "$d" >/dev/null || return 1
     head -4 "$d/00-welcome.mdc" | grep -q 'alwaysApply: true' || return 1
     head -4 "$d/11-tiered-adversarial-review.mdc" | grep -q 'alwaysApply: false' || return 1
@@ -360,7 +401,7 @@ if [[ -f "$REPO/README.md" && -d "$REPO/steering" && -d "$REPO/templates/hooks" 
   chk "every hook file named in the README exists" readme_hooks_exist
   chk "no stale gate count, version footer, counsel marker or case count" no_stale
   chk "scripts carry SPDX headers" spdx_ok
-  chk "workflow example runs all three CI scripts, bootstraps, and also runs on push" workflow_ok
+  chk "workflow example runs all three CI scripts uncommented, requires a license report command, bootstraps, and also runs on push" workflow_ok
   chk "Cursor converter writes .mdc with alwaysApply, copies the core body, never overwrites" cursor_ok
   chk "always-loaded core stays at or under 2,400 words" core_size
   chk ".gitattributes forces LF for scripts" eol_ok

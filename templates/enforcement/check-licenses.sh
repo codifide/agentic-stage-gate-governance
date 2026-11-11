@@ -112,24 +112,30 @@ pairs() {
     # CycloneDX: .components[].licenses[].license.id/.name ; SPDX: .packages[].licenseConcluded/Declared ;
     # license-checker --json: { "pkg@ver": { "licenses": "MIT" } }
     printf '%s' "$INPUT" | jq -r '
+      def paren: if type == "string" and test("(?i)\\s(or|and|with)\\s") then "(" + . + ")" else . end;
+      def joined: if type=="array" then map(paren) | join(" AND ") else paren end;
+      def spdx: (.licenseConcluded // "") as $c
+        | if ($c | ascii_upcase) == "" or ($c | ascii_upcase) == "NOASSERTION" then (.licenseDeclared // "UNKNOWN") else $c end;
       def comps: .[]? | ., (.components | comps);
-      if .components then (.components | comps) | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else join(" AND ") end) ] | @tsv
-      elif .packages then .packages[] | [ (.name // "?"), (.licenseConcluded // .licenseDeclared // "UNKNOWN") ] | @tsv
-      else to_entries[] | [ .key, ( (.value.licenses // .value.license // "UNKNOWN") | if type=="array" then join(" AND ") else . end ) ] | @tsv
+      if .components then (.components | comps) | [ (.name // "?"), ((.licenses // []) | map(.license.id // .license.name // .expression // "UNKNOWN") | if length == 0 then "UNKNOWN" else joined end) ] | @tsv
+      elif .packages then .packages[] | [ (.name // "?"), (spdx | paren) ] | @tsv
+      else to_entries[] | [ .key, ( (.value.licenses // .value.license // "UNKNOWN") | joined ) ] | @tsv
       end'
   else
     # plain list: "name,license" or "name<TAB>license" or SPDX tag-value lines
     printf '%s' "$INPUT" | awk '
-      /^PackageName:/ { if(n!="") print n"\tUNKNOWN"; n=$0; sub(/^PackageName:[ \t]*/,"",n) }
-      /^PackageLicenseConcluded:|^PackageLicenseDeclared:/ { lic=$0; sub(/^[^:]*:[ \t]*/,"",lic); if(n!=""){ print n"\t"lic; n="" } ; next }
-      /[,\t]/ && !/^PackageName:/ {
+      function flush() { if (n != "") { lic = (c != "" && toupper(c) != "NOASSERTION") ? c : (d != "" ? d : "UNKNOWN"); print n "\t" lic } n=""; c=""; d="" }
+      /^PackageName:/ { flush(); n=$0; sub(/^PackageName:[ \t]*/,"",n); next }
+      /^PackageLicenseConcluded:/ { c=$0; sub(/^[^:]*:[ \t]*/,"",c); next }
+      /^PackageLicenseDeclared:/ { d=$0; sub(/^[^:]*:[ \t]*/,"",d); next }
+      /[,\t]/ {
         line=$0; sub(/\r$/,"",line);
         sep=(index(line,"\t")>0)?"\t":",";
         p=index(line,sep); if(p>0){ nm=substr(line,1,p-1); lic=substr(line,p+1);
           gsub(/^[ \t"]+|[ \t"]+$/,"",nm); gsub(/^[ \t"]+|[ \t"]+$/,"",lic);
-          low=tolower(lic); if(low=="license"||low=="licenses"||low=="license name") next;
+          low=tolower(lic); if(NR==1 && (low=="license"||low=="licenses"||low=="license name")) next;
           if(nm!="") print nm"\t"lic } }
-      END { if(n!="") print n"\tUNKNOWN" }
+      END { flush() }
     '
   fi
 }

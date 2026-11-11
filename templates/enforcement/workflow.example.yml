@@ -66,7 +66,18 @@ jobs:
         run: bash "$CODIFIDE_TRUSTED/check-immutable-paths.sh" "$CODIFIDE_BASE"
       - name: Review Level and provenance
         run: bash "$CODIFIDE_TRUSTED/check-review-level.sh" "$CODIFIDE_BASE"
-      # License check: feed it YOUR dependency report. Replace the command below.
+      # License check. It is ON: it fails until you tell it how to produce YOUR dependency
+      # report. Set the repository variable CODIFIDE_LICENSE_REPORT_CMD (Settings > Variables;
+      # only repository admins can set it, a PR cannot) to a command that prints a report on
+      # stdout, for example:  npx --yes license-checker --json
       # The policy is read from the base branch (--base), never from the PR.
-      # - name: Dependency licenses
-      #   run: npx --yes license-checker --json | bash "$CODIFIDE_TRUSTED/check-licenses.sh" --base "$CODIFIDE_BASE"
+      # To opt out deliberately, delete this step in a Steward-approved change.
+      - name: Dependency licenses
+        env:
+          LICENSE_REPORT_CMD: ${{ vars.CODIFIDE_LICENSE_REPORT_CMD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$LICENSE_REPORT_CMD" ]; then
+            echo "::error::Set the repository variable CODIFIDE_LICENSE_REPORT_CMD to a command that prints your dependency license report (or remove this step in a Steward-approved change)."; exit 1
+          fi
+          bash -c "$LICENSE_REPORT_CMD" | bash "$CODIFIDE_TRUSTED/check-licenses.sh" --base "$CODIFIDE_BASE"

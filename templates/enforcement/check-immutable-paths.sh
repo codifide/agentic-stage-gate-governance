@@ -96,7 +96,7 @@ split_path() {
 # repository (absolute target or too many ".."). Returns 1 on a loop or more than 40
 # expansions, which the caller reports as a violation (fail closed).
 tree_resolve() {
-  local cur="" hops=0 i comp next line m rest sha t j
+  local cur="" hops=0 i comp next line m rest sha t j spec real ent en
   local q=() nq=()
   split_path "$1"; q=( ${SP[@]+"${SP[@]}"} )
   i=0
@@ -108,8 +108,18 @@ tree_resolve() {
             if [[ "$cur" == */* ]]; then cur="${cur%/*}"; else cur=""; fi
             i=$((i+1)); continue ;;
     esac
-    next="${cur:+$cur/}$comp"
-    line="$(git --literal-pathspecs ls-tree -z HEAD -- "$next" 2>/dev/null | tr '\0' '\n' | head -n 1)"
+    # Look the component up among the entries of the (already resolved) parent tree,
+    # case-insensitively: on a case-insensitive checkout "SRC/bridge" IS "src/bridge".
+    # If both cases exist, a symlink wins (fail closed).
+    if [[ -z "$cur" ]]; then spec="HEAD"; else spec="HEAD:$cur"; fi
+    line=""; real="$comp"
+    while IFS= read -r -d '' ent; do
+      en="${ent#*$'\t'}"
+      if [[ "$en" == "$comp" ]]; then
+        if [[ -z "$line" || "${ent%% *}" == "120000" ]]; then line="$ent"; real="$en"; fi
+      fi
+    done < <(git ls-tree -z "$spec" 2>/dev/null)
+    next="${cur:+$cur/}$real"
     m="${line%% *}"
     if [[ "$m" == "120000" ]]; then
       hops=$((hops+1)); (( hops > 40 )) && return 1
@@ -142,9 +152,9 @@ trap 'rm -f "$RAW"' EXIT
 git diff --raw -z --no-renames "$BASE"...HEAD > "$RAW" || die "git diff failed"
 
 VER=(); ENF=()
-add_violation() { # $1 = path, $2 = pattern, $3 = note
+add_violation() { # $1 = path, $2 = pattern, $3 = note, $4 = path that decides the class (default $1)
   local line="$1  (pattern: $2)${3:+ $3}"
-  if is_enforcer "$1"; then ENF+=("$line"); else VER+=("$line"); fi
+  if is_enforcer "${4:-$1}" || is_enforcer "$1"; then ENF+=("$line"); else VER+=("$line"); fi
 }
 while IFS= read -r -d '' meta && IFS= read -r -d '' f; do
   [[ -z "$f" ]] && continue
@@ -164,7 +174,7 @@ while IFS= read -r -d '' meta && IFS= read -r -d '' f; do
       add_violation "$f" "(symlink chain)" "[symlink loop or more than 40 hops; cannot prove it avoids protected paths]"
     elif [[ -n "$tn" ]]; then
       tpat="$(pattern_for "$tn")"
-      if [[ -n "$tpat" ]]; then add_violation "$f" "$tpat" "[symlink into protected path '$tn']"
+      if [[ -n "$tpat" ]]; then add_violation "$f" "$tpat" "[symlink into protected path '$tn']" "$tn"
       elif is_enforcer "$tn"; then ENF+=("$f  [symlink into enforcement mechanism '$tn']"); fi
     fi
   fi

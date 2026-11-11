@@ -121,6 +121,27 @@ if [[ $? -ne 0 ]]; then
   echo "Codifide guard: tool input was not valid JSON. Blocking write while $LIST exists." >&2
   exit 2
 fi
+# Unicode aliases: APFS/HFS+ treat NFC and NFD spellings of a name as one file, so every
+# candidate is also checked in both normalisation forms. Needs python3; without it the
+# inode comparison against literal list entries (below) still covers existing files.
+if command -v python3 >/dev/null 2>&1; then
+  CANDIDATES="$(printf '%s\n' "$CANDIDATES" | python3 -c '
+import base64, sys, unicodedata
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    print(line)
+    try:
+        s = base64.b64decode(line).decode("utf-8", "surrogatepass")
+    except Exception:
+        continue
+    for form in ("NFC", "NFD"):
+        n = unicodedata.normalize(form, s)
+        if n != s:
+            print(base64.b64encode(n.encode("utf-8", "surrogatepass")).decode())
+')" || { echo "Codifide guard: Unicode normalisation step failed; failing closed." >&2; exit 2; }
+fi
 # Load patterns (ignore blanks and comments). The list always protects itself.
 PATTERNS=(".codifide/immutable-paths")
 EXCEPTIONS=()
@@ -241,12 +262,12 @@ check_path() {
   done
   # Ancestor of a protected file matched by a glob: look inside an existing directory.
   if [[ -d "$x" ]]; then
-    while IFS= read -r f; do
+    while IFS= read -r -d '' f; do
       count=$((count+1))
       if (( count > 20000 )); then block "$rel" "${PATTERNS[0]}" "directory too large to verify; failing closed"; fi
       pat="$(protected_pattern "${f#"$ROOT"/}")"
       [[ -n "$pat" ]] && block "$rel" "$pat" "directory containing protected '${f#"$ROOT"/}'"
-    done < <(find "$x" -path "$ROOT/.git" -prune -o \( -type f -o -type l \) -print 2>/dev/null | head -n 20001)
+    done < <(find "$x" -path "$ROOT/.git" -prune -o \( -type f -o -type l \) -print0 2>/dev/null)
   fi
   return 0
 }
@@ -258,14 +279,22 @@ while IFS= read -r b64; do
   lex="$(normpath "$in")"
   nol="$(physres "$in" 1)" && full="$(physres "$in" 0)" || { echo "Codifide guard: symlink loop or too many links in a tool-input path; failing closed." >&2; exit 2; }
   check_path "$lex"; check_path "$nol"; check_path "$full"
+  # Same inode as a literal list entry (covers filesystem-level aliases such as Unicode
+  # normalisation that the text comparison cannot see).
+  if [[ -e "$full" ]]; then
+    for pat in "${PATTERNS[@]}"; do
+      [[ "$pat" == *[*?[]* || "$pat" == */ ]] && continue
+      if [[ "$full" -ef "$ROOT/$pat" ]]; then block "${full#"$ROOT"/}" "$pat" "same file as protected '$pat'"; fi
+    done
+  fi
   # Hard links: a different name for the same inode as a protected file, anywhere.
   if [[ -f "$full" && -n "$(find "$full" -maxdepth 0 -links +1 2>/dev/null)" ]]; then
-    while IFS= read -r other; do
+    while IFS= read -r -d '' other; do
       [[ -z "$other" || "$other" == "$full" ]] && continue
       orel="${other#"$ROOT"/}"
       opat="$(protected_pattern "$orel")"
       [[ -n "$opat" ]] && block "${full#"$ROOT"/}" "$opat" "hard link to protected file '$orel'"
-    done < <(find "$ROOT" -path "$ROOT/.git" -prune -o -samefile "$full" -print 2>/dev/null)
+    done < <(find "$ROOT" -path "$ROOT/.git" -prune -o -samefile "$full" -print0 2>/dev/null)
   fi
 done <<< "$CANDIDATES"
 exit 0
