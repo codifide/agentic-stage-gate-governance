@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Persist session handoff",
+      "trigger": "Stop",
+      "action": {
+        "type": "agent",
+        "prompt": "Before this session ends, persist your handoff: 1) what was accomplished, 2) current initiative/gate status, 3) proposed next actions (phrased as proposals for the human to confirm), 4) key metrics or environment changes. Never include secrets, credentials, or real PHI/PII; reference them by ID. WHERE: if you are the only active session, update .kiro/steering/next-session-prompt.md. If other sessions are active (other files exist in $(git rev-parse --path-format=absolute --git-common-dir)/codifide-sessions/, or you are working in a session/<id> worktree), write ONLY to that directory as <your-session-id>.md and do not touch next-session-prompt.md. The human-named integrator consolidates session files into next-session-prompt.md at merge time."
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Screenshot data guard",
+      "trigger": "PreToolUse",
+      "matcher": "screenshot",
+      "action": {
+        "type": "agent",
+        "prompt": "You are about to take a screenshot. If the screen could show real PHI, PII, or secrets, do not take it: switch to synthetic data first. If you must capture, save only to the OS temporary directory ($TMPDIR, never a cloud-synced folder such as Downloads or Desktop, and never the project or any git-tracked path), and delete the file when you are done."
+      }
+    }
+  ]
+}

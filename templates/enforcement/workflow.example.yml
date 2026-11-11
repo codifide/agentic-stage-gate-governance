@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: MIT
+# Codifide Harness — example GitHub Actions workflow for the enforcement checks.
+# Copy to .github/workflows/codifide-enforcement.yml. This file is governance: protect it
+# with CODEOWNERS (see templates/enforcement/README.md, "What you must configure").
+#
+# Design:
+#  - The checks run from the BASE branch's copy of .codifide/*.sh, never from the PR's copy,
+#    so a PR cannot weaken the checks it is judged by.
+#  - Bootstrap: if the base branch has no .codifide/ at all (the adoption PR), the PR's own
+#    copies run once, with a loud notice. That PR must be reviewed by the Human Steward.
+#    If the base has SOME of the files but not all, the job fails (inconsistent adoption).
+#  - Two labels, two decisions: `codifide-verifier-change-approved` waives edits to
+#    verifiers/fixtures/baselines; `codifide-enforcer-change-approved` waives edits to the
+#    checks, hooks, workflows and CODEOWNERS. Restrict who may apply each label.
+#  - Runs on pull requests AND on pushes to main (a post-merge tripwire for changes that
+#    skipped review). Pushes have no label, so a protected-path change fails there by design.
+name: codifide-enforcement
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Select base and fetch trusted copies of the checks
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ]; then BASE="origin/$BASE_REF"; else BASE="$BEFORE"; fi
+          echo "CODIFIDE_BASE=$BASE" >> "$GITHUB_ENV"
+          SCRIPTS="check-immutable-paths.sh check-review-level.sh check-licenses.sh"
+          TRUSTED="$RUNNER_TEMP/codifide-trusted"; mkdir -p "$TRUSTED"
+          have=0; total=0
+          for f in $SCRIPTS; do
+            total=$((total+1))
+            if git cat-file -e "$BASE:.codifide/$f" 2>/dev/null; then
+              git show "$BASE:.codifide/$f" > "$TRUSTED/$f"; have=$((have+1))
+            fi
+          done
+          if [ "$have" -eq "$total" ]; then
+            echo "Using the base branch's copies of the checks."
+          elif [ "$have" -eq 0 ]; then
+            echo "::warning::BOOTSTRAP: base has no .codifide checks. Running this PR's copies once. The Human Steward must review this adoption PR."
+            for f in $SCRIPTS; do cp ".codifide/$f" "$TRUSTED/$f"; done
+            echo "CODIFIDE_BOOTSTRAP=1" >> "$GITHUB_ENV"
+          else
+            echo "::error::Base has $have of $total check scripts. Fix the base branch first (fail closed)."; exit 1
+          fi
+          echo "CODIFIDE_TRUSTED=$TRUSTED" >> "$GITHUB_ENV"
+      - name: Immutable paths
+        env:
+          CODIFIDE_REQUIRE_IMMUTABLE_LIST: ${{ env.CODIFIDE_BOOTSTRAP == '1' && '0' || '1' }}
+          CODIFIDE_VERIFIER_CHANGE_APPROVED_BY: ${{ contains(github.event.pull_request.labels.*.name, 'codifide-verifier-change-approved') && 'label codifide-verifier-change-approved' || '' }}
+          CODIFIDE_ENFORCER_CHANGE_APPROVED_BY: ${{ contains(github.event.pull_request.labels.*.name, 'codifide-enforcer-change-approved') && 'label codifide-enforcer-change-approved' || '' }}
+        run: bash "$CODIFIDE_TRUSTED/check-immutable-paths.sh" "$CODIFIDE_BASE"
+      - name: Review Level and provenance
+        run: bash "$CODIFIDE_TRUSTED/check-review-level.sh" "$CODIFIDE_BASE"
+      # License check: feed it YOUR dependency report. Replace the command below.
+      # The policy is read from the base branch (--base), never from the PR.
+      # - name: Dependency licenses
+      #   run: npx --yes license-checker --json | bash "$CODIFIDE_TRUSTED/check-licenses.sh" --base "$CODIFIDE_BASE"
