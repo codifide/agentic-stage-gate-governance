@@ -112,7 +112,26 @@ g "allow an unrelated non-ASCII file name" 0 "$(printf '{"input":{"path":"caf\30
 nlp="$(printf 'vault/a\nb.pem')"; printf 'p\n' > "$nlp"; ln "$nlp" src/alias
 g "block hard link to a protected file whose name contains a newline" 2 '{"input":{"path":"src/alias"}}'
 rm -f src/alias
-cd /; rm -rf "$G3"; cd "$T"
+cd /; rm -rf "$G3"
+# --- iteration 4 regressions: guard (relative paths, CODIFIDE_ROOT, hook payload cwd) ---
+G4=$(mktemp -d); cd "$G4" && git init -q -b main && git config user.email t@t && git config user.name t
+mkdir -p .codifide verifiers src decoy/.codifide; cp "$SRC"/guard-immutable-paths.sh .codifide/
+printf 'verifiers/\n' > .codifide/immutable-paths; printf 'unrelated/\n' > decoy/.codifide/immutable-paths
+echo v > verifiers/check.py; echo s > src/app.py
+G4S="$G4/.codifide/guard-immutable-paths.sh"
+g4(){ # $1 = name, $2 = want, $3 = cwd (relative to repo), $4 = payload, rest = env assignments
+  local nm="$1" want="$2" wd="$3" pl="$4"; shift 4
+  ( cd "$G4/$wd" && printf '%s' "$pl" | env "$@" $SH "$G4S" >/dev/null 2>&1 ); pass "guard: $nm" "$want" $?; }
+g4 "relative path judged against the hook's cwd (cwd=verifiers, path check.py, input.path)" 2 verifiers '{"input":{"path":"check.py","text":"x"}}' X=1
+g4 "relative path judged against the hook's cwd (cwd=verifiers, tool_input.file_path)" 2 verifiers '{"tool_input":{"file_path":"check.py"}}' X=1
+g4 "relative path judged against the payload cwd (hook runs at the root, payload cwd=verifiers)" 2 . "{\"cwd\":\"$G4/verifiers\",\"tool_input\":{\"file_path\":\"check.py\"}}" X=1
+g4 "allow a relative path to an unprotected file from a subdirectory (cwd=src, app.py)" 0 src '{"input":{"path":"app.py"}}' X=1
+g4 "allow a Claude-style payload whose cwd is the repo root and whose target is unprotected" 0 . "{\"cwd\":\"$G4\",\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"src/app.py\"}}" X=1
+g4 "block a Claude-style payload (cwd=repo root) that writes a verifier" 2 . "{\"cwd\":\"$G4\",\"tool_input\":{\"file_path\":\"verifiers/check.py\"}}" X=1
+g4 "CODIFIDE_ROOT pointing at a decoy directory blocks (REQUIRE=1)" 2 . "{\"input\":{\"path\":\"$G4/verifiers/check.py\"}}" "CODIFIDE_ROOT=$G4/decoy" CODIFIDE_REQUIRE_IMMUTABLE_LIST=1
+g4 "CODIFIDE_ROOT pointing at a decoy directory blocks even an unrelated write" 2 . '{"input":{"path":"src/app.py"}}' "CODIFIDE_ROOT=$G4/decoy"
+g4 "CODIFIDE_ROOT equal to the real top level is accepted (allow control)" 0 . '{"input":{"path":"src/app.py"}}' "CODIFIDE_ROOT=$G4"
+cd /; rm -rf "$G4"; cd "$T"
 # ---------- immutable CI ----------
 ci(){ $SH .codifide/check-immutable-paths.sh main >/dev/null 2>&1; pass "immutable-ci: $1" "$2" $?; }
 git checkout -qb feat/a; echo y >> src/app.py; git commit -qam ok; ci "clean feature branch" 0
@@ -179,6 +198,16 @@ git checkout -qb feat/f02 main; sl=$(printf '../SRC/bridge/check.py' | git hash-
 git update-index --add --cacheinfo 120000,$sl,src/alias; git commit -qm casesl
 ci "symlink whose target uses a different case for a directory symlink into a verifier" 1
 cd /; rm -rf "$C3"
+# --- iteration 4 regressions: CI check (Unicode aliases when git does not precompose) ---
+C4=$(mktemp -d); cd "$C4" && git init -q -b main && git config user.email t@t && git config user.name t && git config core.precomposeunicode false
+mkdir -p .codifide; printf 'caf\303\251.py\n' > .codifide/immutable-paths; cp "$SRC"/check-immutable-paths.sh .codifide/
+h4=$(echo v | git hash-object -w --stdin); git update-index --add --cacheinfo 100644,$h4,"$(printf 'caf\303\251.py')"
+git add -A && git commit -qm base
+git checkout -qb feat/nfd main; git update-index --add --cacheinfo 100644,$h4,"$(printf 'cafe\314\201.py')"; git commit -qm nfd
+ci "NFD alias of a protected NFC file name" 1
+git checkout -qb feat/nfd-ok main; git update-index --add --cacheinfo 100644,$h4,"$(printf 'caf\303\251-notes.md')"; git commit -qm other
+ci "unrelated non-ASCII file name passes (control)" 0
+cd /; rm -rf "$C4"
 cd /; rm -rf "$T"
 
 # ---------- review level ----------
@@ -352,6 +381,9 @@ printf 'PackageName: restricted\nPackageLicenseDeclared: MIT\nPackageLicenseConc
 printf 'PackageName: ok\nPackageLicenseDeclared: GPL-3.0-only\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx tag-value Concluded MIT is the stated conclusion" 0 $?
 printf 'PackageName: x\nPackageLicenseDeclared: GPL-3.0-only\nPackageLicenseConcluded: NOASSERTION\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx Concluded NOASSERTION falls back to Declared (GPL fails)" 1 $?
 lic "spdx json: Concluded NOASSERTION falls back to Declared GPL (fails)" '{"packages":[{"name":"x","licenseConcluded":"NOASSERTION","licenseDeclared":"GPL-3.0-only"}]}' 1
+printf 'name,license\npermitted,MIT\nunresolved-dependency\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: a plain-list row with its license missing is a malformed report (exit 2), not dropped" 2 $?
+printf 'name,license\npermitted,MIT\n\n\nother,ISC\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: blank lines in a plain list are ignored (control)" 0 $?
+printf 'SPDXVersion: SPDX-2.3\nPackageName: a\nPackageSupplier: Organization: Foo, Inc\nPackageLicenseConcluded: MIT\n' | $SH "$SRC"/check-licenses.sh >/dev/null 2>&1; pass "licenses: spdx tag-value lines with commas are not read as list rows (control)" 0 $?
 lic "malformed WITH (nothing after it) fails" 'dependency,MIT WITH' 1
 lic "malformed WITH (open paren after it) fails" 'dependency,MIT WITH (' 1
 # policy must come from the base branch

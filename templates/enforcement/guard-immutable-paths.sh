@@ -60,7 +60,10 @@ shopt -s nocasematch
 # Any exit other than 0 (allow) or 2 (block) is an internal failure: block.
 trap 'rc=$?; if [[ $rc -ne 0 && $rc -ne 2 ]]; then echo "Codifide guard: internal error (exit $rc); failing closed." >&2; exit 2; fi' EXIT
 
-ROOT="${CODIFIDE_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+# The repository root is the git top level of the hook's own working directory. There is no
+# override: a CODIFIDE_ROOT that points anywhere else would let a caller aim the guard at a
+# decoy list, so a CODIFIDE_ROOT that differs from the real top level BLOCKS (checked below).
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 LIST="$ROOT/.codifide/immutable-paths"
 
 # Nothing declared -> nothing to protect, unless the repo requires a list.
@@ -90,7 +93,9 @@ if command -v jq >/dev/null 2>&1; then
   # trimmed, cut at the first NUL, and both. Base64 keeps newlines inside a value.
   CANDIDATES="$(printf '%s' "$INPUT" | jq -r '
     def v: ., gsub("^\\s+|\\s+$";""), (split("\u0000")[0]), (split("\u0000")[0] | gsub("^\\s+|\\s+$";""));
-    ((.. | strings), (.. | objects | keys_unsorted[])) | v | @base64' 2>/dev/null)"
+    (if type == "object" and (.cwd | type) == "string" then del(.cwd) else . end)
+    | ((.. | strings), (.. | objects | keys_unsorted[])) | v | @base64' 2>/dev/null)"
+  PAYLOAD_CWD="$(printf '%s' "$INPUT" | jq -r 'if type == "object" and (.cwd | type) == "string" then .cwd else empty end' 2>/dev/null)"
 elif command -v python3 >/dev/null 2>&1; then
   CANDIDATES="$(printf '%s' "$INPUT" | python3 -c '
 import base64, json, sys
@@ -107,10 +112,19 @@ def walk(v):
     elif isinstance(v, list):
         for x in v: walk(x)
 try:
-    walk(json.load(sys.stdin))
+    d = json.load(sys.stdin)
+    if isinstance(d, dict) and isinstance(d.get("cwd"), str):
+        d.pop("cwd")
+    walk(d)
 except Exception:
     sys.exit(3)
 ')"
+  PAYLOAD_CWD="$(printf '%s' "$INPUT" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+if isinstance(d, dict) and isinstance(d.get("cwd"), str):
+    print(d["cwd"])
+' 2>/dev/null)"
 else
   # Security controls fail closed (00-welcome.md section 6).
   echo "Codifide guard: cannot inspect tool input (install jq or python3). Blocking write while $LIST exists." >&2
@@ -219,6 +233,27 @@ physres() {
   printf '%s' "$cur"
 }
 ROOT="$(physres "$ROOT" 0)" || { echo "Codifide guard: cannot resolve the repository root; failing closed." >&2; exit 2; }
+if [[ -n "${CODIFIDE_ROOT:-}" ]]; then
+  alt="$(physres "$(normpath "$CODIFIDE_ROOT")" 0)" || alt=""
+  if [[ "$alt" != "$ROOT" ]]; then
+    echo "Codifide guard: CODIFIDE_ROOT ('$CODIFIDE_ROOT') is not this repository's top level ('$ROOT'); refusing to use a different root. Blocking (fail closed)." >&2
+    exit 2
+  fi
+fi
+# Relative paths: the tool decides what they are relative to, and the guard cannot know, so a
+# relative candidate is judged against EVERY plausible base: the repository root, the hook's
+# working directory, and the working directory the payload reports (if any).
+BASES=("$ROOT")
+add_base() { # $1 = absolute directory
+  local b
+  [[ "$1" == /* ]] || return 0
+  b="$(physres "$(normpath "$1")" 0)" || return 0
+  [[ "$b" == "$ROOT" ]] && return 0
+  local x; for x in "${BASES[@]}"; do [[ "$x" == "$b" ]] && return 0; done
+  BASES+=("$b")
+}
+add_base "$PWD"
+[[ -n "${PAYLOAD_CWD:-}" ]] && add_base "$PAYLOAD_CWD"
 # Echo the pattern that protects repo-relative path $1 (nothing if unprotected).
 protected_pattern() {
   local rel="$1" ex pat
@@ -275,26 +310,28 @@ while IFS= read -r b64; do
   [[ -z "$b64" ]] && continue
   cand="$(b64d "$b64")" || { echo "Codifide guard: could not decode a tool-input value; failing closed." >&2; exit 2; }
   [[ -z "$cand" ]] && continue
-  if [[ "$cand" == /* ]]; then in="$cand"; else in="$ROOT/$cand"; fi
-  lex="$(normpath "$in")"
-  nol="$(physres "$in" 1)" && full="$(physres "$in" 0)" || { echo "Codifide guard: symlink loop or too many links in a tool-input path; failing closed." >&2; exit 2; }
-  check_path "$lex"; check_path "$nol"; check_path "$full"
-  # Same inode as a literal list entry (covers filesystem-level aliases such as Unicode
-  # normalisation that the text comparison cannot see).
-  if [[ -e "$full" ]]; then
-    for pat in "${PATTERNS[@]}"; do
-      [[ "$pat" == *[*?[]* || "$pat" == */ ]] && continue
-      if [[ "$full" -ef "$ROOT/$pat" ]]; then block "${full#"$ROOT"/}" "$pat" "same file as protected '$pat'"; fi
-    done
-  fi
-  # Hard links: a different name for the same inode as a protected file, anywhere.
-  if [[ -f "$full" && -n "$(find "$full" -maxdepth 0 -links +1 2>/dev/null)" ]]; then
-    while IFS= read -r -d '' other; do
-      [[ -z "$other" || "$other" == "$full" ]] && continue
-      orel="${other#"$ROOT"/}"
-      opat="$(protected_pattern "$orel")"
-      [[ -n "$opat" ]] && block "${full#"$ROOT"/}" "$opat" "hard link to protected file '$orel'"
-    done < <(find "$ROOT" -path "$ROOT/.git" -prune -o -samefile "$full" -print0 2>/dev/null)
-  fi
+  if [[ "$cand" == /* ]]; then INS=("$cand"); else INS=(); for b in "${BASES[@]}"; do INS+=("$b/$cand"); done; fi
+  for in in "${INS[@]}"; do
+    lex="$(normpath "$in")"
+    nol="$(physres "$in" 1)" && full="$(physres "$in" 0)" || { echo "Codifide guard: symlink loop or too many links in a tool-input path; failing closed." >&2; exit 2; }
+    check_path "$lex"; check_path "$nol"; check_path "$full"
+    # Same inode as a literal list entry (covers filesystem-level aliases such as Unicode
+    # normalisation that the text comparison cannot see).
+    if [[ -e "$full" ]]; then
+      for pat in "${PATTERNS[@]}"; do
+        [[ "$pat" == *[*?[]* || "$pat" == */ ]] && continue
+        if [[ "$full" -ef "$ROOT/$pat" ]]; then block "${full#"$ROOT"/}" "$pat" "same file as protected '$pat'"; fi
+      done
+    fi
+    # Hard links: a different name for the same inode as a protected file, anywhere.
+    if [[ -f "$full" && -n "$(find "$full" -maxdepth 0 -links +1 2>/dev/null)" ]]; then
+      while IFS= read -r -d '' other; do
+        [[ -z "$other" || "$other" == "$full" ]] && continue
+        orel="${other#"$ROOT"/}"
+        opat="$(protected_pattern "$orel")"
+        [[ -n "$opat" ]] && block "${full#"$ROOT"/}" "$opat" "hard link to protected file '$orel'"
+      done < <(find "$ROOT" -path "$ROOT/.git" -prune -o -samefile "$full" -print0 2>/dev/null)
+    fi
+  done
 done <<< "$CANDIDATES"
 exit 0

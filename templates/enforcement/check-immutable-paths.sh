@@ -21,7 +21,8 @@
 # Both variables are only as strong as who can set them (label permissions,
 # CODEOWNERS, branch protection); this script cannot verify that.
 #
-# Matching is case-insensitive (case-insensitive checkouts), directory patterns match
+# Matching is case-insensitive (case-insensitive checkouts) and Unicode-alias aware (a non-ASCII
+# path is also matched in its NFC and NFD forms; without python3 such a path is reported, fail closed), directory patterns match
 # the directory entry itself, and a symlink added or changed in the diff whose target
 # resolves into a protected path is reported. The target is followed through the HEAD
 # tree across any number of symlink hops (a loop or more than 40 hops is a violation).
@@ -135,7 +136,33 @@ tree_resolve() {
   done
   printf '%s' "$cur"
 }
-pattern_for() { # $1 = repo-relative path; echoes the matching pattern (nothing if none or excepted)
+# Unicode aliases: APFS/HFS+ and Windows treat the NFC and NFD spellings of a name as one file,
+# and git on Linux stores whichever bytes it is given. A non-ASCII path is therefore also
+# matched in both normalisation forms. Needs python3 (without it a non-ASCII path fails closed).
+uni_forms() { # $1 = path; prints the NFC and NFD forms, NUL-delimited
+  command -v python3 >/dev/null 2>&1 || return 1
+  python3 -c '
+import sys, unicodedata
+s = sys.argv[1].encode("utf-8", "surrogateescape").decode("utf-8", "surrogateescape")
+for f in ("NFC", "NFD"):
+    sys.stdout.buffer.write(unicodedata.normalize(f, s).encode("utf-8", "surrogateescape") + b"\0")
+' "$1"
+}
+pattern_for() { # $1 = path; echoes the matching pattern, also trying its NFC/NFD forms
+  local f="$1" r form
+  r="$(pattern_for_one "$f")"
+  if [[ -n "$r" ]]; then printf '%s' "$r"; return 0; fi
+  if [[ -n "$f" && "$(printf '%s' "$f" | LC_ALL=C tr -d '\000-\177')" != "" ]]; then
+    if ! command -v python3 >/dev/null 2>&1; then printf '%s' "(non-ASCII path, python3 missing: Unicode aliases cannot be ruled out)"; return 0; fi
+    while IFS= read -r -d '' form; do
+      [[ "$form" == "$f" ]] && continue
+      r="$(pattern_for_one "$form")"
+      if [[ -n "$r" ]]; then printf '%s' "$r"; return 0; fi
+    done < <(uni_forms "$f")
+  fi
+  return 0
+}
+pattern_for_one() { # $1 = repo-relative path; echoes the matching pattern (nothing if none or excepted)
   local f="$1" ex pat
   for ex in "${EXCEPTIONS[@]+"${EXCEPTIONS[@]}"}"; do
     if [[ "$f" != ".codifide/immutable-paths" ]] && matches "$f" "$ex"; then return 0; fi

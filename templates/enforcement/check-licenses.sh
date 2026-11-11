@@ -123,11 +123,20 @@ pairs() {
       end'
   else
     # plain list: "name,license" or "name<TAB>license" or SPDX tag-value lines
-    printf '%s' "$INPUT" | awk '
+    # Two shapes: SPDX tag-value (has PackageName: lines; every other line is ignored) or a plain
+    # list, where EVERY non-blank line must be "name<sep>license". A plain-list row with no
+    # separator (a dependency whose license column is missing) is a malformed report: exit 3,
+    # so the caller refuses to pass on a report that silently lost a dependency.
+    local tv=0
+    printf '%s' "$INPUT" | grep -q '^PackageName:' && tv=1
+    printf '%s' "$INPUT" | awk -v tv="$tv" '
       function flush() { if (n != "") { lic = (c != "" && toupper(c) != "NOASSERTION") ? c : (d != "" ? d : "UNKNOWN"); print n "\t" lic } n=""; c=""; d="" }
       /^PackageName:/ { flush(); n=$0; sub(/^PackageName:[ \t]*/,"",n); next }
       /^PackageLicenseConcluded:/ { c=$0; sub(/^[^:]*:[ \t]*/,"",c); next }
       /^PackageLicenseDeclared:/ { d=$0; sub(/^[^:]*:[ \t]*/,"",d); next }
+      tv { next }
+      /^[ \t\r]*$/ { next }
+      !/[,\t]/ { bad=1; print "Codifide licenses: malformed row (no separator, license missing?): " $0 > "/dev/stderr"; next }
       /[,\t]/ {
         line=$0; sub(/\r$/,"",line);
         sep=(index(line,"\t")>0)?"\t":",";
@@ -135,7 +144,7 @@ pairs() {
           gsub(/^[ \t"]+|[ \t"]+$/,"",nm); gsub(/^[ \t"]+|[ \t"]+$/,"",lic);
           low=tolower(lic); if(NR==1 && (low=="license"||low=="licenses"||low=="license name")) next;
           if(nm!="") print nm"\t"lic } }
-      END { flush() }
+      END { flush(); if (bad) exit 3 }
     '
   fi
 }
