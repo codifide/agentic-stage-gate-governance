@@ -63,6 +63,32 @@ Version: see `VERSION` and `CHANGELOG.md`. Pin to a tagged release rather than c
 
 ## Setup
 
+### Install with `install.sh` (recommended)
+
+Download a release from the Releases page, check it against `SHA256SUMS`, unpack it, and run the installer from the unpacked tree (or from a clean checkout of the release tag). There is no one-line network install, on purpose: you should see which bytes enter your repository.
+
+```bash
+# 1. Dry run (the default): prints the plan and writes nothing
+bash codifide-harness-3.2.0/install.sh --target /path/to/your/repo --host kiro
+# 2. Write it
+bash codifide-harness-3.2.0/install.sh --target /path/to/your/repo --host kiro --apply
+# Hosts: kiro | claude | cursor | copilot | codex (repeat or comma-separate)
+```
+
+What it does: copies the steering files for your host (Cursor gets `.mdc` rules made by `templates/cursor/to-mdc.sh`), the four enforcement scripts into `.codifide/`, and starter policy files; records `.codifide/harness-version` and a hash manifest. What it will not do: use the network, commit or push, touch git configuration, or overwrite a file you own (`.codifide/immutable-paths`, `allowed-licenses`, your workflow, `CLAUDE.md`, `AGENTS.md`, the Copilot file; it prints a snippet to merge instead). It never writes `.claude/settings.json`; it prints the hook block to merge. It refuses to run from anything but a tagged release unless you pass `--i-know-this-is-unpinned`.
+
+```bash
+bash NEW-RELEASE/install.sh upgrade   --target /path/to/your/repo          # dry run: shows the diff
+bash NEW-RELEASE/install.sh upgrade   --target /path/to/your/repo --apply
+bash NEW-RELEASE/install.sh uninstall --target /path/to/your/repo --apply   # removes only unmodified files it installed
+```
+
+Upgrade replaces only files that still match the manifest and stops, writing nothing, if you edited one (`--force` overrides). Then open a normal pull request so your reviewers see the diff. Edit `.codifide/immutable-paths` and `.codifide/allowed-licenses` and set `CODIFIDE_LICENSE_REPORT_CMD` before relying on the checks.
+
+**Verified and not verified.** The installer suite (`tests/test-installer.sh`, 342 installer checks) exercises the installer in throwaway repositories on macOS with bash 3.2. We did not run Kiro, Claude Code, Cursor, Copilot or Codex end to end: that each host loads the files, and that the guard hook blocks on exit code 2 in each host, is unverified (see `templates/enforcement/README.md`). The release workflow has not run on GitHub yet, and releases are unsigned until a signing key is configured.
+
+The manual copy steps below still work.
+
 ### New Project
 ```bash
 # Clone this repo and copy the steering folder into your project

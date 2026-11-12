@@ -2,6 +2,23 @@
 
 Versions follow semantic versioning. The version is in `VERSION`. Pin installs to a tag.
 
+## [3.2.0] - Unreleased
+A local installer, an upgrade and an uninstall path, and release automation. The steering files, the hook files and the four enforcement scripts are unchanged from 3.1.0; this release adds the way to get them into a repository and to keep them current.
+### Added
+- `install.sh`: copies a pinned release into a repository. Dry run by default (`--apply` writes). Per-host targets: `kiro`, `claude`, `cursor`, `copilot`, `codex`. Refuses to run unless it is a clean checkout of the tag that matches `VERSION`, or an unpacked release tarball whose `RELEASE` file names that tag (`--i-know-this-is-unpinned` overrides and is recorded). Writes `.codifide/harness-version` and `.codifide/harness-manifest` (a hash for every file it installed). Uses no network, makes no commit, and does not change git configuration.
+- Policy files are never overwritten: `.codifide/immutable-paths`, `.codifide/allowed-licenses`, the enforcement workflow, `CLAUDE.md`, `AGENTS.md` and the Copilot instructions file are created only when absent, and a merge snippet is printed when they exist. `.claude/settings.json` is never written; the snippet is printed.
+- `install.sh upgrade`: re-run from a newer tag. Shows a diff, replaces only files that still match the manifest, stops (writing nothing) on a locally edited harness file unless `--force`, and removes files the new release no longer ships if you have not edited them.
+- `install.sh uninstall`: manifest-driven; removes only files that still match the recorded hash, leaves everything else, and prunes directories it emptied.
+- Every path (from the release and from the manifest in your repository) is checked before any write: relative, from a fixed allow-list, no symbolic link on the way. A write failure rolls back everything the run wrote.
+- `tools/build-release.sh` and `.github/workflows/release.yml`: build the tarball (`git archive` of the tag plus a `RELEASE` file) and `SHA256SUMS` on a pushed `v*` tag, run both test suites first, sign `SHA256SUMS` only if a `RELEASE_SIGNING_KEY` secret exists, and create a DRAFT release. The workflow uses no third-party actions and no `pull_request` triggers.
+- `tests/test-installer.sh`: the installer suite (see the README for the count).
+### Verification status (stated plainly)
+- Verified by the installer suite, in throwaway repositories on macOS with bash 3.2: dry run writes nothing, the pin rules, each host's file layout, no-clobber, manifest hashes, idempotent re-run, upgrade, uninstall (a pristine tree is restored byte for byte), path-traversal, symlink and hostile-manifest cases, no network client or git write is called, rollback after a failed write, and the release build and an install from the built tarball.
+- NOT verified end to end: any host actually loading what the installer wrote. Kiro `inclusion: auto` loading and exit-2 blocking, Claude Code reading `CLAUDE.md` and the merged hook, Cursor loading the `.mdc` rules, Copilot reading its instructions file, and Codex reading `AGENTS.md` were not run. The Cursor output is checked against the converter, not against Cursor.
+- NOT verified: the release workflow has not run on GitHub; it is covered by static checks only. No release has been signed; the 3.1.0 release is unsigned and this one stays unsigned until a signing key is configured.
+- Not re-reviewed by an independent model: the installer was checked by its own test suite and by the review loop described in the pull request, not by a cold external review.
+### Not built (by decision)
+Host plugins, a Kiro Power, an MCP server, a VS Code extension, npm or pip packages, `curl | bash`, auto-update, telemetry, a composite Action.
 ## [3.1.0] - 2026-11-11
 
 Security and distribution hardening of the enforcement layer. Driven by a read-only assessment and a Grok 4.7 cold adversarial review; every finding is either fixed with a regression test or stated as a documented limit in `templates/enforcement/README.md`.

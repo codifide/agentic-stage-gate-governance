@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: MIT
+# Release workflow for the Codifide Harness repository itself.
+# Trigger: pushing a tag v*. It runs both test suites, builds the tarball and SHA256SUMS, signs
+# SHA256SUMS ONLY if the repository secret RELEASE_SIGNING_KEY (an OpenSSH private key) exists, and
+# creates a DRAFT release for the Human Steward to review and publish.
+#
+# Deliberately absent: third-party actions (the runner's own git and gh are used, so there is nothing
+# to pin), pull_request and pull_request_target triggers, and any step that fetches code to run.
+# The only permission is contents: write, needed to create the release.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+    steps:
+      - name: Check out the tag with git
+        run: |
+          set -euo pipefail
+          git init -q .
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --depth=1 origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          git checkout -q "refs/tags/${GITHUB_REF_NAME}"
+          git remote remove origin
+      - name: Tag must match VERSION
+        run: |
+          set -euo pipefail
+          test "v$(cat VERSION)" = "${GITHUB_REF_NAME}"
+      - name: Enforcement test suite
+        run: bash templates/enforcement/test-enforcement.sh
+      - name: Installer test suite
+        run: bash tests/test-installer.sh
+      - name: Build tarball and checksums
+        run: bash tools/build-release.sh "${GITHUB_REF_NAME}" dist
+      - name: Verify the checksum
+        run: cd dist && sha256sum -c SHA256SUMS
+      - name: Sign SHA256SUMS (only when a signing key exists)
+        run: |
+          set -euo pipefail
+          if [ -z "${SIGNING_KEY:-}" ]; then
+            echo "No RELEASE_SIGNING_KEY secret: this release is NOT signed."
+            echo "unsigned" > dist/UNSIGNED.txt
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$SIGNING_KEY" > "$RUNNER_TEMP/signing_key"
+          ssh-keygen -Y sign -f "$RUNNER_TEMP/signing_key" -n codifide-harness dist/SHA256SUMS
+          rm -f "$RUNNER_TEMP/signing_key"
+      - name: Create a draft release
+        run: |
+          set -euo pipefail
+          files="dist/SHA256SUMS dist/codifide-harness-$(cat VERSION).tar.gz"
+          if [ -f dist/SHA256SUMS.sig ]; then files="$files dist/SHA256SUMS.sig"; fi
+          gh release create "${GITHUB_REF_NAME}" $files --draft --verify-tag \
+            --title "Codifide Harness ${GITHUB_REF_NAME}" --notes-file CHANGELOG.md
