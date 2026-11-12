@@ -402,6 +402,61 @@ else
   eq "failure: ...and every removed file is back" "$S1" "$(snap "$T")"
 fi
 
+# ---------- cross-vendor review fixes (F-01 .. F-10) ----------
+FB="$WORK/fakebin"; mkdir -p "$FB"
+# F-01: a forged manifest line cannot make a policy or stub file harness-owned (and so deletable)
+T="$(mk_t)"; ins "$A" --target "$T" --host kiro --apply >/dev/null 2>&1
+printf 'my own instructions\n' > "$T/CLAUDE.md"
+printf '%s owned CLAUDE.md\n' "$(sha "$T/CLAUDE.md")" >> "$T/.codifide/harness-manifest"
+rcne "F-01: upgrade with a forged 'owned CLAUDE.md' manifest line is refused" ins "$B" upgrade --target "$T" --apply
+is "F-01: ...and CLAUDE.md is still there" test -f "$T/CLAUDE.md"
+rcne "F-01: uninstall with the forged line is refused" ins "$A" uninstall --target "$T" --apply
+is "F-01: ...and CLAUDE.md is still there after uninstall" test -f "$T/CLAUDE.md"
+T="$(mk_t)"; ins "$A" --target "$T" --host kiro --apply >/dev/null 2>&1
+printf '%s owned .codifide/immutable-paths\n' "$(sha "$T/.codifide/immutable-paths")" >> "$T/.codifide/harness-manifest"
+rcne "F-01: a forged 'owned' line for the policy file is refused" ins "$B" upgrade --target "$T" --apply
+is "F-01: ...and the policy file is still there" test -f "$T/.codifide/immutable-paths"
+# F-04: a backup that fails stops the run and rolls everything back (the old code carried on and restored wrong bytes)
+printf '#!/bin/sh\nfor a; do last="$a"; done\ncase "$last" in */bk/2) echo "fake cp: forced failure" >&2; exit 1;; esac\nexec /bin/cp "$@"\n' > "$FB/cp"; chmod 755 "$FB/cp"
+T="$(mk_t)"; ins "$A" --target "$T" --host kiro --apply >/dev/null 2>&1; S1="$(snap "$T")"
+rcne "F-04: an upgrade whose second backup fails makes the run fail" env PATH="$FB:$PATH" $SH "$B/install.sh" upgrade --target "$T" --apply
+out_has "F-04: ...and says it rolled back" 'rolling back'
+eq "F-04: ...and every file holds its original bytes" "$S1" "$(snap "$T")"
+# F-02: a file edited between the plan and the write is not overwritten
+printf '#!/bin/sh\nfor a; do last="$a"; done\ncase "$last" in */bk/1) for a; do src="$a"; done; set -- "$@"; for x; do :; done; eval "src=\\${$(($#-1))}"; echo RACE-EDIT >> "$src";; esac\nexec /bin/cp "$@"\n' > "$FB/cp"; chmod 755 "$FB/cp"
+T="$(mk_t)"; ins "$A" --target "$T" --host kiro --apply >/dev/null 2>&1
+rcne "F-02: a file edited after the plan makes the upgrade stop" env PATH="$FB:$PATH" $SH "$B/install.sh" upgrade --target "$T" --apply
+is "F-02: ...and the concurrent edit is still in the file" sh -c "grep -r -q RACE-EDIT '$T/.kiro'"
+# F-03: the temporary file is created exclusively; a link put in its place is detected
+printf '#!/bin/sh\n/bin/cp "$@" || exit 1\nfor a; do last="$a"; done\ncase "$last" in */.codifide-tmp.*) rm -f "$last"; ln -s "$OUTSIDE" "$last";; esac\nexit 0\n' > "$FB/cp"; chmod 755 "$FB/cp"
+OUTSIDE="$WORK/outside-file"; echo precious > "$OUTSIDE"; export OUTSIDE
+T="$(mk_t)"; S0="$(snap "$T")"
+rcne "F-03: a link swapped in for the temporary file makes the install fail" env PATH="$FB:$PATH" $SH "$A/install.sh" --target "$T" --host kiro --apply
+eq "F-03: ...the file outside the repository is untouched" "precious" "$(cat "$OUTSIDE")"
+eq "F-03: ...and the target is back to how it was" "$S0" "$(snap "$T")"
+unset OUTSIDE
+is "F-03: the temporary name is not predictable (mktemp, no \$RANDOM)" sh -c "grep -q 'mktemp \"\$parent/.codifide-tmp' '$REPO/install.sh' && ! grep -q 'RANDOM' '$REPO/install.sh'"
+# F-05: a hand-written RELEASE file does not vouch for a dirty git checkout
+P6="$WORK/srcDirtyRel"; mk_src "$P6" 3.2.0; tag_src "$P6" 3.2.0; echo extra > "$P6/dirty.txt"; printf 'tag=v3.2.0\n' > "$P6/RELEASE"
+rc "F-05: a dirty checkout with a hand-written RELEASE file refuses" 1 ins "$P6" --target "$(mk_t)" --host kiro --apply
+P7="$WORK/srcMovedRel"; mk_src "$P7" 3.2.0; tag_src "$P7" 3.2.0; ( cd "$P7" && echo more >> README.md && git -c commit.gpgsign=false commit -qam later ); printf 'tag=v3.2.0\n' > "$P7/RELEASE"
+rc "F-05: HEAD past the tag with a hand-written RELEASE file refuses" 1 ins "$P7" --target "$(mk_t)" --host kiro --apply
+# F-06: files read from the release are not followed through links
+printf 'outside steering\n' > "$WORK/outside-steer.md"
+P8="$WORK/srcLinkSteer"; mk_src "$P8" 3.2.0; rm -f "$P8/steering/00-welcome.md"; ln -s "$WORK/outside-steer.md" "$P8/steering/00-welcome.md"
+T="$(mk_t)"; S0="$(snap "$T")"
+rc "F-06: Cursor install with a linked steering file refuses" 1 ins "$P8" --target "$T" --host cursor --apply --i-know-this-is-unpinned
+eq "F-06: ...and writes nothing" "$S0" "$(snap "$T")"
+rc "F-06: Copilot install with a linked core file refuses" 1 ins "$P8" --target "$(mk_t)" --host copilot --apply --i-know-this-is-unpinned
+P9="$WORK/srcLinkVer"; mk_src "$P9" 3.2.0; rm -f "$P9/VERSION"; printf '3.2.0\n' > "$WORK/outside-version"; ln -s "$WORK/outside-version" "$P9/VERSION"
+rc "F-06: a linked VERSION file refuses" 1 ins "$P9" --target "$(mk_t)" --host kiro --apply --i-know-this-is-unpinned
+P10="$WORK/srcLinkSnip"; mk_src "$P10" 3.2.0; rm -f "$P10/templates/hooks/claude-code/settings.example.json"; ln -s "$WORK/outside-steer.md" "$P10/templates/hooks/claude-code/settings.example.json"
+rc "F-06: a linked Claude settings snippet refuses" 1 ins "$P10" --target "$(mk_t)" --host claude --i-know-this-is-unpinned
+# F-09 / F-10: the signing key and token are step-scoped; the key file is removed even when signing fails
+wfs="$WORK/release.nocomments2.yml"; grep -v '^[[:space:]]*#' "$REPO/.github/workflows/release.yml" > "$wfs"
+isnot "F-09: no job-level env block" grep -E '^    env:' "$wfs"
+is "F-09: the signing key is read only inside the signing step" sh -c "test \"\$(grep -c 'secrets.RELEASE_SIGNING_KEY' '$wfs')\" = 1 && awk '/name: Sign SHA256SUMS/{f=1} /name: Create a draft release/{f=0} f' '$wfs' | grep -q 'secrets.RELEASE_SIGNING_KEY'"
+is "F-10: the key file is removed by a trap" sh -c "grep -q \"trap 'rm -f \\\"\\\$key\\\"' EXIT\" '$wfs'"
 # ---------- installed guard works ----------
 T="$(mk_t)"; ins "$A" --target "$T" --host kiro --apply >/dev/null 2>&1
 ( cd "$T" && printf '%s' '{"input":{"path":".kiro/hooks/x.json"}}' | $SH .codifide/guard-immutable-paths.sh >/dev/null 2>&1 ); pass "installed guard: blocks a write into .kiro/hooks" 2 $?

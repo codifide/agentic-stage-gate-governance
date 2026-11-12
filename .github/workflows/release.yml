@@ -5,8 +5,10 @@
 # creates a DRAFT release for the Human Steward to review and publish.
 #
 # Deliberately absent: third-party actions (the runner's own git and gh are used, so there is nothing
-# to pin), pull_request and pull_request_target triggers, and any step that fetches code to run.
-# The only permission is contents: write, needed to create the release.
+# to pin), pull_request and pull_request_target triggers, and any downloaded helper code. The only code
+# that runs is this repository's own tagged code, fetched with git. The only permission is
+# contents: write, needed to create the release. The signing key reaches the signing step only, and the
+# token reaches only the steps that need it.
 name: release
 on:
   push:
@@ -16,11 +18,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
     steps:
       - name: Check out the tag with git
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git init -q .
@@ -41,6 +42,8 @@ jobs:
       - name: Verify the checksum
         run: cd dist && sha256sum -c SHA256SUMS
       - name: Sign SHA256SUMS (only when a signing key exists)
+        env:
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
         run: |
           set -euo pipefail
           if [ -z "${SIGNING_KEY:-}" ]; then
@@ -49,10 +52,13 @@ jobs:
             exit 0
           fi
           umask 077
-          printf '%s\n' "$SIGNING_KEY" > "$RUNNER_TEMP/signing_key"
-          ssh-keygen -Y sign -f "$RUNNER_TEMP/signing_key" -n codifide-harness dist/SHA256SUMS
-          rm -f "$RUNNER_TEMP/signing_key"
+          key="$RUNNER_TEMP/signing_key"
+          trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$SIGNING_KEY" > "$key"
+          ssh-keygen -Y sign -f "$key" -n codifide-harness dist/SHA256SUMS
       - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           files="dist/SHA256SUMS dist/codifide-harness-$(cat VERSION).tar.gz"

@@ -85,7 +85,7 @@ bash NEW-RELEASE/install.sh uninstall --target /path/to/your/repo --apply   # re
 
 Upgrade replaces only files that still match the manifest and stops, writing nothing, if you edited one (`--force` overrides). Then open a normal pull request so your reviewers see the diff. Edit `.codifide/immutable-paths` and `.codifide/allowed-licenses` and set `CODIFIDE_LICENSE_REPORT_CMD` before relying on the checks.
 
-**Verified and not verified.** The installer suite (`tests/test-installer.sh`, 342 installer checks) exercises the installer in throwaway repositories on macOS with bash 3.2. We did not run Kiro, Claude Code, Cursor, Copilot or Codex end to end: that each host loads the files, and that the guard hook blocks on exit code 2 in each host, is unverified (see `templates/enforcement/README.md`). The release workflow has not run on GitHub yet, and releases are unsigned until a signing key is configured.
+**Verified and not verified.** The installer suite (`tests/test-installer.sh`, 367 installer checks) exercises the installer in throwaway repositories on macOS with bash 3.2. We did not run Kiro, Claude Code, Cursor, Copilot or Codex end to end: that each host loads the files, and that the guard hook blocks on exit code 2 in each host, is unverified (see `templates/enforcement/README.md`). The release workflow has not run on GitHub yet, and releases are unsigned until a signing key is configured.
 
 The manual copy steps below still work.
 

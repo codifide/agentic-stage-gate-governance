@@ -146,17 +146,28 @@ walk_clean(){ local base="$1" p="$2" cur c oldifs; cur="$base"; oldifs=$IFS; IFS
   if [[ -e "$cur" && ! -f "$cur" ]]; then return 1; fi
   return 0; }
 dest_ok(){ walk_clean "$T" "$1"; }
+# Only files this release actually ships as harness-owned may be recorded as owned. Policy files and the
+# CLAUDE.md / AGENTS.md / Copilot stubs are seed-only: a manifest line cannot make them deletable.
+owned_ok(){ local d="${1%/*}" b="${1##*/}"
+  case "$1" in
+    .codifide/guard-immutable-paths.sh|.codifide/check-immutable-paths.sh|.codifide/check-review-level.sh|.codifide/check-licenses.sh) return 0;;
+    .kiro/hooks/guard-immutable-paths.json) return 0;;
+  esac
+  case "$d" in
+    .kiro/steering|.codifide/steering) case "$b" in [0-9][0-9]-*.md) return 0;; esac;;
+    .cursor/rules) case "$b" in [0-9][0-9]-*.mdc) return 0;; esac;;
+  esac
+  return 1; }
 
 # ---------- the pin ----------
+walk_clean "$SRC" VERSION && [[ -f "$SRC/VERSION" ]] || die "VERSION is missing or is reachable through a link"
 VERSION="$(cat "$SRC/VERSION" 2>/dev/null | head -n 1 || true)"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "VERSION is missing or not MAJOR.MINOR.PATCH"
 SOURCE_KIND="unpinned"; PINNED="no"
 check_pin(){
   local tag
-  if [[ -f "$SRC/RELEASE" && ! -L "$SRC/RELEASE" ]]; then
-    if [[ "$(head -n 1 "$SRC/RELEASE")" == "tag=v$VERSION" ]]; then SOURCE_KIND="release"; PINNED="yes"; return 0; fi
-    echo "install.sh: RELEASE does not say tag=v$VERSION, so this tree is not release v$VERSION" >&2
-  elif [[ -e "$SRC/.git" ]]; then
+  # A git checkout is judged by git alone: a RELEASE file written by hand must not vouch for a dirty tree.
+  if [[ -e "$SRC/.git" ]]; then
     tag="$(git -C "$SRC" describe --exact-match --tags HEAD 2>/dev/null || true)"
     if [[ "$tag" == "v$VERSION" ]]; then
       if [[ -z "$(git -C "$SRC" status --porcelain 2>/dev/null)" ]]; then SOURCE_KIND="tag"; PINNED="yes"; return 0; fi
@@ -164,6 +175,9 @@ check_pin(){
     else
       echo "install.sh: HEAD is not the tag v$VERSION (found: ${tag:-no tag})" >&2
     fi
+  elif [[ -f "$SRC/RELEASE" && ! -L "$SRC/RELEASE" ]]; then
+    if [[ "$(head -n 1 "$SRC/RELEASE")" == "tag=v$VERSION" ]]; then SOURCE_KIND="release"; PINNED="yes"; return 0; fi
+    echo "install.sh: RELEASE does not say tag=v$VERSION, so this tree is not release v$VERSION" >&2
   else
     echo "install.sh: this is neither a checkout of a release tag nor an unpacked release tarball" >&2
   fi
@@ -194,6 +208,7 @@ load_state(){
       [[ "$line" =~ $re ]] || die "$MANFILE line $n is malformed; nothing was changed"
       sha="${BASH_REMATCH[1]}"; kind="${BASH_REMATCH[2]}"; path="${BASH_REMATCH[3]}"
       path_ok "$path" || die "$MANFILE line $n names an unsafe or unknown path; nothing was changed"
+      if [[ "$kind" == owned ]] && ! owned_ok "$path"; then die "$MANFILE line $n marks $path as harness-owned, which this release never does; nothing was changed"; fi
       if awk -v p="$path" '$3==p{f=1} END{exit !f}' "$W/old"; then die "$MANFILE line $n repeats a path; nothing was changed"; fi
       printf '%s %s %s\n' "$sha" "$kind" "$path" >> "$W/old"
     done < "$T/$MANFILE"
@@ -255,6 +270,7 @@ want_host(){
       want_steering ".kiro/steering"
       add_rel owned ".kiro/hooks/guard-immutable-paths.json" "templates/hooks/kiro/guard-immutable-paths.json";;
     claude)
+      src_ok "templates/hooks/claude-code/settings.example.json" || die "release file is missing or reachable through a link: templates/hooks/claude-code/settings.example.json"
       want_steering ".codifide/steering"
       want_stub "CLAUDE.md" "# Codifide Harness
 @.codifide/steering/00-welcome.md
@@ -263,9 +279,11 @@ want_host(){
     cursor)
       d="$W/mdc"; mkdir -p "$d"
       src_ok "templates/cursor/to-mdc.sh" || die "templates/cursor/to-mdc.sh is missing"
+      for f in "$SRC"/steering/[0-9][0-9]-*.md; do src_ok "steering/$(basename "$f")" || die "release file is reachable through a link: steering/$(basename "$f")"; done
       bash "$SRC/templates/cursor/to-mdc.sh" "$d" "$SRC/steering" >/dev/null || die "the Cursor converter failed"
       for f in "$d"/*.mdc; do b="$(basename "$f")"; add_want owned ".cursor/rules/$b" "$f"; done;;
     copilot)
+      src_ok "steering/00-welcome.md" || die "release file is missing or reachable through a link: steering/00-welcome.md"
       want_steering ".codifide/steering"
       g="$(gen_file)"
       { echo "<!-- Installed by Codifide Harness $VERSION. Source: steering/00-welcome.md. Other rules: .codifide/steering/ -->"; core_body; } > "$g"
@@ -297,6 +315,21 @@ fi
 
 # ---------- plan ----------
 : > "$W/plan"; : > "$W/newent"; CONFLICTS=0; CHANGES=0
+# State of every destination at plan time; rechecked just before each write (see check_state).
+: > "$W/expect"
+rec(){ local dest="$1" h
+  if [[ -e "$T/$dest" || -L "$T/$dest" ]]; then
+    if [[ -f "$T/$dest" && ! -L "$T/$dest" ]]; then h="$(hash_file "$T/$dest")"; else h="NOTFILE"; fi
+  else h="ABSENT"; fi
+  printf '%s\t%s\n' "$dest" "$h" >> "$W/expect"; }
+expected_of(){ awk -F'\t' -v p="$1" '$1==p{print $2; exit}' "$W/expect"; }
+check_state(){ local dest="$1" want have
+  want="$(expected_of "$dest")"
+  if [[ -e "$T/$dest" || -L "$T/$dest" ]]; then
+    if [[ -f "$T/$dest" && ! -L "$T/$dest" ]]; then have="$(hash_file "$T/$dest")"; else have="NOTFILE"; fi
+  else have="ABSENT"; fi
+  if [[ -z "$want" || "$have" != "$want" ]]; then die "$dest changed while the installer was running; stopping and rolling back what this run wrote"; fi
+  dest_ok "$dest" || die "$dest, or a directory above it, became a link while the installer was running"; }
 old_sha(){ awk -v p="$1" '$3==p{print $1; exit}' "$W/old"; }
 old_kind(){ awk -v p="$1" '$3==p{print $2; exit}' "$W/old"; }
 in_want(){ awk -F'\t' -v p="$1" '$2==p{f=1} END{exit !f}' "$W/want"; }
@@ -306,6 +339,7 @@ ent(){ printf '%s %s %s\n' "$1" "$2" "$3" >> "$W/newent"; }
 if [[ "$CMD" != uninstall ]]; then
   while IFS=$'\t' read -r kind dest src; do
     dest_ok "$dest" || die "refusing: $dest is, or sits below, a symbolic link or a non-file. Nothing was written."
+    rec "$dest"
     newsha="$(hash_file "$src")"; osha="$(old_sha "$dest")"; okind="$(old_kind "$dest")"
     if [[ ! -e "$T/$dest" ]]; then
       if [[ "$kind" == seed && -n "$okind" ]]; then plan keep "$dest" "$src" "you deleted it; not recreated"
@@ -336,6 +370,7 @@ if [[ "$CMD" != uninstall ]]; then
     [[ -n "$opath" ]] || continue
     in_want "$opath" && continue
     dest_ok "$opath" || die "refusing: $opath is, or sits below, a symbolic link or a non-file. Nothing was written."
+    rec "$opath"
     if [[ "$okind" == seed ]]; then plan forget "$opath" "" "no longer shipped; your file is left alone"
     elif [[ ! -e "$T/$opath" ]]; then plan gone "$opath" "" "already absent"
     elif [[ "$(hash_file "$T/$opath")" == "$osha" ]]; then plan remove "$opath" "" "no longer shipped"; CHANGES=$((CHANGES+1))
@@ -376,8 +411,14 @@ show_snippets(){ local act path src printed=0
 
 # ---------- applying (all-or-nothing) ----------
 journal(){ printf '%s|%s|%s\n' "$1" "$2" "${3:-}" >> "$JOURNAL"; }
-backup(){ # called inside $(...), so the counter must live on disk, not in a variable
-  local n; n=$(( $(ls "$W/bk" | wc -l | tr -d ' ') + 1 )); cp -p "$T/$1" "$W/bk/$n"; echo "$n"; }
+backup(){ # called inside $(...), so the counter lives on disk. Fails loudly, and checks the copy is what was planned.
+  local dest="$1" n want got
+  want="$(expected_of "$dest")"
+  n=$(( $(ls "$W/bk" | wc -l | tr -d ' ') + 1 ))
+  if ! cp -p "$T/$dest" "$W/bk/$n"; then rm -f "$W/bk/$n"; echo "install.sh: could not back up $dest" >&2; return 1; fi
+  got="$(hash_file "$W/bk/$n")"
+  if [[ -z "$want" || "$got" != "$want" ]]; then rm -f "$W/bk/$n"; echo "install.sh: $dest changed while the installer was running" >&2; return 1; fi
+  echo "$n"; }
 ensure_dirs(){ local p="$1" cur="$T" c oldifs=$IFS parts rest
   rest="${p%/*}"; [[ "$rest" != "$p" ]] || return 0
   IFS=/; for c in $rest; do
@@ -385,15 +426,18 @@ ensure_dirs(){ local p="$1" cur="$T" c oldifs=$IFS parts rest
     if [[ ! -d "$cur" ]]; then mkdir "$cur"; journal M "${cur#$T/}"; fi
   done; IFS=$oldifs; }
 put(){ # src dest   (create or replace, atomically, journaled)
-  local src="$1" dest="$2" n parent
+  local src="$1" dest="$2" n parent want
+  check_state "$dest"
   ensure_dirs "$dest"
   parent="$(dirname "$T/$dest")"
-  if [[ -e "$T/$dest" ]]; then n="$(backup "$dest")"; journal R "$dest" "$n"; else journal C "$dest"; fi
-  TMPFILE="$parent/.codifide-tmp.$$.$RANDOM"
+  if [[ -e "$T/$dest" ]]; then n="$(backup "$dest")" || die "stopping: $dest was not backed up"; journal R "$dest" "$n"; else journal C "$dest"; fi
+  want="$(hash_file "$src")"
+  TMPFILE="$(mktemp "$parent/.codifide-tmp.XXXXXX")" || die "cannot create a temporary file in $parent"
   cp "$src" "$TMPFILE"
+  if [[ -L "$TMPFILE" || ! -f "$TMPFILE" || "$(hash_file "$TMPFILE")" != "$want" ]]; then die "the temporary file for $dest was replaced or damaged; stopping"; fi
   case "$dest" in *.sh) chmod 755 "$TMPFILE";; *) chmod 644 "$TMPFILE";; esac
   mv -f "$TMPFILE" "$T/$dest"; TMPFILE=""; }
-drop(){ local dest="$1" n; n="$(backup "$dest")"; journal D "$dest" "$n"; rm -f "$T/$dest"; }
+drop(){ local dest="$1" n; check_state "$dest"; n="$(backup "$dest")" || die "stopping: $dest was not backed up"; journal D "$dest" "$n"; rm -f "$T/$dest"; }
 prune_dirs(){ local p="$1" d
   d="${p%/*}"
   while [[ "$d" != "$p" && -n "$d" && "$d" != "." ]]; do
@@ -413,10 +457,12 @@ if [[ "$CMD" == uninstall ]]; then
   while IFS=' ' read -r osha okind opath; do
     [[ -n "$opath" ]] || continue
     dest_ok "$opath" || die "refusing: $opath is, or sits below, a symbolic link or a non-file. Nothing was removed."
+    rec "$opath"
     if [[ ! -e "$T/$opath" ]]; then plan gone "$opath" "" "already absent"
     elif [[ "$(hash_file "$T/$opath")" == "$osha" ]]; then plan remove "$opath" "" "unmodified"; RM=$((RM+1))
     else plan keep "$opath" "" "edited since install; left in place"; printf '%s %s %s\n' "$osha" "$okind" "$opath" >> "$W/keepent"; fi
   done < "$W/old"
+  rec "$MANFILE"; rec "$VERFILE"
   echo "codifide-harness uninstall of v$OLD_VERSION from $T$([[ $APPLY -eq 1 ]] || echo ' (DRY RUN)')"
   describe_plan
   if [[ $APPLY -ne 1 ]]; then echo; echo "Dry run: nothing was written. Re-run with --apply to remove the $RM unmodified file(s) above."; exit 0; fi
@@ -441,6 +487,7 @@ if [[ "$CMD" == uninstall ]]; then
 fi
 
 mk_meta
+rec "$MANFILE"; rec "$VERFILE"
 META_CHANGED=0
 if [[ ! -f "$T/$MANFILE" ]] || ! cmp -s "$W/newman" "$T/$MANFILE"; then META_CHANGED=1; fi
 if [[ ! -f "$T/$VERFILE" ]] || ! cmp -s "$W/newver" "$T/$VERFILE"; then META_CHANGED=1; fi
