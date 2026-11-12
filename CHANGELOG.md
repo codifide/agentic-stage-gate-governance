@@ -2,7 +2,7 @@
 
 Versions follow semantic versioning. The version is in `VERSION`. Pin installs to a tag.
 
-## [3.2.0] - Unreleased
+## [3.2.0] - 2026-11-11
 A local installer, an upgrade and an uninstall path, and release automation. The steering files, the hook files and the four enforcement scripts are unchanged from 3.1.0; this release adds the way to get them into a repository and to keep them current.
 ### Added
 - `install.sh`: copies a pinned release into a repository. Dry run by default (`--apply` writes). Per-host targets: `kiro`, `claude`, `cursor`, `copilot`, `codex`. Refuses to run unless it is a clean checkout of the tag that matches `VERSION`, or an unpacked release tarball whose `RELEASE` file names that tag (`--i-know-this-is-unpinned` overrides and is recorded). Writes `.codifide/harness-version` and `.codifide/harness-manifest` (a hash for every file it installed). Uses no network, makes no commit, and does not change git configuration.
@@ -15,9 +15,9 @@ A local installer, an upgrade and an uninstall path, and release automation. The
 ### Verification status (stated plainly)
 - Verified by the installer suite, in throwaway repositories on macOS with bash 3.2: dry run writes nothing, the pin rules, each host's file layout, no-clobber, manifest hashes, idempotent re-run, upgrade, uninstall (a pristine tree is restored byte for byte), path-traversal, symlink and hostile-manifest cases, no network client or git write is called, rollback after a failed write, and the release build and an install from the built tarball.
 - NOT verified end to end: any host actually loading what the installer wrote. Kiro `inclusion: auto` loading and exit-2 blocking, Claude Code reading `CLAUDE.md` and the merged hook, Cursor loading the `.mdc` rules, Copilot reading its instructions file, and Codex reading `AGENTS.md` were not run. The Cursor output is checked against the converter, not against Cursor.
-- NOT verified: the release workflow has not run on GitHub; it is covered by static checks only. No release has been signed; the 3.1.0 release is unsigned and this one stays unsigned until a signing key is configured.
+- The release workflow ran once on GitHub for 3.2.0: both suites, the build and the checksum passed; the release step failed (see below). No release has been signed; the 3.1.0 release is unsigned and this one stays unsigned until a signing key is configured.
 - A cross-vendor review (gpt-6.1-sol) of the installer found 3 major and 5 minor reproducible issues; all are fixed with regression tests: a forged manifest line can no longer make a policy or stub file deletable, a failed backup stops and rolls back, a hand-written `RELEASE` file no longer vouches for a dirty git checkout, files are re-checked just before each write, the temporary file is created with `mktemp` and verified, release files are not read through links, and the release workflow scopes the signing key and token to their steps and removes the key file on failure. The fixes themselves have not been re-reviewed.
-- Not re-reviewed by an independent model: the installer has been checked only by its own test suite, not by a cold external review.
+- Release: the release workflow's final step failed on its first run (`gh release create` had no git remote because the workflow checks out without a remote); the 3.2.0 assets were built locally from the tag with `tools/build-release.sh`. Fixed after the tag by passing `--repo`.
 ### Not built (by decision)
 Host plugins, a Kiro Power, an MCP server, a VS Code extension, npm or pip packages, `curl | bash`, auto-update, telemetry, a composite Action.
 ## [3.1.0] - 2026-11-11

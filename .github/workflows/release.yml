@@ -63,5 +63,5 @@ jobs:
           set -euo pipefail
           files="dist/SHA256SUMS dist/codifide-harness-$(cat VERSION).tar.gz"
           if [ -f dist/SHA256SUMS.sig ]; then files="$files dist/SHA256SUMS.sig"; fi
-          gh release create "${GITHUB_REF_NAME}" $files --draft --verify-tag \
+          gh release create "${GITHUB_REF_NAME}" $files --repo "${GITHUB_REPOSITORY}" --draft --verify-tag \
             --title "Codifide Harness ${GITHUB_REF_NAME}" --notes-file CHANGELOG.md
