@@ -1,4 +1,4 @@
-# Stage-Gate Rebooted: How We Govern AI-Powered Development in Healthcare
+# Codifide Harness: How We Govern AI-Powered Development in Healthcare
 
 *The Codifide Harness whitepaper. It is based on Robert G. Cooper's Stage-Gate® model; see [NOTICE.md](NOTICE.md).*
 

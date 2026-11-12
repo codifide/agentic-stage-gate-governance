@@ -69,9 +69,9 @@ Download a release from the Releases page, check it against `SHA256SUMS`, unpack
 
 ```bash
 # 1. Dry run (the default): prints the plan and writes nothing
-bash codifide-harness-3.2.0/install.sh --target /path/to/your/repo --host kiro
+bash codifide-harness-3.2.1/install.sh --target /path/to/your/repo --host kiro
 # 2. Write it
-bash codifide-harness-3.2.0/install.sh --target /path/to/your/repo --host kiro --apply
+bash codifide-harness-3.2.1/install.sh --target /path/to/your/repo --host kiro --apply
 # Hosts: kiro | claude | cursor | copilot | codex (repeat or comma-separate)
 ```
 
@@ -85,7 +85,7 @@ bash NEW-RELEASE/install.sh uninstall --target /path/to/your/repo --apply   # re
 
 Upgrade replaces only files that still match the manifest and stops, writing nothing, if you edited one (`--force` overrides). Then open a normal pull request so your reviewers see the diff. Edit `.codifide/immutable-paths` and `.codifide/allowed-licenses` and set `CODIFIDE_LICENSE_REPORT_CMD` before relying on the checks.
 
-**Verified and not verified.** The installer suite (`tests/test-installer.sh`, 367 installer checks) exercises the installer in throwaway repositories on macOS with bash 3.2. We did not run Kiro, Claude Code, Cursor, Copilot or Codex end to end: that each host loads the files, and that the guard hook blocks on exit code 2 in each host, is unverified (see `templates/enforcement/README.md`). The release workflow ran once on GitHub for 3.2.0: tests, build and checksum passed, the release step failed and the 3.2.0 assets were built locally from the tag (fixed on `trunk` after the tag, not yet re-run). Releases are unsigned until a signing key is configured.
+**Verified and not verified.** The installer suite (`tests/test-installer.sh`, 367 installer checks) exercises the installer in throwaway repositories on macOS with bash 3.2. We did not run Kiro, Claude Code, Cursor, Copilot or Codex end to end: that each host loads the files is unverified. The guard hook blocking on exit code 2 was checked once by hand in the Kiro IDE on macOS (2026-11-11) and is unverified in the other hosts (see `templates/enforcement/README.md`). The release workflow ran once on GitHub for 3.2.0: tests, build and checksum passed, the release step failed and the 3.2.0 assets were built locally from the tag (fixed on `trunk` after the tag, not yet re-run). From 3.2.1 the release tag is signed with an SSH key (check the tag's "Verified" badge on GitHub). The release files are not separately signed: `SHA256SUMS` carries no signature.
 
 The manual copy steps below still work.
 
@@ -164,7 +164,7 @@ templates/
     ├── TEAM-CHANNEL-BROADCAST.md  # Advisory per-prompt hook that reminds the agent to persist lessons to files
     ├── NFR-TEMPLATE.md            # Non-functional requirements template
     └── INTENT-CONTRACT.md         # Persistent human-authorized goal, constraints, harm boundaries
-WHITEPAPER.md                      # Stage-Gate Rebooted — full methodology paper
+WHITEPAPER.md                      # Codifide Harness whitepaper — full methodology paper
 LOOP-ENGINEERING-GUIDE.md          # Deep-dive: loop engineering rationale and patterns
 VERSION, CHANGELOG.md              # Release version and change history
 .gitattributes                     # Forces LF endings on scripts and hook files

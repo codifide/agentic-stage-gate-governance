@@ -2,14 +2,17 @@
 
 Versions follow semantic versioning. The version is in `VERSION`. Pin installs to a tag.
 
-## [3.2.1] - Unreleased
+## [3.2.1] - 2026-11-12
 A fix to the example CI workflow. The steering files, hook files, installer and the four enforcement scripts are unchanged.
 ### Fixed
 - `templates/enforcement/workflow.example.yml`: on `pull_request`, `actions/checkout` checked out GitHub's synthetic `refs/pull/N/merge` commit. That commit has no `Generated-By` or `Review-Level` trailers, so `check-review-level.sh` failed every PR that touched a governance file, even with `codifide-enforcer-change-approved` applied. The checkout now uses `ref: ${{ github.event.pull_request.head.sha || github.sha }}`. Found on a downstream PR, where the same one-line change made the check pass. If you installed 3.2.0, the installer will not overwrite your workflow (it is a policy file): add the line by hand.
 ### Changed
+- The whitepaper is retitled "Codifide Harness: How We Govern AI-Powered Development in Healthcare" (it no longer uses the Stage-Gate® mark as its headline); citations in `articles/` updated.
+- `README.md`: install commands name 3.2.1; the Kiro exit-2 check and the signed tag are stated.
 - `templates/enforcement/README.md`: the Kiro row now records one manual check in the Kiro IDE on macOS, where exit 2 blocked a write to a protected path and allowed a write elsewhere. Also: the guard fails closed on every write if the `python3` on `PATH` cannot run.
 ### Verification status
-- The enforcement suite has a new check that the example checks out the PR head; it fails against the 3.2.0 file. The fix has not run on GitHub from this repository; it ran on one downstream repository.
+- The enforcement suite has a new check that the example checks out the PR head; it fails against the 3.2.0 file. The fix has not run on GitHub from this repository; it ran on two downstream repositories (the site and the private swarm), where governance PRs then passed.
+- The `v3.2.1` tag is the first signed tag (SSH key). `SHA256SUMS` is not separately signed.
 ## [3.2.0] - 2026-11-11
 A local installer, an upgrade and an uninstall path, and release automation. The steering files, the hook files and the four enforcement scripts are unchanged from 3.1.0; this release adds the way to get them into a repository and to keep them current.
 ### Added

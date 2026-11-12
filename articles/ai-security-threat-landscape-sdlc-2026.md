@@ -444,7 +444,7 @@ The choice is not between speed and security. It is between architectural adapta
 
 [26] OWASP (2026). "Large Language Model Security Verification Standard 2.0." https://owasp.org/www-project-llm-verification-standard/
 
-[27] Jones, D. (2026). "Stage-Gate Rebooted: How We Govern AI-Powered Development." Codifide Harness. https://github.com/codifide/codifide-harness
+[27] Jones, D. (2026). "Codifide Harness: How We Govern AI-Powered Development in Healthcare." Codifide Harness. https://github.com/codifide/codifide-harness
 
 [28] NxCode (2026). "AI-Native SDLC Security: A Practical Control Plan for Agent-Written Code." July 2026. https://www.nxcode.io/resources/news/ai-native-sdlc-security-controls-playbook-2026
 
