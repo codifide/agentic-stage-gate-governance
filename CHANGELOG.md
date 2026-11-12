@@ -16,7 +16,7 @@ A local installer, an upgrade and an uninstall path, and release automation. The
 - Verified by the installer suite, in throwaway repositories on macOS with bash 3.2: dry run writes nothing, the pin rules, each host's file layout, no-clobber, manifest hashes, idempotent re-run, upgrade, uninstall (a pristine tree is restored byte for byte), path-traversal, symlink and hostile-manifest cases, no network client or git write is called, rollback after a failed write, and the release build and an install from the built tarball.
 - NOT verified end to end: any host actually loading what the installer wrote. Kiro `inclusion: auto` loading and exit-2 blocking, Claude Code reading `CLAUDE.md` and the merged hook, Cursor loading the `.mdc` rules, Copilot reading its instructions file, and Codex reading `AGENTS.md` were not run. The Cursor output is checked against the converter, not against Cursor.
 - NOT verified: the release workflow has not run on GitHub; it is covered by static checks only. No release has been signed; the 3.1.0 release is unsigned and this one stays unsigned until a signing key is configured.
-- Not re-reviewed by an independent model: the installer was checked by its own test suite and by the review loop described in the pull request, not by a cold external review.
+- Not re-reviewed by an independent model: the installer has been checked only by its own test suite, not by a cold external review.
 ### Not built (by decision)
 Host plugins, a Kiro Power, an MCP server, a VS Code extension, npm or pip packages, `curl | bash`, auto-update, telemetry, a composite Action.
 ## [3.1.0] - 2026-11-11
