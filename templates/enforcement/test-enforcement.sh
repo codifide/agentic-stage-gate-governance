@@ -579,6 +579,9 @@ if [[ -f "$REPO/README.md" && -d "$REPO/steering" && -d "$REPO/templates/hooks" 
   chk "no stale gate count, version footer, counsel marker or case count" no_stale
   chk "scripts carry SPDX headers" spdx_ok
   chk "workflow example runs all three CI scripts uncommented, requires a license report command, bootstraps, and also runs on push" workflow_ok
+  # 3.2.1: the default pull_request checkout is the synthetic merge commit (no trailers).
+  pr_head_ok(){ local w="$HERE/workflow.example.yml"; has '^[^#]*ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}' "$w"; }
+  chk "workflow example checks out the PR head commit, not the synthetic merge commit" pr_head_ok
   chk "Cursor converter writes .mdc with alwaysApply, copies the core body, never overwrites" cursor_ok
   chk "always-loaded core stays at or under 2,400 words" core_size
   chk ".gitattributes forces LF for scripts" eol_ok

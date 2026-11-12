@@ -30,6 +30,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Check out the PR's own head commit. The default for pull_request is GitHub's
+          # synthetic refs/pull/N/merge commit, which has no Generated-By / Review-Level
+          # trailers, so check-review-level.sh would fail every PR that touches a
+          # governance file. Push events keep github.sha.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Select base and fetch trusted copies of the checks
         env:
           EVENT: ${{ github.event_name }}

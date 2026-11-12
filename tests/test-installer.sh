@@ -490,7 +490,7 @@ git -C "$A" tag v3.2.7; rc "release: a tag that disagrees with VERSION is refuse
 # ---------- documentation and release-file consistency ----------
 has(){ grep -q -E -- "$1" "$2"; }
 wf="$WORK/release.nocomments.yml"; grep -v '^[[:space:]]*#' "$REPO/.github/workflows/release.yml" > "$wf"
-is "docs: VERSION is 3.2.0" test "$(cat "$REPO/VERSION")" = "3.2.0"
+is "docs: VERSION is 3.2.1" test "$(cat "$REPO/VERSION")" = "3.2.1"
 is "docs: CHANGELOG has a 3.2.0 entry" has '^## \[3\.2\.0\]' "$REPO/CHANGELOG.md"
 is "docs: CHANGELOG states what was not verified end to end" grep -q -i -E 'not verified end to end' "$REPO/CHANGELOG.md"
 is "docs: README documents install.sh, --apply and the dry-run default" sh -c "grep -q 'install.sh' '$REPO/README.md' && grep -q -- '--apply' '$REPO/README.md' && grep -qi 'dry run' '$REPO/README.md'"

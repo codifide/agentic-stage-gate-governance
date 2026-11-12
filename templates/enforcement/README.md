@@ -49,13 +49,14 @@ echo '{"input":{"path":"verifiers/check.py"}}' | bash .codifide/guard-immutable-
 
 ## CI
 
-Use `workflow.example.yml`. It differs from a naive setup in five ways that matter:
+Use `workflow.example.yml`. It differs from a naive setup in six ways that matter:
 
 1. **Checks run from the base branch.** The job copies `.codifide/*.sh` from `origin/<base>` and runs those, so a PR cannot weaken the checks that judge it.
 2. **First-run bootstrap.** If the base branch has none of the scripts yet (the adoption PR), the job runs the PR's own copies once and prints a warning. That PR needs the Human Steward's review: on first adoption the PR is the only source of the rules. If the base has some of the scripts but not all, the job fails.
 3. **License policy comes from the base branch** (`--base`; under GitHub Actions a missing base fails closed). A change that adds `GPL-3.0-only` to `allowed-licenses` cannot approve its own dependency.
 4. **It also runs on pushes to `main`**, as a tripwire for anything that reached `main` without a passing PR check.
 5. **Two labels, two decisions.** `codifide-verifier-change-approved` sets `CODIFIDE_VERIFIER_CHANGE_APPROVED_BY` and waives edits to verifiers, fixtures and baselines. It does **not** waive edits to `.codifide/`, `.github/workflows/`, `CODEOWNERS` (including `docs/CODEOWNERS`), `.kiro/hooks/` or `.claude/settings.json`. Those need `codifide-enforcer-change-approved`, which sets `CODIFIDE_ENFORCER_CHANGE_APPROVED_BY`. A PR that changes both kinds needs both labels.
+6. **It checks out the PR head, not GitHub's merge commit.** On `pull_request`, `actions/checkout` defaults to the synthetic `refs/pull/N/merge` commit. That commit carries no trailers, so the review-level check would fail every PR that touches a governance file, even with the right label. The example sets `ref: ${{ github.event.pull_request.head.sha || github.sha }}`. If you wrote your own workflow, add the same line.
 
 ### What you must configure (the repo cannot check this for you)
 
@@ -81,7 +82,7 @@ Coverage by host:
 
 | Host | Blocking guard hook shipped | Notes |
 |------|-----------------------------|-------|
-| Kiro | yes (`templates/hooks/kiro/`) | exit-2 behaviour `[UNVERIFIED]` by us; run the check above |
+| Kiro | yes (`templates/hooks/kiro/`) | exit 2 blocked a write once in the Kiro IDE on macOS (2026-11-11): a write to a protected path was refused with the guard's message and a write elsewhere went through. One host, one machine, not a test in this repo; run the check above. If `python3` on `PATH` cannot run (for example macOS with an unaccepted Xcode licence), the guard fails closed on every write; put a working `python3` first on `PATH` in the hook command |
 | Claude Code | yes (`templates/hooks/claude-code/`) | documented by the vendor to block on exit 2; most writes happen through the shell, which the hook does not see |
 | Cursor, Copilot, Windsurf, Codex | no | they have hook mechanisms we have not tested; CI is your blocking control |
 
